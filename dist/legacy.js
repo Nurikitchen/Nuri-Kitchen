@@ -3588,7 +3588,7 @@
         },
       ];
 
-      const locationData = window.locationData = {
+      const locationData = {
         "TP. Hồ Chí Minh": {
           "Quận 1": [
             "Phường Tân Định (P. Tân Định mới)",
@@ -6941,7 +6941,7 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
                             <button onclick="openCustomerMenuModal(${currentUser.id})" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2.5 rounded-xl text-sm transition-colors flex justify-center items-center gap-2">
                                 <i class="fa-solid fa-utensils"></i> Chọn lại menu tuần
                             </button>
-                            <button onclick="window.openPlatformSelectorModal()" class="w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold py-2.5 rounded-xl text-sm transition-colors flex justify-center items-center gap-2 shadow-sm">
+                            <button onclick="openOrderPlatformModal('customer')" class="w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold py-2.5 rounded-xl text-sm transition-colors flex justify-center items-center gap-2 shadow-sm">
                                 <i class="fa-solid fa-cart-shopping"></i> Đặt hàng ngoài gói đăng ký
                             </button>
                             <button onclick="openRenewSubscriptionModal()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2.5 rounded-xl text-sm transition-colors flex justify-center items-center gap-2 shadow-sm">
@@ -14330,7 +14330,7 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
                           <input type="hidden" id="pkg-lucky-prize" value="${localStorage.getItem("nutriadmin_wheel_prize") || ""}">
 
           <div class="mt-8 flex flex-col md:flex-row justify-center items-center gap-4 w-full relative z-20 pb-8">
-            <button type="button" onclick="window.openPlatformSelectorModal()" class="animate-attention-glow-shake relative group/order-btn overflow-hidden w-full md:w-auto bg-gradient-to-r from-orange-500 to-amber-500 text-white font-black text-lg py-3.5 px-8 rounded-full hover:scale-105 active:scale-95 transition-all duration-300 shadow-[0_0_20px_rgba(245,158,11,0.6)] hover:shadow-[0_0_40px_rgba(245,158,11,0.9)] border-2 border-amber-300 z-20 flex-1 max-w-[250px]">
+            <button type="button" onclick="window.openOrderPlatformModal()" class="animate-attention-glow-shake relative group/order-btn overflow-hidden w-full md:w-auto bg-gradient-to-r from-orange-500 to-amber-500 text-white font-black text-lg py-3.5 px-8 rounded-full hover:scale-105 active:scale-95 transition-all duration-300 shadow-[0_0_20px_rgba(245,158,11,0.6)] hover:shadow-[0_0_40px_rgba(245,158,11,0.9)] border-2 border-amber-300 z-20 flex-1 max-w-[250px]">
               <span class="absolute inset-0 w-full h-full rounded-full opacity-30 bg-gradient-to-b from-transparent via-transparent to-black pointer-events-none"></span>
               <span class="relative flex items-center justify-center gap-2">
                 <i class="fa-solid fa-gift text-amber-100 animate-bounce text-xl"></i>
@@ -14355,7 +14355,7 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
                           ${
                             showBanner
                               ? `
-      <button id="cta-order-now-btn" type="button" onclick="window.openPlatformSelectorModal()" class="bg-[#F97316] text-white px-8 py-3.5 rounded-xl font-bold text-lg transition-all lg:hover:-translate-y-1 lg:hover:shadow-lg active:scale-[0.98] lg:hover:bg-[#EA580C] flex items-center justify-center gap-2 mx-auto animate-glow-pulse">
+      <button id="cta-order-now-btn" type="button" onclick="openOrderPlatformModal()" class="bg-[#F97316] text-white px-8 py-3.5 rounded-xl font-bold text-lg transition-all lg:hover:-translate-y-1 lg:hover:shadow-lg active:scale-[0.98] lg:hover:bg-[#EA580C] flex items-center justify-center gap-2 mx-auto animate-glow-pulse">
           <i class="fa-solid fa-utensils"></i> Đăng ký đặt 1 bữa
       </button>
       `
@@ -23157,10 +23157,10 @@ function openCustomerMenuModal(cId, isFromAdmin = false) {
         if (window.visualViewport) {
           const vv = window.visualViewport;
           if (window.innerWidth < 640) {
-            // Mobile: keep it max 85vh, but avoid keyboard overlap
-            chatWindow.style.height = "";
+            // Full screen on mobile, adjust for keyboard
+            chatWindow.style.height = `${vv.height}px`;
             chatWindow.style.bottom = `${window.innerHeight - vv.height}px`;
-            chatWindow.style.maxHeight = vv.height < window.innerHeight - 50 ? `${vv.height}px` : "85vh";
+            chatWindow.style.maxHeight = "none";
           } else {
             // Desktop popup
             if (vv.height < window.innerHeight - 50) {
@@ -28498,55 +28498,3 @@ window.submitModalPackage = function(e) {
     }
 };
 
-
-
-window.openPlatformSelectorModal = function() {
-    const modal = document.getElementById('platform-selector-modal');
-    if (modal) {
-        try {
-            const settingsStr = localStorage.getItem('nutriadmin_settings');
-            const settings = settingsStr ? JSON.parse(settingsStr) : {};
-            
-            const btnNuri = document.getElementById('btn-nuriweb');
-            if (btnNuri) {
-                if (settings.orderWebsiteEnable === false) btnNuri.style.display = 'none';
-                else btnNuri.style.display = 'flex';
-            }
-            
-            const btnShopee = document.getElementById('btn-shopeefood');
-            if (btnShopee) {
-                if (settings.orderShopeeFoodEnable === false) btnShopee.style.display = 'none';
-                else {
-                    btnShopee.style.display = 'flex';
-                    btnShopee.href = settings.orderShopeeFoodUrl || '#';
-                }
-            }
-            
-            const btnGrab = document.getElementById('btn-grabfood');
-            if (btnGrab) {
-                if (settings.orderGrabFoodEnable === false) btnGrab.style.display = 'none';
-                else {
-                    btnGrab.style.display = 'flex';
-                    btnGrab.href = settings.orderGrabFoodUrl || '#';
-                }
-            }
-            
-            const btnXanhsm = document.getElementById('btn-xanhsm');
-            if (btnXanhsm) {
-                if (settings.orderXanhSMEnable === false) btnXanhsm.style.display = 'none';
-                else {
-                    btnXanhsm.style.display = 'flex';
-                    btnXanhsm.href = settings.orderXanhSMUrl || '#';
-                }
-            }
-        } catch(e) {
-            console.error(e);
-        }
-        modal.classList.remove('hidden');
-    }
-};
-
-window.closePlatformSelectorModal = function() {
-    const modal = document.getElementById('platform-selector-modal');
-    if (modal) modal.classList.add('hidden');
-};
