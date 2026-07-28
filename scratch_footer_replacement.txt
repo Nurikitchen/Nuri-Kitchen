@@ -1,0 +1,611 @@
+                      <!-- 6. Khách hàng thành công (Testimonials) -->
+                      <div id="section-cau-chuyen" class="py-16 md:py-24 bg-slate-50 border-t border-slate-200">
+                        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                          <div class="text-center mb-16">
+                            <h2 class="text-3xl md:text-4xl font-black text-slate-900 mb-4">Câu chuyện thành công</h2>
+                            <p class="text-lg text-slate-500 max-w-2xl mx-auto">Hàng ngàn khách hàng đã thay đổi vóc dáng và sức khỏe cùng Nuri.</p>
+                          </div>
+                          
+                          <div class="relative overflow-hidden w-full max-w-full pb-4 reveal-right" id="testimonial-carousel">
+                            <div class="flex transition-transform duration-500 ease-in-out w-full" id="testimonial-track" style="transform: translateX(0%);">
+                              <div class="w-full flex-shrink-0">
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-8 px-1 sm:px-2">
+                                  <div class="bg-white p-8 rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow relative h-full flex flex-col">
+                                    <i class="fa-solid fa-quote-left text-4xl text-emerald-100 absolute top-6 right-6"></i>
+                                    <div class="flex items-center gap-4 mb-6">
+                                      <div class="w-16 h-16 rounded-full bg-slate-200 overflow-hidden flex-shrink-0 border-2 border-emerald-500">
+                                        <img src="https://images.unsplash.com/photo-1548142813-c348350df52b?auto=format&amp;fit=crop&amp;w=150&amp;q=80" alt="Customer" class="w-full h-full object-cover">
+                                      </div>
+                                      <div>
+                                        <h4 class="font-bold text-slate-900">Minh Tú</h4>
+                                        <p class="text-sm text-slate-500">Giảm 4kg trong 1 tháng</p>
+                                      </div>
+                                    </div>
+                                    <div class="flex gap-1 text-amber-400 text-sm mb-4">
+                                      <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i>
+                                    </div>
+                                    <p class="text-slate-600 italic flex-1">"Mình làm văn phòng bận rộn không có thời gian nấu nướng. Từ ngày dùng gói Lean của Nuri, mình đã lấy lại vóc dáng thon gọn mà không hề bị mệt mỏi. Đồ ăn siêu ngon!"</p>
+                                  </div>
+                                  <div class="bg-white p-8 rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow relative h-full flex flex-col">
+                                    <i class="fa-solid fa-quote-left text-4xl text-emerald-100 absolute top-6 right-6"></i>
+                                    <div class="flex items-center gap-4 mb-6">
+                                      <div class="w-16 h-16 rounded-full bg-slate-200 overflow-hidden flex-shrink-0 border-2 border-emerald-500">
+                                        <img src="https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&amp;fit=crop&amp;w=150&amp;q=80" alt="Customer" class="w-full h-full object-cover">
+                                      </div>
+                                      <div>
+                                        <h4 class="font-bold text-slate-900">Hoàng Nam</h4>
+                                        <p class="text-sm text-slate-500">Dân tập Gym</p>
+                                      </div>
+                                    </div>
+                                    <div class="flex gap-1 text-amber-400 text-sm mb-4">
+                                      <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star-half-stroke"></i>
+                                    </div>
+                                    <p class="text-slate-600 italic flex-1">"Tính năng Self-mix cực kỳ tiện lợi cho gymer. Mình hay ăn Size Power và tự chọn thêm ức gà, bò mỡ. Tiết kiệm thời gian meal prep mà lượng Macro vẫn cực chuẩn."</p>
+                                  </div>
+                                  <div class="bg-white p-8 rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow relative h-full flex flex-col">
+                                    <i class="fa-solid fa-quote-left text-4xl text-emerald-100 absolute top-6 right-6"></i>
+                                    <div class="flex items-center gap-4 mb-6">
+                                      <div class="w-16 h-16 rounded-full bg-slate-200 overflow-hidden flex-shrink-0 border-2 border-emerald-500">
+                                        <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&amp;fit=crop&amp;w=150&amp;q=80" alt="Customer" class="w-full h-full object-cover">
+                                      </div>
+                                      <div>
+                                        <h4 class="font-bold text-slate-900">Thanh Phương</h4>
+                                        <p class="text-sm text-slate-500">Mẹ bỉm sữa</p>
+                                      </div>
+                                    </div>
+                                    <div class="flex gap-1 text-amber-400 text-sm mb-4">
+                                      <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i>
+                                    </div>
+                                    <p class="text-slate-600 italic flex-1">"Đồ ăn đóng gói sạch sẽ, nguyên liệu tươi ngon ăn là thấy sự khác biệt. Đặc biệt là thực đơn thay đổi liên tục nên không bao giờ thấy ngán. Cảm ơn Nuri rất nhiều."</p>
+                                  </div>
+                                </div>
+                              </div>
+                              <div class="w-full flex-shrink-0">
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-8 px-1 sm:px-2">
+                                  <div class="bg-white p-8 rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow relative h-full flex flex-col">
+                                    <i class="fa-solid fa-quote-left text-4xl text-emerald-100 absolute top-6 right-6"></i>
+                                    <div class="flex items-center gap-4 mb-6">
+                                      <div class="w-16 h-16 rounded-full bg-slate-200 overflow-hidden flex-shrink-0 border-2 border-emerald-500">
+                                        <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&amp;fit=crop&amp;w=150&amp;q=80" alt="Customer" class="w-full h-full object-cover">
+                                      </div>
+                                      <div>
+                                        <h4 class="font-bold text-slate-900">Tuấn Anh</h4>
+                                        <p class="text-sm text-slate-500">Kỹ sư CNTT</p>
+                                      </div>
+                                    </div>
+                                    <div class="flex gap-1 text-amber-400 text-sm mb-4">
+                                      <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i>
+                                    </div>
+                                    <p class="text-slate-600 italic flex-1">"Ngồi máy tính cả ngày khiến mình hay bị đầy bụng và tăng cân. Chuyển sang ăn Nuri thấy bụng nhẹ hẳn, làm việc cũng tập trung hơn. Rất đáng tiền!"</p>
+                                  </div>
+                                  <div class="bg-white p-8 rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow relative h-full flex flex-col">
+                                    <i class="fa-solid fa-quote-left text-4xl text-emerald-100 absolute top-6 right-6"></i>
+                                    <div class="flex items-center gap-4 mb-6">
+                                      <div class="w-16 h-16 rounded-full bg-slate-200 overflow-hidden flex-shrink-0 border-2 border-emerald-500">
+                                        <img src="https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?auto=format&amp;fit=crop&amp;w=150&amp;q=80" alt="Customer" class="w-full h-full object-cover">
+                                      </div>
+                                      <div>
+                                        <h4 class="font-bold text-slate-900">Ngọc Mai</h4>
+                                        <p class="text-sm text-slate-500">Giảm mỡ sau sinh</p>
+                                      </div>
+                                    </div>
+                                    <div class="flex gap-1 text-amber-400 text-sm mb-4">
+                                      <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i>
+                                    </div>
+                                    <p class="text-slate-600 italic flex-1">"Thật sự bất ngờ với chất lượng của Nuri. Khẩu phần ăn vừa vặn, gia vị nêm nếm rất vừa miệng chứ không hề nhạt nhẽo như các chỗ khác mình từng thử."</p>
+                                  </div>
+                                  <div class="bg-white p-8 rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow relative h-full flex flex-col">
+                                    <i class="fa-solid fa-quote-left text-4xl text-emerald-100 absolute top-6 right-6"></i>
+                                    <div class="flex items-center gap-4 mb-6">
+                                      <div class="w-16 h-16 rounded-full bg-slate-200 overflow-hidden flex-shrink-0 border-2 border-emerald-500">
+                                        <img src="https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?auto=format&amp;fit=crop&amp;w=150&amp;q=803" alt="Customer" class="w-full h-full object-cover">
+                                      </div>
+                                      <div>
+                                        <h4 class="font-bold text-slate-900">Quốc Bảo</h4>
+                                        <p class="text-sm text-slate-500">Giảm 3kg trong 2 tuần</p>
+                                      </div>
+                                    </div>
+                                    <div class="flex gap-1 text-amber-400 text-sm mb-4">
+                                      <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star-half-stroke"></i>
+                                    </div>
+                                    <p class="text-slate-600 italic flex-1">"Dịch vụ giao hàng rất chuẩn giờ. Mỗi buổi sáng nhận được phần ăn nóng hổi, tươm tất là thấy vui cả ngày. Mình đã giới thiệu cho mấy đồng nghiệp cùng công ty."</p>
+                                  </div>
+                                </div>
+                              </div>
+                              <div class="w-full flex-shrink-0">
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-8 px-1 sm:px-2">
+                                  <div class="bg-white p-8 rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow relative h-full flex flex-col">
+                                    <i class="fa-solid fa-quote-left text-4xl text-emerald-100 absolute top-6 right-6"></i>
+                                    <div class="flex items-center gap-4 mb-6">
+                                      <div class="w-16 h-16 rounded-full bg-slate-200 overflow-hidden flex-shrink-0 border-2 border-emerald-500">
+                                        <img src="https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&amp;fit=crop&amp;w=150&amp;q=80" alt="Customer" class="w-full h-full object-cover">
+                                      </div>
+                                      <div>
+                                        <h4 class="font-bold text-slate-900">Thu Hà</h4>
+                                        <p class="text-sm text-slate-500">Nhân viên ngân hàng</p>
+                                      </div>
+                                    </div>
+                                    <div class="flex gap-1 text-amber-400 text-sm mb-4">
+                                      <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i>
+                                    </div>
+                                    <p class="text-slate-600 italic flex-1">"Hộp đựng rất xinh và thân thiện với môi trường. Đồ ăn không chỉ ngon mà bày trí cũng rất đẹp mắt, trưa nào mở hộp ra cũng thấy thèm ăn ngay."</p>
+                                  </div>
+                                  <div class="bg-white p-8 rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow relative h-full flex flex-col">
+                                    <i class="fa-solid fa-quote-left text-4xl text-emerald-100 absolute top-6 right-6"></i>
+                                    <div class="flex items-center gap-4 mb-6">
+                                      <div class="w-16 h-16 rounded-full bg-slate-200 overflow-hidden flex-shrink-0 border-2 border-emerald-500">
+                                        <img src="https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&amp;fit=crop&amp;w=150&amp;q=80" alt="Customer" class="w-full h-full object-cover">
+                                      </div>
+                                      <div>
+                                        <h4 class="font-bold text-slate-900">Đức Trí</h4>
+                                        <p class="text-sm text-slate-500">Chuẩn bị thi đấu</p>
+                                      </div>
+                                    </div>
+                                    <div class="flex gap-1 text-amber-400 text-sm mb-4">
+                                      <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i>
+                                    </div>
+                                    <p class="text-slate-600 italic flex-1">"Mình cần siết mỡ để chuẩn bị cho giải chạy sắp tới. Gói Balance của Nuri đáp ứng hoàn hảo nhu cầu của mình. Năng lượng tràn trề mà không sợ dư calo."</p>
+                                  </div>
+                                  <div class="bg-white p-8 rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow relative h-full flex flex-col">
+                                    <i class="fa-solid fa-quote-left text-4xl text-emerald-100 absolute top-6 right-6"></i>
+                                    <div class="flex items-center gap-4 mb-6">
+                                      <div class="w-16 h-16 rounded-full bg-slate-200 overflow-hidden flex-shrink-0 border-2 border-emerald-500">
+                                        <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&amp;fit=crop&amp;w=150&amp;q=80" alt="Customer" class="w-full h-full object-cover">
+                                      </div>
+                                      <div>
+                                        <h4 class="font-bold text-slate-900">Phương Thảo</h4>
+                                        <p class="text-sm text-slate-500">Cải thiện sức khoẻ</p>
+                                      </div>
+                                    </div>
+                                    <div class="flex gap-1 text-amber-400 text-sm mb-4">
+                                      <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i>
+                                    </div>
+                                    <p class="text-slate-600 italic flex-1">"Từ lúc ăn chế độ của Nuri, da dẻ mình sáng hơn, không còn bị nổi mụn lặt vặt nữa. Tiêu hoá cũng tốt lên rất nhiều. Một giải pháp tuyệt vời cho người lười nấu ăn."</p>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                            
+                            <!-- Navigation Arrows -->
+                            <button onclick="prevTestimonialPage()" class="absolute left-0 top-1/2 -translate-y-1/2 w-12 h-12 bg-white rounded-full shadow-lg border border-slate-100 text-slate-500 hover:text-emerald-600 hover:scale-110 transition-all z-10 hidden lg:flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transform -translate-x-4 xl:-translate-x-1/2">
+                              <i class="fa-solid fa-chevron-left text-lg"></i>
+                            </button>
+                            <button onclick="nextTestimonialPage()" class="absolute right-0 top-1/2 -translate-y-1/2 w-12 h-12 bg-white rounded-full shadow-lg border border-slate-100 text-slate-500 hover:text-emerald-600 hover:scale-110 transition-all z-10 hidden lg:flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transform translate-x-4 xl:translate-x-1/2">
+                              <i class="fa-solid fa-chevron-right text-lg"></i>
+                            </button>
+              
+                            <!-- Dots -->
+                            <div class="flex justify-center gap-2 mt-8">
+                              <button onclick="setTestimonialPage(0)" id="test-dot-0" class="w-4 h-2.5 rounded-full bg-emerald-500 transition-all"></button>
+                              <button onclick="setTestimonialPage(1)" id="test-dot-1" class="w-2.5 h-2.5 rounded-full bg-slate-300 transition-all"></button>
+                              <button onclick="setTestimonialPage(2)" id="test-dot-2" class="w-2.5 h-2.5 rounded-full bg-slate-300 transition-all"></button>
+                            </div>
+                          </div>
+                            
+                          <div class="relative mt-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                            <div class="overflow-hidden" id="customer-meals-carousel">
+                              <div class="flex transition-transform duration-500 ease-in-out w-full" id="customer-meals-track" style="transform: translateX(0%);">
+                                <div class="w-full flex-shrink-0">
+                                  <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                                    <div class="relative group aspect-square rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300">
+                                      <img src="https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&amp;fit=crop&amp;w=400&amp;q=80" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt="Customer meal 1">
+                                      <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-3">
+                                        <div class="flex items-center gap-2">
+                                          <div class="w-6 h-6 rounded-full border border-white/50 overflow-hidden bg-slate-200">
+                                            <img src="https://i.pravatar.cc/100?img=10" class="w-full h-full object-cover">
+                                          </div>
+                                          <i class="fa-solid fa-heart text-white text-xs"></i>
+                                        </div>
+                                      </div>
+                                    </div>
+                                    <div class="relative group aspect-square rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300">
+                                      <img src="https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&amp;fit=crop&amp;w=400&amp;q=80" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt="Customer meal 2">
+                                      <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-3">
+                                        <div class="flex items-center gap-2">
+                                          <div class="w-6 h-6 rounded-full border border-white/50 overflow-hidden bg-slate-200">
+                                            <img src="https://i.pravatar.cc/100?img=11" class="w-full h-full object-cover">
+                                          </div>
+                                          <i class="fa-solid fa-heart text-white text-xs"></i>
+                                        </div>
+                                      </div>
+                                    </div>
+                                    <div class="relative group aspect-square rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300">
+                                      <img src="https://images.unsplash.com/photo-1490645935967-10de6ba17061?auto=format&amp;fit=crop&amp;w=400&amp;q=80" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt="Customer meal 3">
+                                      <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-3">
+                                        <div class="flex items-center gap-2">
+                                          <div class="w-6 h-6 rounded-full border border-white/50 overflow-hidden bg-slate-200">
+                                            <img src="https://i.pravatar.cc/100?img=12" class="w-full h-full object-cover">
+                                          </div>
+                                          <i class="fa-solid fa-heart text-white text-xs"></i>
+                                        </div>
+                                      </div>
+                                    </div>
+                                    <div class="relative group aspect-square rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300">
+                                      <img src="https://images.unsplash.com/photo-1543339308-43e59d6b73a6?auto=format&amp;fit=crop&amp;w=400&amp;q=80" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt="Customer meal 4">
+                                      <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-3">
+                                        <div class="flex items-center gap-2">
+                                          <div class="w-6 h-6 rounded-full border border-white/50 overflow-hidden bg-slate-200">
+                                            <img src="https://i.pravatar.cc/100?img=13" class="w-full h-full object-cover">
+                                          </div>
+                                          <i class="fa-solid fa-heart text-white text-xs"></i>
+                                        </div>
+                                      </div>
+                                    </div>
+                                    <div class="relative group aspect-square rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300">
+                                      <img src="https://images.unsplash.com/photo-1511690656952-34342bb7c2f2?auto=format&amp;fit=crop&amp;w=400&amp;q=80" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt="Customer meal 5">
+                                      <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-3">
+                                        <div class="flex items-center gap-2">
+                                          <div class="w-6 h-6 rounded-full border border-white/50 overflow-hidden bg-slate-200">
+                                            <img src="https://i.pravatar.cc/100?img=14" class="w-full h-full object-cover">
+                                          </div>
+                                          <i class="fa-solid fa-heart text-white text-xs"></i>
+                                        </div>
+                                      </div>
+                                    </div>
+                                    <div class="relative group aspect-square rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300">
+                                      <img src="https://images.unsplash.com/photo-1498837167922-ddd27525d352?auto=format&amp;fit=crop&amp;w=400&amp;q=80" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt="Customer meal 6">
+                                      <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-3">
+                                        <div class="flex items-center gap-2">
+                                          <div class="w-6 h-6 rounded-full border border-white/50 overflow-hidden bg-slate-200">
+                                            <img src="https://i.pravatar.cc/100?img=15" class="w-full h-full object-cover">
+                                          </div>
+                                          <i class="fa-solid fa-heart text-white text-xs"></i>
+                                        </div>
+                                      </div>
+                                    </div>
+                                    <div class="relative group aspect-square rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300">
+                                      <img src="https://images.unsplash.com/photo-1484723091791-00d31db109ff?auto=format&amp;fit=crop&amp;w=400&amp;q=80" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt="Customer meal 7">
+                                      <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-3">
+                                        <div class="flex items-center gap-2">
+                                          <div class="w-6 h-6 rounded-full border border-white/50 overflow-hidden bg-slate-200">
+                                            <img src="https://i.pravatar.cc/100?img=16" class="w-full h-full object-cover">
+                                          </div>
+                                          <i class="fa-solid fa-heart text-white text-xs"></i>
+                                        </div>
+                                      </div>
+                                    </div>
+                                    <div class="relative group aspect-square rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300">
+                                      <img src="https://images.unsplash.com/photo-1504630083234-14187a9df0f5?auto=format&amp;fit=crop&amp;w=400&amp;q=80" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt="Customer meal 8">
+                                      <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-3">
+                                        <div class="flex items-center gap-2">
+                                          <div class="w-6 h-6 rounded-full border border-white/50 overflow-hidden bg-slate-200">
+                                            <img src="https://i.pravatar.cc/100?img=17" class="w-full h-full object-cover">
+                                          </div>
+                                          <i class="fa-solid fa-heart text-white text-xs"></i>
+                                        </div>
+                                      </div>
+                                    </div>
+                                    <div class="relative group aspect-square rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300">
+                                      <img src="https://images.unsplash.com/photo-1543352634-99a5d50ae78e?auto=format&amp;fit=crop&amp;w=400&amp;q=80" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt="Customer meal 9">
+                                      <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-3">
+                                        <div class="flex items-center gap-2">
+                                          <div class="w-6 h-6 rounded-full border border-white/50 overflow-hidden bg-slate-200">
+                                            <img src="https://i.pravatar.cc/100?img=18" class="w-full h-full object-cover">
+                                          </div>
+                                          <i class="fa-solid fa-heart text-white text-xs"></i>
+                                        </div>
+                                      </div>
+                                    </div>
+                                    <div class="relative group aspect-square rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300">
+                                      <img src="https://images.unsplash.com/photo-1473093295043-cdd812d0e601?auto=format&amp;fit=crop&amp;w=400&amp;q=80" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt="Customer meal 10">
+                                      <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-3">
+                                        <div class="flex items-center gap-2">
+                                          <div class="w-6 h-6 rounded-full border border-white/50 overflow-hidden bg-slate-200">
+                                            <img src="https://i.pravatar.cc/100?img=19" class="w-full h-full object-cover">
+                                          </div>
+                                          <i class="fa-solid fa-heart text-white text-xs"></i>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                                <div class="w-full flex-shrink-0">
+                                  <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                                    <div class="relative group aspect-square rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300">
+                                      <img src="https://images.unsplash.com/photo-1536304929831-ee1ca9d44906?auto=format&amp;fit=crop&amp;w=400&amp;q=80" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt="Customer meal 11">
+                                      <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-3">
+                                        <div class="flex items-center gap-2">
+                                          <div class="w-6 h-6 rounded-full border border-white/50 overflow-hidden bg-slate-200">
+                                            <img src="https://i.pravatar.cc/100?img=20" class="w-full h-full object-cover">
+                                          </div>
+                                          <i class="fa-solid fa-heart text-white text-xs"></i>
+                                        </div>
+                                      </div>
+                                    </div>
+                                    <div class="relative group aspect-square rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300">
+                                      <img src="https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?auto=format&amp;fit=crop&amp;w=400&amp;q=80" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt="Customer meal 12">
+                                      <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-3">
+                                        <div class="flex items-center gap-2">
+                                          <div class="w-6 h-6 rounded-full border border-white/50 overflow-hidden bg-slate-200">
+                                            <img src="https://i.pravatar.cc/100?img=21" class="w-full h-full object-cover">
+                                          </div>
+                                          <i class="fa-solid fa-heart text-white text-xs"></i>
+                                        </div>
+                                      </div>
+                                    </div>
+                                    <div class="relative group aspect-square rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300">
+                                      <img src="https://images.unsplash.com/photo-1493770348161-369560ae357d?auto=format&amp;fit=crop&amp;w=400&amp;q=80" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt="Customer meal 13">
+                                      <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-3">
+                                        <div class="flex items-center gap-2">
+                                          <div class="w-6 h-6 rounded-full border border-white/50 overflow-hidden bg-slate-200">
+                                            <img src="https://i.pravatar.cc/100?img=22" class="w-full h-full object-cover">
+                                          </div>
+                                          <i class="fa-solid fa-heart text-white text-xs"></i>
+                                        </div>
+                                      </div>
+                                    </div>
+                                    <div class="relative group aspect-square rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300">
+                                      <img src="https://images.unsplash.com/photo-1476224203421-9ac39bcb3327?auto=format&amp;fit=crop&amp;w=400&amp;q=80" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt="Customer meal 14">
+                                      <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-3">
+                                        <div class="flex items-center gap-2">
+                                          <div class="w-6 h-6 rounded-full border border-white/50 overflow-hidden bg-slate-200">
+                                            <img src="https://i.pravatar.cc/100?img=23" class="w-full h-full object-cover">
+                                          </div>
+                                          <i class="fa-solid fa-heart text-white text-xs"></i>
+                                        </div>
+                                      </div>
+                                    </div>
+                                    <div class="relative group aspect-square rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300">
+                                      <img src="https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&amp;fit=crop&amp;w=400&amp;q=80" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt="Customer meal 15">
+                                      <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-3">
+                                        <div class="flex items-center gap-2">
+                                          <div class="w-6 h-6 rounded-full border border-white/50 overflow-hidden bg-slate-200">
+                                            <img src="https://i.pravatar.cc/100?img=24" class="w-full h-full object-cover">
+                                          </div>
+                                          <i class="fa-solid fa-heart text-white text-xs"></i>
+                                        </div>
+                                      </div>
+                                    </div>
+                                    <div class="relative group aspect-square rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300">
+                                      <img src="https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?auto=format&amp;fit=crop&amp;w=400&amp;q=80" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt="Customer meal 16">
+                                      <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-3">
+                                        <div class="flex items-center gap-2">
+                                          <div class="w-6 h-6 rounded-full border border-white/50 overflow-hidden bg-slate-200">
+                                            <img src="https://i.pravatar.cc/100?img=25" class="w-full h-full object-cover">
+                                          </div>
+                                          <i class="fa-solid fa-heart text-white text-xs"></i>
+                                        </div>
+                                      </div>
+                                    </div>
+                                    <div class="relative group aspect-square rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300">
+                                      <img src="https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&amp;fit=crop&amp;w=400&amp;q=80" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt="Customer meal 17">
+                                      <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-3">
+                                        <div class="flex items-center gap-2">
+                                          <div class="w-6 h-6 rounded-full border border-white/50 overflow-hidden bg-slate-200">
+                                            <img src="https://i.pravatar.cc/100?img=26" class="w-full h-full object-cover">
+                                          </div>
+                                          <i class="fa-solid fa-heart text-white text-xs"></i>
+                                        </div>
+                                      </div>
+                                    </div>
+                                    <div class="relative group aspect-square rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300">
+                                      <img src="https://images.unsplash.com/photo-1565958011703-44f9829ba187?auto=format&amp;fit=crop&amp;w=400&amp;q=80" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt="Customer meal 18">
+                                      <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-3">
+                                        <div class="flex items-center gap-2">
+                                          <div class="w-6 h-6 rounded-full border border-white/50 overflow-hidden bg-slate-200">
+                                            <img src="https://i.pravatar.cc/100?img=27" class="w-full h-full object-cover">
+                                          </div>
+                                          <i class="fa-solid fa-heart text-white text-xs"></i>
+                                        </div>
+                                      </div>
+                                    </div>
+                                    <div class="relative group aspect-square rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300">
+                                      <img src="https://images.unsplash.com/photo-1506084868230-bb9d95c24759?auto=format&amp;fit=crop&amp;w=400&amp;q=80" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt="Customer meal 19">
+                                      <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-3">
+                                        <div class="flex items-center gap-2">
+                                          <div class="w-6 h-6 rounded-full border border-white/50 overflow-hidden bg-slate-200">
+                                            <img src="https://i.pravatar.cc/100?img=28" class="w-full h-full object-cover">
+                                          </div>
+                                          <i class="fa-solid fa-heart text-white text-xs"></i>
+                                        </div>
+                                      </div>
+                                    </div>
+                                    <div class="relative group aspect-square rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300">
+                                      <img src="https://images.unsplash.com/photo-1547496502-affa22d38842?auto=format&amp;fit=crop&amp;w=400&amp;q=80" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt="Customer meal 20">
+                                      <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-3">
+                                        <div class="flex items-center gap-2">
+                                          <div class="w-6 h-6 rounded-full border border-white/50 overflow-hidden bg-slate-200">
+                                            <img src="https://i.pravatar.cc/100?img=29" class="w-full h-full object-cover">
+                                          </div>
+                                          <i class="fa-solid fa-heart text-white text-xs"></i>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                                <div class="w-full flex-shrink-0">
+                                  <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                                    <div class="relative group aspect-square rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300">
+                                      <img src="https://images.unsplash.com/photo-1481070555726-e2fe8357725c?auto=format&amp;fit=crop&amp;w=400&amp;q=80" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt="Customer meal 21">
+                                      <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-3">
+                                        <div class="flex items-center gap-2">
+                                          <div class="w-6 h-6 rounded-full border border-white/50 overflow-hidden bg-slate-200">
+                                            <img src="https://i.pravatar.cc/100?img=30" class="w-full h-full object-cover">
+                                          </div>
+                                          <i class="fa-solid fa-heart text-white text-xs"></i>
+                                        </div>
+                                      </div>
+                                    </div>
+                                    <div class="relative group aspect-square rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300">
+                                      <img src="https://images.unsplash.com/photo-1512058564366-18510be2db19?auto=format&amp;fit=crop&amp;w=400&amp;q=80" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt="Customer meal 22">
+                                      <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-3">
+                                        <div class="flex items-center gap-2">
+                                          <div class="w-6 h-6 rounded-full border border-white/50 overflow-hidden bg-slate-200">
+                                            <img src="https://i.pravatar.cc/100?img=31" class="w-full h-full object-cover">
+                                          </div>
+                                          <i class="fa-solid fa-heart text-white text-xs"></i>
+                                        </div>
+                                      </div>
+                                    </div>
+                                    <div class="relative group aspect-square rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300">
+                                      <img src="https://images.unsplash.com/photo-1529042410759-befb1204b468?auto=format&amp;fit=crop&amp;w=400&amp;q=80" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt="Customer meal 23">
+                                      <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-3">
+                                        <div class="flex items-center gap-2">
+                                          <div class="w-6 h-6 rounded-full border border-white/50 overflow-hidden bg-slate-200">
+                                            <img src="https://i.pravatar.cc/100?img=32" class="w-full h-full object-cover">
+                                          </div>
+                                          <i class="fa-solid fa-heart text-white text-xs"></i>
+                                        </div>
+                                      </div>
+                                    </div>
+                                    <div class="relative group aspect-square rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300">
+                                      <img src="https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&amp;fit=crop&amp;w=400&amp;q=80" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt="Customer meal 24">
+                                      <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-3">
+                                        <div class="flex items-center gap-2">
+                                          <div class="w-6 h-6 rounded-full border border-white/50 overflow-hidden bg-slate-200">
+                                            <img src="https://i.pravatar.cc/100?img=33" class="w-full h-full object-cover">
+                                          </div>
+                                          <i class="fa-solid fa-heart text-white text-xs"></i>
+                                        </div>
+                                      </div>
+                                    </div>
+                                    <div class="relative group aspect-square rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300">
+                                      <img src="https://images.unsplash.com/photo-1505576399279-565b52d4ac71?auto=format&amp;fit=crop&amp;w=400&amp;q=80" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt="Customer meal 25">
+                                      <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-3">
+                                        <div class="flex items-center gap-2">
+                                          <div class="w-6 h-6 rounded-full border border-white/50 overflow-hidden bg-slate-200">
+                                            <img src="https://i.pravatar.cc/100?img=34" class="w-full h-full object-cover">
+                                          </div>
+                                          <i class="fa-solid fa-heart text-white text-xs"></i>
+                                        </div>
+                                      </div>
+                                    </div>
+                                    <div class="relative group aspect-square rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300">
+                                      <img src="https://images.unsplash.com/photo-1467003909585-2f8a72700288?auto=format&amp;fit=crop&amp;w=400&amp;q=80" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt="Customer meal 26">
+                                      <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-3">
+                                        <div class="flex items-center gap-2">
+                                          <div class="w-6 h-6 rounded-full border border-white/50 overflow-hidden bg-slate-200">
+                                            <img src="https://i.pravatar.cc/100?img=35" class="w-full h-full object-cover">
+                                          </div>
+                                          <i class="fa-solid fa-heart text-white text-xs"></i>
+                                        </div>
+                                      </div>
+                                    </div>
+                                    <div class="relative group aspect-square rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300">
+                                      <img src="https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&amp;fit=crop&amp;w=400&amp;q=80" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt="Customer meal 27">
+                                      <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-3">
+                                        <div class="flex items-center gap-2">
+                                          <div class="w-6 h-6 rounded-full border border-white/50 overflow-hidden bg-slate-200">
+                                            <img src="https://i.pravatar.cc/100?img=36" class="w-full h-full object-cover">
+                                          </div>
+                                          <i class="fa-solid fa-heart text-white text-xs"></i>
+                                        </div>
+                                      </div>
+                                    </div>
+                                    <div class="relative group aspect-square rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300">
+                                      <img src="https://images.unsplash.com/photo-1490645935967-10de6ba17061?auto=format&amp;fit=crop&amp;w=400&amp;q=80" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt="Customer meal 28">
+                                      <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-3">
+                                        <div class="flex items-center gap-2">
+                                          <div class="w-6 h-6 rounded-full border border-white/50 overflow-hidden bg-slate-200">
+                                            <img src="https://i.pravatar.cc/100?img=37" class="w-full h-full object-cover">
+                                          </div>
+                                          <i class="fa-solid fa-heart text-white text-xs"></i>
+                                        </div>
+                                      </div>
+                                    </div>
+                                    <div class="relative group aspect-square rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300">
+                                      <img src="https://images.unsplash.com/photo-1543339308-43e59d6b73a6?auto=format&amp;fit=crop&amp;w=400&amp;q=80" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt="Customer meal 29">
+                                      <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-3">
+                                        <div class="flex items-center gap-2">
+                                          <div class="w-6 h-6 rounded-full border border-white/50 overflow-hidden bg-slate-200">
+                                            <img src="https://i.pravatar.cc/100?img=38" class="w-full h-full object-cover">
+                                          </div>
+                                          <i class="fa-solid fa-heart text-white text-xs"></i>
+                                        </div>
+                                      </div>
+                                    </div>
+                                    <div class="relative group aspect-square rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300">
+                                      <img src="https://images.unsplash.com/photo-1511690656952-34342bb7c2f2?auto=format&amp;fit=crop&amp;w=400&amp;q=80" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt="Customer meal 30">
+                                      <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-3">
+                                        <div class="flex items-center gap-2">
+                                          <div class="w-6 h-6 rounded-full border border-white/50 overflow-hidden bg-slate-200">
+                                            <img src="https://i.pravatar.cc/100?img=39" class="w-full h-full object-cover">
+                                          </div>
+                                          <i class="fa-solid fa-heart text-white text-xs"></i>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                            
+                            <!-- Navigation Arrows -->
+                            <button onclick="prevMealPage()" class="absolute left-0 lg:-left-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-white rounded-full shadow-lg border border-slate-100 text-slate-500 hover:text-emerald-600 hover:scale-110 transition-all z-10 hidden sm:flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-emerald-500/20">
+                              <i class="fa-solid fa-chevron-left text-lg"></i>
+                            </button>
+                            <button onclick="nextMealPage()" class="absolute right-0 lg:-right-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-white rounded-full shadow-lg border border-slate-100 text-slate-500 hover:text-emerald-600 hover:scale-110 transition-all z-10 hidden sm:flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-emerald-500/20">
+                              <i class="fa-solid fa-chevron-right text-lg"></i>
+                            </button>
+                            
+                            <!-- Dots -->
+                            <div class="flex justify-center gap-2 mt-8">
+                              <button onclick="setMealPage(0)" id="meal-dot-0" class="w-2.5 h-2.5 rounded-full bg-emerald-500 transition-all"></button>
+                              <button onclick="setMealPage(1)" id="meal-dot-1" class="w-2.5 h-2.5 rounded-full bg-slate-300 transition-all"></button>
+                              <button onclick="setMealPage(2)" id="meal-dot-2" class="w-2.5 h-2.5 rounded-full bg-slate-300 transition-all"></button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <!-- 7. Footer Doanh nghiệp -->
+                      <div class="bg-slate-900 text-white py-12 border-t-4 border-emerald-500">
+                        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                          <div class="grid grid-cols-1 md:grid-cols-4 gap-8 reveal">
+                            <div class="col-span-1 md:col-span-2">
+                              <div class="flex items-center gap-3 mb-6">
+                                <div class="w-12 h-12 bg-emerald-500 rounded-2xl flex items-center justify-center text-2xl font-black text-white shadow-lg">
+                                  N
+                                </div>
+                                <div>
+                                  <h3 class="text-2xl font-black tracking-tight" id="footer-kitchen-brand-name">Nuri Kitchen</h3>
+                                  <p class="text-emerald-400 text-sm font-medium">Dinh Dưỡng Thông Minh</p>
+                                </div>
+                              </div>
+                              <p class="text-slate-400 leading-relaxed max-w-sm mb-6">
+                                Đồng hành cùng sức khỏe Việt qua những bữa ăn ngon, tiện lợi và được tính toán dinh dưỡng cá nhân hóa.
+                              </p>
+                              <div class="flex gap-4">
+                                <a href="${parsedSettings.facebook || '#'}" target="_blank" class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-slate-400 hover:bg-emerald-500 hover:text-white transition-all"><i class="fa-brands fa-facebook-f"></i></a>
+                                <a href="#" class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-slate-400 hover:bg-emerald-500 hover:text-white transition-all"><i class="fa-brands fa-instagram"></i></a>
+                                <a href="#" class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-slate-400 hover:bg-emerald-500 hover:text-white transition-all"><i class="fa-brands fa-tiktok"></i></a>
+                              </div>
+                            </div>
+                            
+                            <div>
+                              <h4 class="text-lg font-bold mb-6 text-white uppercase tracking-wider">Liên Hệ</h4>
+                              <ul class="space-y-4">
+                                <li class="flex items-start gap-3 text-slate-400">
+                                  <i class="fa-solid fa-location-dot mt-1 text-emerald-500"></i>
+                                  <span id="footer-kitchen-address" class="system-editable focus:outline-none focus:ring-1 focus:ring-emerald-500 rounded px-1 -mx-1">${parsedSettings.address || ''}</span>
+                                </li>
+                                <li class="flex items-center gap-3 text-slate-400">
+                                  <i class="fa-solid fa-phone text-emerald-500"></i>
+                                  <span id="footer-kitchen-phone" class="system-editable focus:outline-none focus:ring-1 focus:ring-emerald-500 rounded px-1 -mx-1">${parsedSettings.phone || ''}</span>
+                                </li>
+                                <li class="flex items-center gap-3 text-slate-400">
+                                  <div class="bg-blue-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded mr-1">Zalo</div>
+                                  <a href="${zaloUrl}" target="_blank" class="hover:text-blue-400 transition-colors">
+                                    <span id="footer-kitchen-zalo" class="system-editable focus:outline-none focus:ring-1 focus:ring-emerald-500 rounded px-1 -mx-1">${parsedSettings.zalo || ''}</span>
+                                  </a>
+                                </li>
+                              </ul>
+                            </div>
+                            
+                            <div>
+                              <h4 class="text-lg font-bold mb-6 text-white uppercase tracking-wider">Chính Sách</h4>
+                              <ul class="space-y-3">
+                                <li><a href="#" class="text-slate-400 hover:text-emerald-400 transition-colors">Điều khoản dịch vụ</a></li>
+                                <li><a href="#" class="text-slate-400 hover:text-emerald-400 transition-colors">Chính sách bảo mật</a></li>
+                                <li><a href="#" class="text-slate-400 hover:text-emerald-400 transition-colors">Chính sách giao hàng</a></li>
+                                <li><a href="#" class="text-slate-400 hover:text-emerald-400 transition-colors">Câu hỏi thường gặp</a></li>
+                              </ul>
+                            </div>
+                          </div>
+                          
+                          <div class="border-t border-slate-800 mt-12 pt-8 text-center text-slate-500 text-sm">
+                            <p>© <span id="kitchen-current-year">2026</span> <span id="footer-kitchen-copyright-name">Nuri Kitchen</span>. Tất cả quyền được bảo lưu.</p>
+                          </div>
+                        </div>
+                      </div>
+                  \`;

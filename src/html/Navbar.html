@@ -1,0 +1,144 @@
+﻿<nav class="bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200/50 dark:border-slate-700/50 sticky top-0 z-30 shadow-sm transition-colors duration-200">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between min-h-[4rem] py-1">
+          <div class="flex flex-1 min-w-0">
+            <!-- Logo -->
+            <div class="flex-shrink-0 flex items-center gap-2 cursor-pointer" onclick="switchView('consulting')">
+              <div id="header-logo-container" class="w-8 h-8 bg-primary rounded-lg flex items-center justify-center text-white shadow-sm">
+                <i class="fa-solid fa-leaf"></i>
+              </div>
+              <span id="header-brand-name" class="font-bold text-[25px] leading-[35px] text-slate-800 tracking-tight">Nuri Kitchen</span>
+            </div>
+            <!-- Desktop Menu -->
+            <div class="hidden md:ml-1 lg:ml-2 md:flex flex-1 min-w-0 gap-0.5 xl:gap-2 flex-wrap items-center justify-center">
+              <a id="nav-dashboard" onclick="switchView('dashboard')" class="border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:border-slate-600 inline-flex items-center px-0.5 pt-1 border-b-2 text-[15px] 2xl:text-[15px] leading-[20px] font-medium transition-colors cursor-pointer whitespace-nowrap">
+                <i class="fa-solid fa-chart-pie mr-0.5 xl:mr-1.5"></i> Tổng quan
+              </a>
+              <a id="nav-marketing" onclick="switchView('marketing')" class="border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:border-slate-600 inline-flex items-center px-0.5 pt-1 border-b-2 text-[15px] 2xl:text-[15px] leading-[20px] font-medium transition-colors cursor-pointer whitespace-nowrap">
+                <i class="fa-solid fa-bullseye mr-0.5 xl:mr-1.5"></i> Marketing
+              </a>
+              <a id="nav-orders" onclick="switchView('orders')" class="border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:border-slate-600 inline-flex items-center px-0.5 pt-1 border-b-2 text-[15px] 2xl:text-[15px] leading-[20px] font-medium transition-colors cursor-pointer relative whitespace-nowrap">
+                <i class="fa-solid fa-receipt mr-0.5 xl:mr-1.5"></i> Quản lý đơn hàng
+                <span id="order-badge" class="hidden bg-red-500 text-white text-[15px] font-bold px-1.5 py-0.5 rounded-full ml-1.5 animate-bounce">0</span>
+              </a>
+              <a id="nav-inventory" onclick="switchView('inventory')" class="border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:border-slate-600 inline-flex items-center px-0.5 pt-1 border-b-2 text-[15px] 2xl:text-[15px] leading-[20px] font-medium transition-colors cursor-pointer whitespace-nowrap">
+                <i class="fa-solid fa-boxes-stacked mr-0.5 xl:mr-1.5"></i> QL Nguyên liệu
+              </a>
+              <a id="nav-messages" onclick="switchView('messages')" class="border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:border-slate-600 inline-flex items-center px-0.5 pt-1 border-b-2 text-[15px] 2xl:text-[15px] leading-[20px] font-medium transition-colors cursor-pointer whitespace-nowrap relative">
+                <i class="fa-solid fa-comments mr-0.5 xl:mr-1.5"></i> Tin nhắn
+                <span id="nav-messages-badge" class="hidden bg-red-500 text-white text-[15px] font-bold px-1.5 py-0.5 rounded-full ml-1.5">0</span>
+              </a>
+              <a id="nav-menu" onclick="switchView('menu')" class="border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:border-slate-600 inline-flex items-center px-0.5 pt-1 border-b-2 text-[15px] 2xl:text-[15px] leading-[20px] font-medium transition-colors cursor-pointer whitespace-nowrap">
+                <i class="fa-solid fa-utensils mr-0.5 xl:mr-1.5"></i> Quản lý Menu
+              </a>
+              <a id="nav-customers" onclick="switchView('customers')" class="border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:border-slate-600 inline-flex items-center px-0.5 pt-1 border-b-2 text-[15px] 2xl:text-[15px] leading-[20px] font-medium transition-colors cursor-pointer whitespace-nowrap">
+                <i class="fa-solid fa-users mr-0.5 xl:mr-1.5"></i> Dữ liệu KH
+                <span id="nav-customers-badge" class="hidden bg-red-500 text-white text-[15px] font-bold px-1.5 py-0.5 rounded-full ml-1.5 animate-pulse">0</span>
+              </a>
+              <a id="nav-consulting" onclick="switchView('consulting')" class="border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:border-slate-600 inline-flex items-center px-0.5 pt-1 border-b-2 text-[15px] 2xl:text-[15px] leading-[20px] font-medium transition-colors cursor-pointer whitespace-nowrap">
+                <i class="fa-solid fa-stethoscope mr-0.5 xl:mr-1.5"></i> Tư vấn dinh dưỡng
+              </a>
+              <a id="nav-kitchen" onclick="switchView('kitchen')" class="border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:border-slate-600 inline-flex items-center px-0.5 pt-1 border-b-2 text-[15px] 2xl:text-[15px] leading-[20px] font-medium transition-colors cursor-pointer whitespace-nowrap">
+                <i class="fa-solid fa-utensils mr-0.5 xl:mr-1.5"></i> Nuri Kitchen
+              </a>
+              <a id="nav-system" onclick="switchView('system')" class="border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:border-slate-600 inline-flex items-center px-0.5 pt-1 border-b-2 text-[15px] 2xl:text-[15px] leading-[20px] font-medium transition-colors cursor-pointer whitespace-nowrap">
+                <i class="fa-solid fa-gear mr-0.5 xl:mr-1.5"></i> Hệ thống
+              </a>
+            </div>
+          </div>
+          <div class="flex items-center gap-2">
+            <!-- Admin Notification Bell (Hidden by default, shown when admin logged in) -->
+            <div id="admin-notification-container" class="relative hidden items-center">
+              <button onclick="toggleAdminNotifications()" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-300 flex items-center justify-center transition-colors cursor-pointer relative" title="Thông báo hệ thống">
+                <i class="fa-solid fa-bell"></i>
+                <span id="admin-notification-badge" class="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full hidden border-2 border-white dark:border-slate-900"></span>
+              </button>
+              <div id="admin-notification-dropdown" class="absolute top-10 right-0 w-80 bg-white dark:bg-slate-800 rounded-xl shadow-2xl border border-slate-100 dark:border-slate-700 hidden flex-col overflow-hidden z-50 transform origin-top-right transition-all">
+                <div class="p-3 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center bg-slate-50 dark:bg-slate-800/50">
+                  <h3 class="font-bold text-slate-800 dark:text-white text-[17.5px] leading-[25px]">Thông báo</h3>
+                  <button onclick="markAllAdminNotificationsAsRead()" class="text-[15px] leading-[20px] text-primary hover:underline cursor-pointer font-medium">Đánh dấu đã đọc</button>
+                </div>
+                <div id="admin-notification-list" class="max-h-80 overflow-y-auto flex flex-col">
+                  <!-- Notifications will be injected here -->
+                </div>
+              </div>
+            </div>
+
+            <button onclick="toggleTheme()" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-300 flex items-center justify-center transition-colors" title="Chuyển đổi giao diện">
+              <i class="fa-solid fa-moon dark:hidden"></i>
+              <i class="fa-solid fa-sun hidden dark:block"></i>
+            </button>
+            <div class="w-8 h-8 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-[17.5px] leading-[25px] border border-emerald-200 cursor-pointer hidden md:flex" title="Tài khoản Quản trị">
+              AD
+            </div>
+            <button id="admin-logout-btn" onclick="adminLogout()" class="text-[15px] leading-[20px] bg-red-550 bg-red-50 hover:bg-red-100 text-red-600 dark:bg-red-950/20 dark:hover:bg-red-950/40 dark:text-red-400 px-2.5 py-1.5 rounded-lg flex items-center gap-1.5 transition-colors hidden md:flex" title="Đăng xuất Quản trị">
+              <i class="fa-solid fa-right-from-bracket"></i> Đăng xuất
+            </button>
+            <button onclick="
+                document
+                  .getElementById('mobile-menu')
+                  .classList.toggle('hidden')
+              " class="md:hidden w-8 h-8 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-300 flex items-center justify-center transition-colors focus:outline-none">
+              <i class="fa-solid fa-bars"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Mobile menu -->
+      <div id="mobile-menu" class="hidden md:hidden border-t border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-lg absolute w-full left-0">
+        <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+                    <a id="nav-mobile-kitchen" onclick="
+              switchView('kitchen');
+              document.getElementById('mobile-menu').classList.add('hidden');
+            " class="block px-3 py-2 rounded-md text-[20px] leading-[30px] font-medium text-slate-700 dark:text-slate-300 cursor-pointer transition-colors"><i class="fa-solid fa-house w-6"></i> Trang chủ</a>
+          <a id="nav-mobile-dashboard" onclick="
+              switchView('dashboard');
+              document.getElementById('mobile-menu').classList.add('hidden');
+            " class="block px-3 py-2 rounded-md text-[20px] leading-[30px] font-medium text-slate-700 dark:text-slate-300 cursor-pointer transition-colors"><i class="fa-solid fa-chart-pie w-6"></i> Tổng quan</a>
+          <a id="nav-mobile-marketing" onclick="
+              switchView('marketing');
+              document.getElementById('mobile-menu').classList.add('hidden');
+            " class="block px-3 py-2 rounded-md text-[20px] leading-[30px] font-medium text-slate-700 dark:text-slate-300 cursor-pointer transition-colors"><i class="fa-solid fa-bullseye w-6"></i> Marketing</a>
+          <a id="nav-mobile-orders" onclick="
+              switchView('orders');
+              document.getElementById('mobile-menu').classList.add('hidden');
+            " class="px-3 py-2 rounded-md text-[20px] leading-[30px] font-medium text-slate-700 dark:text-slate-300 cursor-pointer transition-colors flex justify-between items-center"><div class="flex items-center">
+              <i class="fa-solid fa-receipt w-6"></i> Quản lý đơn hàng
+            </div>
+            <span id="mobile-order-badge" class="hidden bg-red-500 text-white text-[15px] font-bold px-1.5 py-0.5 rounded-full">0</span></a>
+          <a id="nav-mobile-inventory" onclick="
+              switchView('inventory');
+              document.getElementById('mobile-menu').classList.add('hidden');
+            " class="block px-3 py-2 rounded-md text-[20px] leading-[30px] font-medium text-slate-700 dark:text-slate-300 cursor-pointer transition-colors"><i class="fa-solid fa-boxes-stacked w-6"></i> QL Nguyên liệu</a>
+          <a id="nav-mobile-messages" onclick="
+              switchView('messages');
+              document.getElementById('mobile-menu').classList.add('hidden');
+            " class="px-3 py-2 rounded-md text-[20px] leading-[30px] font-medium text-slate-700 dark:text-slate-300 cursor-pointer transition-colors flex justify-between items-center"><div class="flex items-center">
+              <i class="fa-solid fa-comments w-6"></i> Tin nhắn
+            </div>
+            <span id="nav-mobile-messages-badge" class="hidden bg-red-500 text-white text-[15px] font-bold px-1.5 py-0.5 rounded-full">0</span></a>
+          <a id="nav-mobile-menu" onclick="
+              switchView('menu');
+              document.getElementById('mobile-menu').classList.add('hidden');
+            " class="block px-3 py-2 rounded-md text-[20px] leading-[30px] font-medium text-slate-700 dark:text-slate-300 cursor-pointer transition-colors"><i class="fa-solid fa-utensils w-6"></i> Quản lý Menu</a>
+          <a id="nav-mobile-customers" onclick="
+              switchView('customers');
+              document.getElementById('mobile-menu').classList.add('hidden');
+            " class="px-3 py-2 rounded-md text-[20px] leading-[30px] font-medium text-slate-700 dark:text-slate-300 cursor-pointer transition-colors flex justify-between items-center"><i class="fa-solid fa-users w-6"></i> Dữ liệu KH</a>
+          <a id="nav-mobile-consulting" onclick="
+              switchView('consulting');
+              document.getElementById('mobile-menu').classList.add('hidden');
+            " class="block px-3 py-2 rounded-md text-[20px] leading-[30px] font-medium text-slate-700 dark:text-slate-300 cursor-pointer transition-colors"><i class="fa-solid fa-stethoscope w-6"></i> Tư vấn dinh dưỡng</a>
+          <a id="nav-mobile-system" onclick="
+              switchView('system');
+              document.getElementById('mobile-menu').classList.add('hidden');
+            " class="block px-3 py-2 rounded-md text-[20px] leading-[30px] font-medium text-slate-700 dark:text-slate-300 cursor-pointer transition-colors"><i class="fa-solid fa-gear w-6"></i> Hệ thống</a>
+          <a id="admin-logout-mobile-btn" onclick="
+              adminLogout();
+              document.getElementById('mobile-menu').classList.add('hidden');
+            " class="block px-3 py-2 rounded-md text-[20px] leading-[30px] font-medium text-red-600 dark:text-red-400 cursor-pointer transition-colors border-t border-slate-150 dark:border-slate-700/50 mt-2 pt-2 hidden"><i class="fa-solid fa-right-from-bracket w-6"></i> Đăng xuất Quản
+            trị</a>
+        </div>
+      </div>
+    </nav>

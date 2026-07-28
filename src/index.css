@@ -1,0 +1,24 @@
+/* Reset */
+@font-face {
+  font-family: 'UTM Duepuntozero';
+  src: url('/fonts/UTM_Duepuntozero.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'UTM Akashi';
+  src: url('/fonts/UTM Akashi.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+
+/* ?n các b? l?c nguyên li?u trong popup menu public */
+#public-menu-modal #category-filters button[onclick*="'protein'"],
+#public-menu-modal #category-filters button[onclick*="'carbs'"],
+#public-menu-modal #category-filters button[onclick*="'veggies'"],
+#public-menu-modal #category-filters button[onclick*="'sauce'"] {
+    display: none !important;
+}
+

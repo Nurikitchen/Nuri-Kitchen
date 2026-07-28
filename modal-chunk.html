@@ -1,0 +1,74 @@
+    <!-- Modal: Order Platform Modal -->
+    <div id="order-platform-modal" class="fixed inset-0 z-[110] hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+      <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" onclick="closeOrderPlatformModal()"></div>
+      <div class="fixed inset-0 z-10 overflow-y-auto">
+        <div class="flex min-h-full items-center justify-center p-4 text-center sm:p-0">
+          <div class="relative transform overflow-hidden rounded-3xl bg-white text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-xl border border-slate-100">
+            
+            <!-- Nút đóng -->
+            <button type="button" onclick="closeOrderPlatformModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-full w-8 h-8 flex items-center justify-center transition-colors z-10">
+              <i class="fa-solid fa-xmark text-[22.5px] leading-[35px]"></i>
+            </button>
+
+            <div class="p-6 md:p-8">
+              <h4 class="text-[22.5px] leading-[35px] font-bold text-[#0F172A] mb-6 text-center">Thông tin đặt hàng</h4>
+              <div class="space-y-4">
+                  <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div>
+                          <label class="block text-[15px] leading-[20px] font-medium text-slate-500 mb-1">Gói đăng ký *</label>
+                          <select id="modal-pkg-duration" required class="w-full rounded-xl border border-slate-300 py-3 px-4 text-[17.5px] leading-[25px] focus:border-[#15803D] focus:ring-1 focus:ring-[#15803D] outline-none transition-colors bg-slate-50 focus:bg-white">
+                              <option value="7">Trải Nghiệm</option>
+                              <option value="14">Chuyển Đổi</option>
+                              <option value="30">Bứt Phá</option>
+                          </select>
+                      </div>
+                      <div>
+                          <label class="block text-[15px] leading-[20px] font-medium text-slate-500 mb-1">Size đăng ký *</label>
+                          <select id="modal-pkg-size" required class="w-full rounded-xl border border-slate-300 py-3 px-4 text-[17.5px] leading-[25px] focus:border-[#15803D] focus:ring-1 focus:ring-[#15803D] outline-none transition-colors bg-slate-50 focus:bg-white">
+                              <option value="lean">Size Lean (S)</option>
+                              <option value="balance">Size Balance (M)</option>
+                              <option value="power">Size Power (L)</option>
+                          </select>
+                      </div>
+                      <div>
+                          <label class="block text-[15px] leading-[20px] font-medium text-slate-500 mb-1">Số bữa ăn *</label>
+                          <select id="modal-pkg-meals" required class="w-full rounded-xl border border-slate-300 py-3 px-4 text-[17.5px] leading-[25px] focus:border-[#15803D] focus:ring-1 focus:ring-[#15803D] outline-none transition-colors bg-slate-50 focus:bg-white">
+                              <option value="1">1 Bữa</option>
+                              <option value="2">2 Bữa</option>
+                          </select>
+                      </div>
+                  </div>
+                  <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <input type="text" id="modal-pkg-name" required placeholder="Họ và tên *" class="w-full rounded-xl border border-slate-300 py-3 px-4 text-[17.5px] leading-[25px] focus:border-[#15803D] focus:ring-1 focus:ring-[#15803D] outline-none transition-colors bg-slate-50 focus:bg-white">
+                      <input type="tel" id="modal-pkg-phone" required placeholder="Số điện thoại *" class="w-full rounded-xl border border-slate-300 py-3 px-4 text-[17.5px] leading-[25px] focus:border-[#15803D] focus:ring-1 focus:ring-[#15803D] outline-none transition-colors bg-slate-50 focus:bg-white">
+                  </div>
+                  <div class="grid grid-cols-2 gap-4">
+                      <select id="modal-pkg-district" required class="w-full rounded-xl border border-slate-300 py-3 px-4 text-[17.5px] leading-[25px] focus:border-[#15803D] focus:ring-1 focus:ring-[#15803D] outline-none transition-colors bg-slate-50 focus:bg-white" onchange="updateModalPkgWards()"><option value="">Quận/Huyện *</option></select>
+                      <select id="modal-pkg-ward" required disabled class="w-full rounded-xl border border-slate-300 py-3 px-4 text-[17.5px] leading-[25px] disabled:bg-slate-100 disabled:text-slate-400 focus:border-[#15803D] focus:ring-1 focus:ring-[#15803D] outline-none transition-colors bg-slate-50 focus:bg-white"><option value="">Phường/Xã *</option></select>
+                  </div>
+                  <input type="text" id="modal-pkg-street" required placeholder="Số nhà, Tên đường cụ thể *" class="w-full rounded-xl border border-slate-300 py-3 px-4 text-[17.5px] leading-[25px] focus:border-[#15803D] focus:ring-1 focus:ring-[#15803D] outline-none transition-colors bg-slate-50 focus:bg-white">
+                  <button type="button" onclick="submitModalPackage(event)" class="w-full bg-[linear-gradient(135deg,#15803D,#10B981)] lg:hover:bg-[linear-gradient(135deg,#166534,#059669)] text-white font-bold py-3.5 rounded-xl transition-all shadow-md lg:hover:shadow-lg lg:hover:-translate-y-1 active:scale-[0.98] flex items-center justify-center gap-2 mt-2">
+                      Xác nhận đăng ký <i class="fa-solid fa-arrow-right"></i>
+                  </button>
+                  <!-- Trust Badges -->
+                  <div class="mt-4 flex justify-center gap-4 flex-wrap">
+                      <div class="flex items-center gap-1.5 text-slate-500">
+                          <i class="fa-solid fa-shield-check text-emerald-500 text-[20px] leading-[30px]"></i>
+                          <span class="text-[15px] leading-[20px] font-semibold">Cam kết hoàn tiền</span>
+                      </div>
+                      <div class="flex items-center gap-1.5 text-slate-500">
+                          <i class="fa-solid fa-leaf text-emerald-500 text-[20px] leading-[30px]"></i>
+                          <span class="text-[15px] leading-[20px] font-semibold">100% Nguyên liệu sạch</span>
+                      </div>
+                      <div class="flex items-center gap-1.5 text-slate-500">
+                          <i class="fa-solid fa-user-doctor text-emerald-500 text-[20px] leading-[30px]"></i>
+                          <span class="text-[15px] leading-[20px] font-semibold">Bác sĩ khuyên dùng</span>
+                      </div>
+                  </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
