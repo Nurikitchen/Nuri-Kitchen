@@ -23898,8 +23898,17 @@ function openCustomerMenuModal(cId, isFromAdmin = false) {
               setupFirestoreSync();
             })
             .catch((authErr) => {
-              console.warn("Client failed to sign in anonymously. Attempting Firestore sync without auth...", authErr);
-              setupFirestoreSync();
+              console.warn("Client failed to sign in anonymously. Retrying with NONE persistence...", authErr);
+              firebase.auth().setPersistence(firebase.auth.Auth.Persistence.NONE)
+                .then(() => firebase.auth().signInAnonymously())
+                .then(() => {
+                   console.log("Client authenticated anonymously with NONE persistence.");
+                   setupFirestoreSync();
+                })
+                .catch((err2) => {
+                   console.error("Still failed to sign in anonymously.", err2);
+                   setupFirestoreSync();
+                });
             });
 
           function setupFirestoreSync() {
@@ -24079,13 +24088,13 @@ function openCustomerMenuModal(cId, isFromAdmin = false) {
           // Interval local diffing - autosaves logic
           firebaseSyncTask = setInterval(() => {
             if (!isInitialSyncComplete) return;
-            // Bỏ comment đoạn này để cho phép khách hàng (không phải admin) đồng bộ dữ liệu lên Firebase
-            // const isUserAdmin =
-            //   typeof isAdminViewActive === "function" &&
-            //   isAdminViewActive() &&
-            //   typeof checkAdminSessionSilent === "function" &&
-            //   checkAdminSessionSilent();
-            // if (!isUserAdmin) return;
+            // Bỏ comment đoạn này để không cho phép khách hàng (không phải admin) đồng bộ toàn bộ dữ liệu lên Firebase (chỉ admin mới được dùng Task này)
+            const isUserAdmin =
+              typeof isAdminViewActive === "function" &&
+              isAdminViewActive() &&
+              typeof checkAdminSessionSilent === "function" &&
+              checkAdminSessionSilent();
+            if (!isUserAdmin) return;
 
             const settingsRaw = localStorage.getItem("nutriadmin_settings");
             const currentSettings = settingsRaw ? JSON.parse(settingsRaw) : {};
@@ -27197,7 +27206,7 @@ const MascotDB = {
             switchView("kitchen");
             openAdminLoginModal();
           }
-        } else if (mode === "landing" || utmSourceParam) {
+        } else if (mode === "landing") {
           const nav = document.querySelector("nav");
           if (nav) nav.classList.add("hidden");
 

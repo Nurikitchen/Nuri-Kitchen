@@ -3581,8 +3581,8 @@
         
         
         <!-- SCROLL SEQUENCE SECTION -->
-        <div id="section-scroll-sequence" class="relative w-full" style="height: 200vh;">
-          <div class="sticky top-0 left-0 w-full h-screen overflow-hidden flex items-center justify-center bg-white px-4 md:px-8">
+        <div id="section-scroll-sequence" class="relative w-full" style="height: 200vh; max-height: 260vw;">
+          <div class="sticky left-0 w-full overflow-hidden flex items-center justify-center bg-white px-4 md:px-8" style="top: max(0px, 50vh - 65vw); height: 100vh; max-height: 130vw;">
             <div class="relative w-full max-w-7xl mx-auto aspect-video rounded-3xl overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.1)] border border-slate-100">
                <canvas id="sequence-canvas" class="absolute top-0 left-0 w-full h-full object-cover"></canvas>
             </div>
@@ -3809,7 +3809,7 @@
 
             <button onclick="openPublicMenu()" class="relative group/menu-btn overflow-hidden w-full md:w-auto bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-black text-[30px] leading-[40px] py-6 px-12 rounded-full hover:scale-105 active:scale-95 transition-all duration-300 shadow-[0_0_20px_rgba(16,185,129,0.5)] hover:shadow-[0_0_40px_rgba(16,185,129,0.8)] border-4 border-emerald-300 z-20 flex-1 max-w-sm">
               <span class="absolute inset-0 w-full h-full rounded-full opacity-30 bg-gradient-to-b from-transparent via-transparent to-black pointer-events-none"></span>
-              <span class="relative flex items-center justify-center gap-4">
+              <span class="relative flex items-center justify-center gap-4 whitespace-nowrap">
                 <i class="fa-solid fa-utensils text-emerald-100 text-[37.5px] leading-[45px]"></i>
                 XEM MENU ĐẦY ĐỦ
               </span>
@@ -3888,8 +3888,8 @@
         </div>
 
         <!-- Phần Hoạt Ảnh Cuộn -->
-        <div id="scroll-animation-wrapper" style="height: 300vh; position: relative;">
-          <div id="scroll-animation-sticky" style="position: sticky; top: 0; width: 100%; height: 100vh; overflow: hidden; background-color: transparent; display: flex; align-items: center; justify-content: center; z-index: 20;">
+        <div id="scroll-animation-wrapper" style="height: 300vh; max-height: 390vw; position: relative;">
+          <div id="scroll-animation-sticky" style="position: sticky; top: max(0px, 50vh - 65vw); width: 100%; height: 100vh; max-height: 130vw; overflow: hidden; background-color: transparent; display: flex; align-items: center; justify-content: center; z-index: 20;">
             <div style="position: relative; width: 100%; height: 100%; max-width: 1400px; margin: 0 auto; display: flex; align-items: center; justify-content: center;">
               
               <!-- Curtains for Split Reveal Effect -->
@@ -3915,10 +3915,10 @@
 
                 <!-- Foreground Images Layer -->
                 <!-- Image 3 (Trái qua) -->
-                <img id="anim-img-3" src="./images/A3.png" class="absolute left-[0%] top-[20%] w-[32%] object-contain z-0 pointer-events-none" style="transform: translateX(-150vw);" alt="Dumbbells">
+                <img id="anim-img-3" src="./images/A3.png" class="absolute -left-[6%] top-[20%] w-[36%] object-contain z-0 pointer-events-none" style="transform: translateX(-150vw);" alt="Dumbbells">
 
                 <!-- Image 2 (Phải qua) -->
-                <img id="anim-img-2" src="./images/A2.png" class="absolute right-[0%] top-[4%] w-[38%] object-contain z-0 pointer-events-none" style="transform: translateX(150vw);" alt="Yoga Mat">
+                <img id="anim-img-2" src="./images/A2.png" class="absolute -right-[5%] top-[4%] w-[41%] object-contain z-0 pointer-events-none" style="transform: translateX(150vw);" alt="Yoga Mat">
 
                 <!-- Image 1 (Dưới lên) -->
                 <img id="anim-img-1" src="./images/A1.png" class="absolute left-1/2 bottom-[14%] w-[48%] object-contain z-20 pointer-events-none" style="transform: translate(-50%, 150vh);" alt="Lunch Box">
