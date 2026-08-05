@@ -870,4 +870,19 @@
         transition: 0s;
       }
 
+      /* Tăng chính xác 25% kích thước tất cả chữ và số trong Trang cá nhân khách hàng (Banner đầu trang giữ nguyên) */
+      #customer-profile-body-container {
+        zoom: 1.25;
+      }
+
+      /* Tăng gấp đôi kích thước chữ tin nhắn trong bảng chatbot */
+      #chatbot-messages .bg-white,
+      #chatbot-messages .bg-slate-800,
+      #chatbot-messages #chatbot-greeting-msg {
+        font-size: 28px !important;
+        line-height: 38px !important;
+      }
+
+
+
 

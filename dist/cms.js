@@ -292,7 +292,7 @@
       // Only show on kitchen view when admin is logged in, or we can just show it if admin session is true and we are on kitchen
       // Wait, is "kitchen" view active?
       const kitchenView = document.getElementById('view-kitchen');
-      if (kitchenView && !kitchenView.classList.contains('hidden')) {
+      if (kitchenView && !kitchenView.classList.contains('hidden') && params.get('mode') === 'admin') {
         injectToolbar();
       } else {
         const toolbar = document.getElementById('nuri-cms-toolbar');

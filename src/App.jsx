@@ -11,7 +11,7 @@ export default function App() {
 
     const script = document.createElement('script');
     script.id = 'legacy-script-loader';
-    script.src = './legacy.js';
+    script.src = `./legacy.js?v=${Date.now()}`;
     script.onload = () => {
         const cmsScript = document.createElement('script');
         cmsScript.src = './cms.js';
@@ -28,7 +28,7 @@ export default function App() {
               const observer = new IntersectionObserver((entries) => {
                 if (entries[0].isIntersecting) {
                   window.hasShownGrandOpeningPopup = true;
-                  if (window.openGrandOpeningPopup) setTimeout(window.openGrandOpeningPopup, 500);
+                  if (window.openGrandOpeningPopup) setTimeout(window.openGrandOpeningPopup, 1800);
                   observer.disconnect();
                 }
               }, { threshold: 0.2 });

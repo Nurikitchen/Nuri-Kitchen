@@ -683,6 +683,14 @@
 
     <!-- Nuri Chatbot FAB & Social Group -->
     <div id="chatbot-fab" class="fixed bottom-6 right-[calc(max(1rem,(100vw-1280px)/2+1rem))] sm:right-[calc(max(1.5rem,(100vw-1280px)/2+1.5rem))] z-[85] flex flex-col items-center gap-3 transition-all duration-300">
+      <!-- Floating Grand Opening Discount Icon (positioned above Chatbot Mascot) -->
+      <div id="floating-grand-opening-icon" class="hidden cursor-pointer transform hover:scale-110 transition-all duration-300 shadow-2xl rounded-full mb-1 z-40" onclick="window.openGrandOpeningPopup()">
+        <div class="bg-gradient-to-br from-[#1b5e20] to-emerald-600 text-white w-14 h-14 md:w-16 md:h-16 rounded-full flex items-center justify-center text-2xl md:text-3xl border-2 border-white shadow-[0_0_20px_rgba(16,185,129,0.6)] relative animate-bounce">
+          <i class="fa-solid fa-party-popper text-yellow-300"></i>
+          <span class="absolute -top-1 -left-1 bg-red-600 text-white text-[10px] md:text-xs font-black px-2 py-0.5 rounded-full shadow-md animate-pulse border border-white">-15%</span>
+        </div>
+      </div>
+
       <!-- Sub-menu (Zalo, Messenger, Nuri AI) -->
       <div id="chatbot-social-menu" class="hidden flex flex-col items-center gap-3 mb-1 transition-all duration-300 transform translate-y-4 opacity-0">
         <!-- Nuri AI Button -->
@@ -756,7 +764,7 @@
           <div class="w-7 h-7 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0 text-[15px] leading-[20px] shadow-sm border border-emerald-200">
             <i class="fa-solid fa-robot"></i>
           </div>
-          <div id="chatbot-greeting-msg" class="bg-white p-3 rounded-2xl rounded-tl-none border border-slate-100 text-[17.5px] leading-[25px] text-slate-700 shadow-sm leading-relaxed">
+          <div id="chatbot-greeting-msg" class="bg-white p-3 rounded-2xl rounded-tl-none border border-slate-100 text-[28px] leading-[38px] text-slate-700 shadow-sm leading-relaxed">
             Chào bạn! Nuri là chuyên gia dinh dưỡng ảo của Nuri Kitchen. 👋<br><br>Nuri
             có thể giúp bạn giải đáp các thắc mắc về calo, gợi ý món ăn, hoặc tư
             vấn lộ trình giảm cân. Bạn cần hỗ trợ gì ạ?
@@ -3031,3 +3039,296 @@
         </div>
       </div>
     </div>
+
+    <!-- Customer Location Pin Modal -->
+    <div id="customer-pin-modal" class="fixed inset-0 z-[200] bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-4">
+      <div class="bg-white rounded-2xl shadow-xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
+        <div class="px-5 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+          <div>
+            <h3 class="font-bold text-slate-800 text-lg flex items-center gap-2">
+              <i class="fa-solid fa-location-dot text-rose-500"></i> Ghim vị trí giao hàng khách mua gói
+            </h3>
+            <p id="pin-modal-customer-info" class="text-xs text-slate-500 font-medium mt-0.5"></p>
+          </div>
+          <button type="button" onclick="closeCustomerPinModal()" class="text-slate-400 hover:text-slate-600">
+            <i class="fa-solid fa-times text-2xl"></i>
+          </button>
+        </div>
+
+        <div class="p-4 bg-slate-50 border-b border-slate-100 flex flex-col gap-2">
+          <div class="flex items-center justify-between gap-3">
+            <div class="flex-1 min-w-0">
+              <div class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Địa chỉ đăng ký:</div>
+              <div id="pin-modal-address" class="text-sm font-semibold text-slate-800 truncate bg-white p-2 rounded-lg border border-slate-200"></div>
+            </div>
+            <button type="button" onclick="aiGeocodeCustomerAddress()" class="px-3.5 py-2.5 rounded-xl font-bold text-xs text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 shadow-md flex items-center gap-2 shrink-0 transition-all">
+              <i class="fa-solid fa-wand-magic-sparkles text-amber-300 animate-pulse"></i> AI Định vị từ Địa chỉ
+            </button>
+          </div>
+          <div class="text-[12px] text-slate-500 italic flex items-center justify-between gap-2">
+            <span><i class="fa-solid fa-hand-pointer mr-1 text-indigo-500"></i> Hoặc click/kéo ghim trên bản đồ để chọn thủ công</span>
+            <span id="pin-coords-display" class="font-mono font-bold text-slate-700 bg-slate-200 px-2 py-0.5 rounded text-[11px]"></span>
+          </div>
+        </div>
+
+        <div class="p-0 relative flex-1 min-h-[350px]">
+          <div id="customer-pin-map" class="w-full h-full min-h-[350px] bg-slate-100 z-10"></div>
+        </div>
+
+        <div class="p-4 bg-slate-50 border-t border-slate-100 flex justify-between items-center">
+          <button type="button" onclick="closeCustomerPinModal()" class="px-4 py-2 rounded-lg font-semibold text-slate-600 bg-white border border-slate-200 hover:bg-slate-100">
+            Hủy
+          </button>
+          <button type="button" onclick="saveCustomerLocationPin()" class="px-5 py-2 rounded-lg font-bold text-white bg-rose-500 hover:bg-rose-600 shadow-md flex items-center gap-2">
+            <i class="fa-solid fa-floppy-disk"></i> Lưu vị trí đã ghim
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- All Purchased Customers Map Modal -->
+    <div id="all-purchased-map-modal" class="fixed inset-0 z-[200] bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-4">
+      <div class="bg-white rounded-2xl shadow-xl w-full max-w-5xl overflow-hidden flex flex-col h-[85vh]">
+        <div class="px-5 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center font-bold">
+              <i class="fa-solid fa-map-location-dot text-lg"></i>
+            </div>
+            <div>
+              <h3 class="font-bold text-slate-800 text-lg">Bản đồ vị trí Khách Hàng Đã Mua Gói</h3>
+              <p id="all-purchased-map-stats" class="text-xs text-slate-500 font-medium"></p>
+            </div>
+          </div>
+          <button type="button" onclick="closePurchasedCustomerMapModal()" class="text-slate-400 hover:text-slate-600">
+            <i class="fa-solid fa-times text-2xl"></i>
+          </button>
+        </div>
+
+        <div class="p-0 relative flex-1">
+          <div id="all-purchased-leaflet-map" class="w-full h-full bg-slate-100 z-10"></div>
+        </div>
+
+        <div class="p-3 bg-slate-50 border-t border-slate-100 flex justify-between items-center px-6">
+          <div class="text-xs text-slate-500 flex items-center gap-4">
+            <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-emerald-500 inline-block"></span> Đang hoạt động</span>
+            <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-red-500 inline-block"></span> Đã hết hạn</span>
+          </div>
+          <button type="button" onclick="closePurchasedCustomerMapModal()" class="px-5 py-2 rounded-lg font-bold text-slate-700 bg-white border border-slate-200 hover:bg-slate-100">
+            Đóng
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal: Share Streak (Khoe Ngay) & Social Platforms & Reward Points -->
+    <div id="share-modal" class="fixed inset-0 z-[120] hidden items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in" onclick="if(event.target === this) closeShareModal()">
+      <div class="bg-white dark:bg-slate-800 rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden relative border border-slate-100 dark:border-slate-700 transform transition-all animate-scale-up">
+        <!-- Close Button -->
+        <button type="button" onclick="closeShareModal()" class="absolute top-4 right-4 w-9 h-9 bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-300 rounded-full flex items-center justify-center hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors z-10">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+
+        <div class="p-6 md:p-8 text-center">
+          <!-- Header Icon & Badge -->
+          <div class="w-16 h-16 bg-amber-100 dark:bg-amber-900/40 text-amber-500 rounded-full flex items-center justify-center text-3xl mx-auto mb-3 shadow-inner">
+            🔥
+          </div>
+          <h3 class="text-2xl font-black text-slate-900 dark:text-white mb-1">Khoe Thành Tích Ăn Lành Mạnh!</h3>
+          <p class="text-slate-500 dark:text-slate-400 text-sm mb-4">
+            Chia sẻ lên Mạng xã hội để nhận ngay <span class="font-extrabold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/40 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800">+20 điểm tích lũy</span> 🎉
+          </p>
+
+          <!-- Pre-filled Status Textarea -->
+          <div class="mb-5 text-left">
+            <label class="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1.5 uppercase tracking-wider">
+              <i class="fa-solid fa-pen-to-square text-emerald-600 mr-1"></i> Nội dung Status (Đã tạo sẵn):
+            </label>
+            <div class="relative">
+              <textarea id="streak-status-text" rows="4" readonly class="w-full bg-slate-50 dark:bg-slate-900/70 border border-slate-200 dark:border-slate-700 rounded-2xl p-3.5 text-sm font-medium text-slate-700 dark:text-slate-200 focus:outline-none resize-none leading-relaxed select-all">🔥 Tôi đã hoàn thành chuỗi 7 ngày ăn uống lành mạnh cùng Nuri Kitchen! Thực đơn chuẩn calo, ngon miệng và tràn đầy năng lượng mỗi ngày. Cùng làm quen lối sống xanh với mình nhé! #Nurikitchen</textarea>
+              <button type="button" onclick="copyStreakStatusText()" class="absolute right-3 bottom-3 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-3 py-1.5 rounded-xl shadow-sm transition-all active:scale-95 flex items-center gap-1.5">
+                <i class="fa-solid fa-copy"></i> <span id="copy-status-btn-text">Sao chép status</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Social Platforms Buttons Grid -->
+          <div class="mb-4">
+            <label class="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-2 uppercase tracking-wider text-left">
+              <i class="fa-solid fa-share-nodes text-emerald-600 mr-1"></i> Chọn nền tảng chia sẻ:
+            </label>
+            <div class="grid grid-cols-3 gap-3">
+              <!-- Facebook -->
+              <button type="button" onclick="shareStreakPlatform('facebook')" class="flex flex-col items-center justify-center p-3.5 bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-900/50 border border-blue-200 dark:border-blue-800 rounded-2xl text-blue-600 dark:text-blue-400 font-bold text-xs gap-2 transition-all hover:-translate-y-0.5 active:scale-95 shadow-sm">
+                <div class="w-10 h-10 bg-blue-600 text-white rounded-full flex items-center justify-center text-xl shadow-md">
+                  <i class="fa-brands fa-facebook-f"></i>
+                </div>
+                <span>Facebook</span>
+              </button>
+
+              <!-- Zalo -->
+              <button type="button" onclick="shareStreakPlatform('zalo')" class="flex flex-col items-center justify-center p-3.5 bg-sky-50 dark:bg-sky-950/40 hover:bg-sky-100 dark:hover:bg-sky-900/50 border border-sky-200 dark:border-sky-800 rounded-2xl text-sky-600 dark:text-sky-400 font-bold text-xs gap-2 transition-all hover:-translate-y-0.5 active:scale-95 shadow-sm">
+                <div class="w-10 h-10 bg-sky-500 text-white rounded-full flex items-center justify-center text-lg font-black shadow-md">
+                  Zalo
+                </div>
+                <span>Zalo</span>
+              </button>
+
+              <!-- Instagram -->
+              <button type="button" onclick="shareStreakPlatform('instagram')" class="flex flex-col items-center justify-center p-3.5 bg-pink-50 dark:bg-pink-950/40 hover:bg-pink-100 dark:hover:bg-pink-900/50 border border-pink-200 dark:border-pink-800 rounded-2xl text-pink-600 dark:text-pink-400 font-bold text-xs gap-2 transition-all hover:-translate-y-0.5 active:scale-95 shadow-sm">
+                <div class="w-10 h-10 bg-gradient-to-tr from-amber-500 via-rose-500 to-purple-600 text-white rounded-full flex items-center justify-center text-xl shadow-md">
+                  <i class="fa-brands fa-instagram"></i>
+                </div>
+                <span>Instagram</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Notice Badge -->
+          <div id="share-streak-reward-status" class="bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 text-xs font-semibold p-3 rounded-xl border border-amber-200 dark:border-amber-800/60 flex items-center justify-center gap-2">
+            <i class="fa-solid fa-gift text-amber-500"></i>
+            <span>Mỗi tài khoản được cộng +20 điểm thưởng khoe chuỗi 1 lần mỗi 7 ngày</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal: Nhập món ăn thêm & AI Phân tích -->
+    <div id="add-calorie-modal" class="fixed inset-0 z-[110] hidden items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-fade-in" onclick="if(event.target === this) window.closeAddCalorieModal()">
+      <div class="relative w-full max-w-lg bg-white rounded-3xl shadow-2xl overflow-hidden border border-slate-100 flex flex-col max-h-[90vh]">
+        <!-- Header -->
+        <div class="bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 p-5 text-white flex justify-between items-center shrink-0 shadow-md">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center text-xl shadow-inner">
+              <i class="fa-solid fa-utensils text-emerald-100"></i>
+            </div>
+            <div>
+              <h3 class="font-black text-lg leading-tight">Nhập món ăn thêm</h3>
+              <p class="text-xs text-emerald-100 font-medium">Tự động phân tích Kcal bằng AI hoặc nhập thủ công</p>
+            </div>
+          </div>
+          <button type="button" onclick="window.closeAddCalorieModal()" class="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors">
+            <i class="fa-solid fa-xmark text-lg"></i>
+          </button>
+        </div>
+
+        <!-- Body -->
+        <div class="p-6 overflow-y-auto space-y-4 text-left">
+
+          <!-- 1. Photo Upload / Dropzone -->
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+              <i class="fa-solid fa-camera text-emerald-600 mr-1"></i> Tải lên ảnh món ăn (Cho AI xem & phân tích)
+            </label>
+            <div id="add-food-dropzone" onclick="document.getElementById('add-food-file-input').click()" class="border-2 border-dashed border-slate-300 hover:border-emerald-500 bg-slate-50 hover:bg-emerald-50/50 rounded-2xl p-4 text-center cursor-pointer transition-all flex flex-col items-center justify-center relative overflow-hidden group min-h-[110px]">
+              <input type="file" id="add-food-file-input" accept="image/*" class="hidden" onchange="window.handleAddFoodImageSelect(event)">
+              <div id="add-food-upload-prompt" class="flex flex-col items-center gap-1">
+                <div class="w-10 h-10 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center text-lg group-hover:scale-110 transition-transform">
+                  <i class="fa-solid fa-cloud-arrow-up"></i>
+                </div>
+                <span class="text-xs font-bold text-slate-700">Chạm để chọn ảnh món ăn</span>
+                <span class="text-[10px] text-slate-400">PNG, JPG, WEBP (Tối đa 5MB)</span>
+              </div>
+              <div id="add-food-preview-wrapper" class="hidden relative w-full h-36">
+                <img id="add-food-preview-img" src="" class="w-full h-full object-cover rounded-xl shadow-md">
+                <button type="button" onclick="event.stopPropagation(); window.removeAddFoodImage();" class="absolute top-2 right-2 bg-red-600 text-white w-7 h-7 rounded-full flex items-center justify-center shadow-lg hover:bg-red-700 transition-colors text-xs font-bold">
+                  <i class="fa-solid fa-xmark"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 2. Dish Name -->
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+              <i class="fa-solid fa-bowl-food text-emerald-600 mr-1"></i> Tên món ăn <span class="text-red-500">*</span>
+            </label>
+            <input type="text" id="add-food-name" placeholder="Ví dụ: Phở bò tái chín, Bún chả, Cơm tấm..." class="w-full border border-slate-300 rounded-xl px-4 py-2.5 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-slate-50">
+          </div>
+
+          <!-- 3. Portion / Component Description -->
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+              <i class="fa-solid fa-scale-balanced text-emerald-600 mr-1"></i> Kích thước & Mô tả thành phần
+            </label>
+            <input type="text" id="add-food-portion" placeholder="Ví dụ: 1 tô vừa, thêm 1 trứng chần, nhiều thịt..." class="w-full border border-slate-300 rounded-xl px-4 py-2.5 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-slate-50">
+          </div>
+
+          <!-- 4. AI Analysis Button & Loading State -->
+          <div>
+            <button type="button" id="btn-ai-analyze-food" onclick="window.analyzeFoodWithAI()" class="w-full bg-gradient-to-r from-purple-600 via-indigo-600 to-emerald-600 text-white font-black py-3 px-4 rounded-xl shadow-lg hover:shadow-xl hover:scale-[1.01] active:scale-[0.99] transition-all flex items-center justify-center gap-2 cursor-pointer border border-white/20">
+              <i class="fa-solid fa-wand-magic-sparkles text-amber-300 animate-pulse"></i>
+              <span>✨ AI Phân Tích Kcal & Dinh Dưỡng</span>
+            </button>
+            <div id="ai-food-loading" class="hidden mt-2 p-3 bg-purple-50 rounded-xl border border-purple-200 flex items-center justify-center gap-3 text-purple-700 text-xs font-bold animate-pulse">
+              <i class="fa-solid fa-spinner fa-spin text-purple-600 text-base"></i>
+              <span>AI đang phân tích hình ảnh & tính toán lượng Kcal...</span>
+            </div>
+          </div>
+
+          <!-- 5. Kcal Input (Manual or AI Auto-filled) -->
+          <div class="pt-2 border-t border-slate-100">
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+              <i class="fa-solid fa-fire text-amber-500 mr-1"></i> Số lượng Kcal món ăn <span class="text-red-500">*</span>
+            </label>
+            <div class="relative">
+              <input type="number" id="add-food-kcal" min="0" max="5000" placeholder="VD: 550" class="w-full border border-slate-300 rounded-xl px-4 py-3 text-lg font-black text-amber-600 focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-amber-50/40 pr-16 transition-all">
+              <span class="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">kcal</span>
+            </div>
+          </div>
+
+          <!-- 6. Macronutrients (Optional / AI Auto-filled) -->
+          <div class="grid grid-cols-3 gap-2 pt-1">
+            <div>
+              <label class="block text-[11px] font-bold text-slate-500 mb-1">Đạm (Protein)</label>
+              <div class="relative">
+                <input type="number" id="add-food-protein" min="0" placeholder="0" class="w-full border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs font-bold text-red-500 bg-slate-50 text-center">
+                <span class="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-slate-400">g</span>
+              </div>
+            </div>
+            <div>
+              <label class="block text-[11px] font-bold text-slate-500 mb-1">Tinh bột (Carb)</label>
+              <div class="relative">
+                <input type="number" id="add-food-carbs" min="0" placeholder="0" class="w-full border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs font-bold text-blue-500 bg-slate-50 text-center">
+                <span class="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-slate-400">g</span>
+              </div>
+            </div>
+            <div>
+              <label class="block text-[11px] font-bold text-slate-500 mb-1">Béo (Fat)</label>
+              <div class="relative">
+                <input type="number" id="add-food-fat" min="0" placeholder="0" class="w-full border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs font-bold text-yellow-600 bg-slate-50 text-center">
+                <span class="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-slate-400">g</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 7. Select Day of Week -->
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+              <i class="fa-solid fa-calendar-day text-emerald-600 mr-1"></i> Ngày áp dụng trong tuần
+            </label>
+            <select id="add-food-day" class="w-full border border-slate-300 rounded-xl px-4 py-2.5 text-xs font-bold text-slate-800 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer">
+              <option value="bar-t2">Thứ 2</option>
+              <option value="bar-t3">Thứ 3</option>
+              <option value="bar-t4">Thứ 4</option>
+              <option value="bar-t5">Thứ 5</option>
+              <option value="bar-t6">Thứ 6</option>
+              <option value="bar-t7">Thứ 7</option>
+              <option value="bar-cn">Chủ nhật</option>
+            </select>
+          </div>
+
+        </div>
+
+        <!-- Footer -->
+        <div class="p-4 bg-slate-50 border-t border-slate-100 flex gap-3 shrink-0">
+          <button type="button" onclick="window.closeAddCalorieModal()" class="flex-1 bg-white hover:bg-slate-100 border border-slate-300 text-slate-700 font-bold py-3 rounded-xl transition-colors text-xs">
+            Hủy
+          </button>
+          <button type="button" onclick="window.saveExtraFoodItem()" class="flex-[2] bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl shadow-md transition-all text-xs flex items-center justify-center gap-2 active:scale-95">
+            <i class="fa-solid fa-check"></i> Lưu & Cập Nhật Biểu Đồ
+          </button>
+        </div>
+      </div>
+    </div>
+
+

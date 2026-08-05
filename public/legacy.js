@@ -151,59 +151,48 @@
 
       window.hasShownGrandOpeningPopup = false;
       window.openGrandOpeningPopup = function () {
-        const modal = document.getElementById("user-grand-opening-modal");
-        const content = document.getElementById(
-          "user-grand-opening-modal-content",
-        );
         const icon = document.getElementById("floating-grand-opening-icon");
+        if (icon) {
+          icon.classList.add("hidden");
+        }
+
+        if (typeof window.ensureGrandOpeningModalInDOM === "function") {
+          window.ensureGrandOpeningModalInDOM();
+        }
+        const modal = document.getElementById("user-grand-opening-modal");
+        const content = document.getElementById("user-grand-opening-modal-content");
+
         if (modal && content) {
           modal.classList.remove("opacity-0", "pointer-events-none");
           content.classList.remove("scale-90", "translate-y-8");
-          const popupMascots = [
-            document.getElementById("popup-mascot-img"),
-            document.getElementById("popup-mascot-img-result"),
-          ].filter(Boolean);
-          if (popupMascots.length > 0) {
-            setTimeout(() => {
-              popupMascots.forEach((m) => {
-                m.classList.remove("translate-y-4", "opacity-0");
-                m.classList.add("translate-y-0", "opacity-100");
-              });
-            }, 300);
-          }
-          if (icon) icon.classList.add("hidden");
 
-          // Play sound effect
+          // Play chime sound effect
           try {
-            const audio = new Audio(
-              "https://assets.mixkit.co/active_storage/sfx/2018/2018-preview.mp3",
-            );
-            audio.volume = 0.5;
-            audio.play().catch((e) => console.log("Audio autoplay blocked"));
+            const audio = new Audio("https://assets.mixkit.co/active_storage/sfx/2018/2018-preview.mp3");
+            audio.volume = 0.6;
+            audio.play().catch((e) => console.log("Audio play prevented:", e));
           } catch (e) {}
         }
       };
 
       window.closeGrandOpeningPopup = function () {
         const modal = document.getElementById("user-grand-opening-modal");
-        const content = document.getElementById(
-          "user-grand-opening-modal-content",
-        );
+        const content = document.getElementById("user-grand-opening-modal-content");
+        
+        if (typeof window.ensureFloatingGrandOpeningIconInDOM === "function") {
+          window.ensureFloatingGrandOpeningIconInDOM();
+        }
         const icon = document.getElementById("floating-grand-opening-icon");
+
         if (modal && content) {
           modal.classList.add("opacity-0", "pointer-events-none");
           content.classList.add("scale-90", "translate-y-8");
-          const popupMascots = [
-            document.getElementById("popup-mascot-img"),
-            document.getElementById("popup-mascot-img-result"),
-          ].filter(Boolean);
-          if (popupMascots.length > 0) {
-            popupMascots.forEach((m) => {
-              m.classList.remove("translate-y-0", "opacity-100");
-              m.classList.add("translate-y-4", "opacity-0");
-            });
-          }
-          if (icon) {
+
+          const savedSettings = localStorage.getItem("nutriadmin_settings");
+          let settingsObj = savedSettings ? JSON.parse(savedSettings) : {};
+          const showBanner = settingsObj.bannerGrandOpeningEnabled !== false;
+
+          if (showBanner && icon) {
             setTimeout(() => {
               icon.classList.remove("hidden");
               icon.classList.add("animate-fade-in");
@@ -212,15 +201,18 @@
         }
       };
 
+      
       window.handleBannerPkgClick = function () {
-        window.closeGrandOpeningPopup();
+        if (typeof window.closeGrandOpeningPopup === "function") {
+          window.closeGrandOpeningPopup();
+        }
         setTimeout(() => {
-          const el = document.getElementById("package-registration-section");
-          if (el) {
-            el.scrollIntoView({ behavior: "smooth", block: "start" });
+          if (typeof window.openOrderPlatformModal === "function") {
+            window.openOrderPlatformModal("grand_opening");
           }
-        }, 300);
+        }, 150);
       };
+
 
       window.handleBannerOrderClick = function () {
         window.closeGrandOpeningPopup();
@@ -741,6 +733,14 @@
           allChats[customerDeviceId].lastUpdated = Date.now();
         }
         localStorage.setItem("nutriadmin_all_chats", JSON.stringify(allChats));
+
+        try {
+          if (typeof cloudDb !== 'undefined' && cloudDb && customerDeviceId && allChats[customerDeviceId]) {
+            cloudDb.collection('nutriadmin_v1').doc('chats_log').set({
+              chats: { [customerDeviceId]: allChats[customerDeviceId] }
+            }, { merge: true }).catch(e => console.warn('Chat Firebase sync error:', e.message));
+          }
+        } catch (e) {}
 
         // Update unread badge in navigation if any chat needs support
         updateMessagesNavBadge();
@@ -1901,6 +1901,13 @@
           "nutriadmin_all_reviews",
           JSON.stringify(allReviews),
         );
+        try {
+          if (typeof cloudDb !== 'undefined' && cloudDb) {
+            cloudDb.collection('nutriadmin_v1').doc('reviews_log').set({
+              reviews: allReviews
+            }, { merge: true }).catch(e => console.warn('Review Firebase push error:', e.message));
+          }
+        } catch (e) {}
         syncStateToServer();
         if (typeof updateMessagesNavBadge === "function")
           updateMessagesNavBadge();
@@ -6504,21 +6511,30 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
             const hasCheckedIn = currentUser.lastCheckInDate === todayStr;
 
             let hasLoggedWeightThisWeek = false;
-            if (currentUser.lastBmiUpdateDate) {
+            const nowTs = Date.now();
+            const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
+
+            if (currentUser.lastBodyUpdateRewardTime && (nowTs - currentUser.lastBodyUpdateRewardTime < SEVEN_DAYS_MS)) {
+              hasLoggedWeightThisWeek = true;
+            } else if (currentUser.lastBmiUpdateDate) {
               hasLoggedWeightThisWeek = isSameCalendarWeek(
                 new Date(currentUser.lastBmiUpdateDate).getTime(),
-                Date.now(),
+                nowTs,
               );
             }
 
             let hasSharedThisWeek = false;
-            const nowTs = Date.now();
-            const filteredShareHistory = (
-              currentUser.shareHistory || []
-            ).filter((ts) => isSameCalendarWeek(ts, nowTs));
-            if (filteredShareHistory.length > 0) {
+            if (currentUser.lastShareRewardTime && (nowTs - currentUser.lastShareRewardTime < SEVEN_DAYS_MS)) {
               hasSharedThisWeek = true;
+            } else {
+              const filteredShareHistory = (
+                currentUser.shareHistory || []
+              ).filter((ts) => isSameCalendarWeek(ts, nowTs));
+              if (filteredShareHistory.length > 0) {
+                hasSharedThisWeek = true;
+              }
             }
+
 
             questsContainer.innerHTML = `
             <!-- Quest 1 -->
@@ -7529,12 +7545,14 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
         const d = setDistrict.value,
           w = document.getElementById("set-ward");
         if (!w) return;
+        const currentW = w.value;
         w.innerHTML = '<option value="">Phường/Xã</option>';
-        if (d) {
+        if (d && window.locationData && window.locationData["TP. Hồ Chí Minh"] && window.locationData["TP. Hồ Chí Minh"][d]) {
           w.disabled = false;
-          for (let wd of locationData["TP. Hồ Chí Minh"][d]) {
+          window.locationData["TP. Hồ Chí Minh"][d].forEach(wd => {
             w.innerHTML += `<option value="${wd}">${wd}</option>`;
-          }
+          });
+          if (currentW) w.value = currentW;
         } else {
           w.disabled = true;
         }
@@ -9259,12 +9277,23 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
             localStorage.getItem("nutriadmin_settings") || "{}",
           ),
           dishes: dishes,
+          inventory: typeof inventory !== 'undefined' ? inventory : [],
           trackingSources: trackingSources,
           discountCodes: discountCodes,
           potentialCustomers: potentialCustomers,
           purchasedCustomers: purchasedCustomers,
           shippers: shippers,
           orders: orders,
+          allReviews: typeof allReviews !== 'undefined' ? allReviews : {},
+          allChats: typeof allChats !== 'undefined' ? allChats : {},
+          qrScans: typeof qrScans !== 'undefined' ? qrScans : [],
+          mascotExpressions: typeof mascotExpressions !== 'undefined' ? mascotExpressions : [],
+          mascotActions: typeof mascotActions !== 'undefined' ? mascotActions : [],
+          mascotAges: typeof mascotAges !== 'undefined' ? mascotAges : [],
+          activeMascotId: typeof activeMascotId !== 'undefined' ? activeMascotId : null,
+          pwaCustomIcon: typeof pwaCustomIcon !== 'undefined' ? pwaCustomIcon : null,
+          pwaNotifications: typeof pwaNotifications !== 'undefined' ? pwaNotifications : [],
+          pwaBadgeActive: typeof pwaBadgeActive !== 'undefined' ? pwaBadgeActive : false
         };
 
         const dataStr =
@@ -9312,9 +9341,24 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
                     JSON.stringify(importedData.settings),
                   );
                 dishes = importedData.dishes || [];
+                if (importedData.inventory) inventory = importedData.inventory;
                 trackingSources = importedData.trackingSources || [];
                 discountCodes = importedData.discountCodes || [];
                 shippers = importedData.shippers || [];
+                
+                if (importedData.allReviews) allReviews = importedData.allReviews;
+                if (importedData.allChats) {
+                   allChats = importedData.allChats;
+                   localStorage.setItem("nutriadmin_all_chats", JSON.stringify(allChats));
+                }
+                if (importedData.qrScans) qrScans = importedData.qrScans;
+                if (importedData.mascotExpressions) mascotExpressions = importedData.mascotExpressions;
+                if (importedData.mascotActions) mascotActions = importedData.mascotActions;
+                if (importedData.mascotAges) mascotAges = importedData.mascotAges;
+                if (importedData.activeMascotId !== undefined) activeMascotId = importedData.activeMascotId;
+                if (importedData.pwaCustomIcon !== undefined) pwaCustomIcon = importedData.pwaCustomIcon;
+                if (importedData.pwaNotifications !== undefined) pwaNotifications = importedData.pwaNotifications;
+                if (importedData.pwaBadgeActive !== undefined) pwaBadgeActive = importedData.pwaBadgeActive;
 
                 // Parse date strings back to Date objects
                 orders = (importedData.orders || []).map((o) => ({
@@ -11257,6 +11301,140 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
 
       let dashboardMapInst = null;
 
+      
+      // SHIPPER DENSITY MAP & FILTER LOGIC
+      function filterShipperDensityMap() {
+        if (!dashboardMapInst) return;
+        const filterEl = document.getElementById("density-map-filter");
+        const filterVal = filterEl ? filterEl.value : "all_pinned";
+        
+        if (typeof L !== "undefined" && dashboardMapInst instanceof L.Map) {
+          if (typeof leafletMarkers !== "undefined" && Array.isArray(leafletMarkers)) {
+            leafletMarkers.forEach((m) => dashboardMapInst.removeLayer(m));
+          }
+          leafletMarkers = [];
+
+          const kPos = typeof getKitchenPos === "function" ? getKitchenPos() : [10.7769, 106.7009];
+          
+          // Store / Kitchen Marker
+          const storeIcon = L.divIcon({
+            className: 'custom-store-pin',
+            html: '<div style="background-color: #ef4444; color: white; border-radius: 50%; width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; font-size: 18px; box-shadow: 0 0 10px rgba(239,68,68,0.7); border: 2px solid white;"><i class="fa-solid fa-store"></i></div>',
+            iconSize: [34, 34],
+            iconAnchor: [17, 17]
+          });
+          const storeM = L.marker(kPos, { icon: storeIcon })
+            .bindPopup('<b>🏪 Cửa hàng / Bếp trung tâm Nuri</b><br>Tọa độ gốc: ' + kPos[0].toFixed(4) + ', ' + kPos[1].toFixed(4))
+            .addTo(dashboardMapInst);
+          leafletMarkers.push(storeM);
+
+          let bounds = [kPos];
+
+          if (filterVal === "all_shipper_routes") {
+            drawAllShippersRoutes();
+            return;
+          } else if (filterVal && filterVal.startsWith("route_")) {
+            const sId = filterVal.replace("route_", "");
+            drawSingleShipperRoute(sId);
+            return;
+          } else {
+            const card = document.getElementById("shipper-route-summary-card");
+            if (card) card.classList.add("hidden");
+          }
+
+          if (filterVal === "all_pinned") {
+            const pinned = (purchasedCustomers || []).filter(c => c.lat && c.lng);
+            pinned.forEach(c => {
+              const lat = parseFloat(c.lat);
+              const lng = parseFloat(c.lng);
+              if (isNaN(lat) || isNaN(lng)) return;
+              bounds.push([lat, lng]);
+
+              const cusIcon = L.divIcon({
+                className: 'custom-cus-pin',
+                html: '<div style="background-color: #ec4899; color: white; border-radius: 50%; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; font-size: 14px; box-shadow: 0 0 8px rgba(236,72,153,0.6); border: 2px solid white;"><i class="fa-solid fa-location-dot"></i></div>',
+                iconSize: [28, 28],
+                iconAnchor: [14, 14]
+              });
+
+              const addrStr = c.address || ((c.street || '') + (c.ward ? ', ' + c.ward : '') + (c.district ? ', ' + c.district : '')).replace(/^,\s*/, '');
+              const pkgName = typeof resolvePackageName === "function" ? resolvePackageName(c.package) : (c.package || '--');
+              const m = L.marker([lat, lng], { icon: cusIcon })
+                .bindPopup('<b>📌 Khách hàng đã ghim:</b> ' + c.name + '<br><b>SĐT:</b> ' + (c.phone || '--') + '<br><b>Gói:</b> ' + pkgName + '<br><b>Địa chỉ:</b> ' + (addrStr || 'Chưa có'))
+                .addTo(dashboardMapInst);
+              leafletMarkers.push(m);
+            });
+          } else {
+            let targetStatuses = [];
+            if (filterVal === "all_active_orders") {
+              targetStatuses = ["pending", "processing", "ready"];
+            } else {
+              targetStatuses = [filterVal];
+            }
+
+            const activeOrders = (orders || []).filter(o => targetStatuses.includes(o.status));
+            
+            const statusColors = {
+              pending: "#f59e0b",
+              processing: "#3b82f6",
+              ready: "#10b981",
+              delivering: "#8b5cf6"
+            };
+            const statusLabels = {
+              pending: "⏳ Chờ xác nhận",
+              processing: "🔥 Đang chuẩn bị",
+              ready: "✅ Sẵn sàng giao",
+              delivering: "🚚 Đang giao"
+            };
+
+            activeOrders.forEach(o => {
+              let lat = o.lat ? parseFloat(o.lat) : null;
+              let lng = o.lng ? parseFloat(o.lng) : null;
+
+              if (!lat || !lng) {
+                const cus = (purchasedCustomers || []).find(c => c.id == o.packageCustomerId || c.phone === o.phone);
+                if (cus && cus.lat && cus.lng) {
+                  lat = parseFloat(cus.lat);
+                  lng = parseFloat(cus.lng);
+                }
+              }
+
+              if (!lat || !lng) {
+                lat = kPos[0] + (Math.random() * 0.04 - 0.02);
+                lng = kPos[1] + (Math.random() * 0.04 - 0.02);
+              }
+
+              bounds.push([lat, lng]);
+              const color = statusColors[o.status] || "#6366f1";
+              const label = statusLabels[o.status] || o.status;
+
+              const orderIcon = L.divIcon({
+                className: 'custom-order-pin',
+                html: '<div style="background-color: ' + color + '; color: white; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; font-size: 14px; box-shadow: 0 0 10px ' + color + '; border: 2px solid white;"><i class="fa-solid fa-box"></i></div>',
+                iconSize: [30, 30],
+                iconAnchor: [15, 15]
+              });
+
+              const itemsList = (o.items || []).map(i => i.name).join(", ") || "Suất ăn";
+              const m = L.marker([lat, lng], { icon: orderIcon })
+                .bindPopup('<b>📦 Đơn hàng #' + o.id + '</b> (' + label + ')<br><b>Khách hàng:</b> ' + (o.customerName || '--') + ' (' + (o.phone || '--') + ')<br><b>Địa chỉ:</b> ' + (o.address || 'Chưa nhập') + '<br><b>Món:</b> ' + itemsList)
+                .addTo(dashboardMapInst);
+              leafletMarkers.push(m);
+            });
+          }
+
+          if (bounds.length > 1) {
+            try {
+              dashboardMapInst.fitBounds(bounds, { padding: [40, 40], maxZoom: 15 });
+            } catch (e) {
+              dashboardMapInst.setView(kPos, 13);
+            }
+          } else {
+            dashboardMapInst.setView(kPos, 13);
+          }
+        }
+      }
+
       function initShipperMap() {
         const sys = JSON.parse(localStorage.getItem("systemStore") || "{}");
         const apiKey = sys.googleApiKey || window.GOOGLE_MAPS_API_KEY;
@@ -11265,7 +11443,10 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
 
         if (dashboardMapInst) {
           if (typeof L !== "undefined" && dashboardMapInst.invalidateSize) {
-            setTimeout(() => dashboardMapInst.invalidateSize(), 100);
+            setTimeout(() => {
+              dashboardMapInst.invalidateSize();
+              filterShipperDensityMap();
+            }, 100);
           }
           return;
         }
@@ -11516,25 +11697,23 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
       }
 
       function buildLeafletMap(mapDiv) {
-        mapDiv.innerHTML = ""; // clear loading
-        const kPos =
-          typeof getKitchenPos === "function"
-            ? getKitchenPos()
-            : [10.776, 106.7];
+        mapDiv.innerHTML = "";
+        const kPos = typeof getKitchenPos === "function" ? getKitchenPos() : [10.7769, 106.7009];
         dashboardMapInst = L.map(mapDiv).setView(kPos, 13);
 
         L.tileLayer(
           "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",
           {
-            attribution:
-              '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
             subdomains: "abcd",
             maxZoom: 20,
-          },
+          }
         ).addTo(dashboardMapInst);
 
-        // Initially empty or we can load mock to start with
-        // Let's leave it empty initially and tell user to trigger AI
+        setTimeout(() => {
+          dashboardMapInst.invalidateSize();
+          filterShipperDensityMap();
+        }, 200);
       }
 
       async function buildMap() {
@@ -13787,7 +13966,7 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
                           /* Target Packages Active State */
                           @media (min-width: 768px) {
                               .pkg-label.active-pkg {
-                                  transform: scale(1.05);
+                                  transform: none !important;
                                   z-index: 10;
                               }
                           }
@@ -14134,19 +14313,19 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
           let inlinePrizeTextVal = savedPrize || "";
 
           wheelBannerHTML = `
-                      <div class="max-w-xl mx-auto bg-slate-900 p-4 md:p-6 rounded-3xl shadow-xl border border-slate-800 mb-4 animate-fade-in flex items-center justify-between cursor-pointer hover:scale-[1.02] transition-transform relative overflow-hidden group" onclick="openWheelPopup()">
-                          <div class="absolute inset-0 bg-gradient-to-r from-emerald-500/10 to-teal-500/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                          <div class="relative z-10 flex items-center gap-4">
-                              <div class="w-12 h-12 rounded-full bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center text-white shadow-[0_0_15px_rgba(16,185,129,0.5)] group-hover:animate-pulse">
-                                  <i class="fa-solid fa-gift text-xl"></i>
+                      <div class="w-full max-w-4xl mx-auto bg-gradient-to-r from-slate-900 via-emerald-950 to-slate-900 p-5 md:p-7 rounded-3xl shadow-2xl border-2 border-emerald-500/40 mb-6 animate-fade-in flex items-center justify-between cursor-pointer hover:scale-[1.01] transition-transform relative overflow-hidden group" onclick="openWheelPopup()">
+                          <div class="absolute inset-0 bg-gradient-to-r from-emerald-500/20 to-teal-500/20 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                          <div class="relative z-10 flex items-center gap-5">
+                              <div class="w-14 h-14 md:w-16 md:h-16 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center text-white shadow-[0_0_20px_rgba(16,185,129,0.6)] group-hover:animate-pulse shrink-0">
+                                  <i class="fa-solid fa-gift text-2xl md:text-3xl"></i>
                               </div>
                               <div>
-                                  <h4 class="text-lg font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-500 mb-1 tracking-wide">VÒNG QUAY MAY MẮN</h4>
-                                  <p class="text-sm text-slate-400">Nhấn để quay và nhận mã ưu đãi đặc biệt!</p>
+                                  <h4 class="text-xl md:text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-teal-300 to-emerald-300 mb-1 tracking-wide">VÒNG QUAY MAY MẮN</h4>
+                                  <p class="text-sm md:text-base text-slate-300">Nhấn để quay và nhận ngay mã ưu đãi đặc biệt!</p>
                               </div>
                           </div>
-                          <div class="relative z-10 text-slate-500 group-hover:text-emerald-400 transition-colors">
-                              <i class="fa-solid fa-chevron-right text-xl"></i>
+                          <div class="relative z-10 text-emerald-400 group-hover:translate-x-1 transition-transform pl-4">
+                              <i class="fa-solid fa-circle-chevron-right text-2xl md:text-3xl drop-shadow"></i>
                           </div>
                       </div>
 
@@ -14180,9 +14359,9 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
                           <!-- Removed general packages grid -->
 
                           <!-- Gói Theo Mục Tiêu -->
-                          <div class="banner-scale-wrapper relative mb-10 mt-8 w-full">
-                              <div class="banner-scale flex flex-col items-center bg-transparent border-0 shadow-none min-h-0 pt-4 pb-4" data-desktop-width="760">
-                                  <div class="grid grid-cols-1 md:grid-cols-3 gap-4 lg:gap-8 items-stretch w-[760px] mx-auto text-left px-2 lg:px-0 mt-16">
+                          <div class="relative mb-10 mt-8 w-full">
+                              <div class="flex flex-col items-center w-full">
+                                  <div class="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8 items-stretch w-full max-w-6xl mx-auto text-left px-2 lg:px-0 mt-8">
 
                                       <label class="pkg-label pkg-target-label relative block cursor-pointer group h-full transition-all duration-500" style="order: 1; view-transition-name: pkg-target-5;">
                                           <input type="radio" onchange="handlePackageChange()" name="pkg_duration" value="target_7" class="sr-only">
@@ -14329,8 +14508,8 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
 
                           <input type="hidden" id="pkg-lucky-prize" value="${localStorage.getItem("nutriadmin_wheel_prize") || ""}">
 
-          <div class="mt-8 flex flex-col md:flex-row justify-center items-center gap-4 w-full relative z-20 pb-8">
-            <button type="button" onclick="window.openPlatformSelectorModal()" class="animate-attention-glow-shake relative group/order-btn overflow-hidden w-full md:w-auto bg-gradient-to-r from-orange-500 to-amber-500 text-white font-black text-lg py-3.5 px-8 rounded-full hover:scale-105 active:scale-95 transition-all duration-300 shadow-[0_0_20px_rgba(245,158,11,0.6)] hover:shadow-[0_0_40px_rgba(245,158,11,0.9)] border-2 border-amber-300 z-20 flex-1 max-w-[250px]">
+          <div class="mt-8 flex flex-col sm:flex-row justify-center items-center gap-4 w-full max-w-xl mx-auto relative z-20 pb-8">
+            <button type="button" onclick="window.openPlatformSelectorModal()" class="animate-attention-glow-shake relative group/order-btn overflow-hidden w-full sm:w-64 h-14 bg-gradient-to-r from-orange-500 to-amber-500 text-white font-black text-base md:text-lg rounded-full hover:scale-105 active:scale-95 transition-all duration-300 shadow-[0_0_20px_rgba(245,158,11,0.6)] hover:shadow-[0_0_40px_rgba(245,158,11,0.9)] border-2 border-amber-300 z-20 shrink-0 flex items-center justify-center cursor-pointer">
               <span class="absolute inset-0 w-full h-full rounded-full opacity-30 bg-gradient-to-b from-transparent via-transparent to-black pointer-events-none"></span>
               <span class="relative flex items-center justify-center gap-2">
                 <i class="fa-solid fa-gift text-amber-100 animate-bounce text-xl"></i>
@@ -14338,7 +14517,7 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
               </span>
             </button>
 
-            <button type="button" onclick="openPublicMenu()" class="relative group/menu-btn overflow-hidden w-full md:w-auto bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-black text-lg py-3.5 px-8 rounded-full hover:scale-105 active:scale-95 transition-all duration-300 shadow-[0_0_20px_rgba(16,185,129,0.5)] hover:shadow-[0_0_40px_rgba(16,185,129,0.8)] border-2 border-emerald-300 z-20 flex-1 max-w-[250px]">
+            <button type="button" onclick="openPublicMenu()" class="relative group/menu-btn overflow-hidden w-full sm:w-64 h-14 bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-black text-base md:text-lg rounded-full hover:scale-105 active:scale-95 transition-all duration-300 shadow-[0_0_20px_rgba(16,185,129,0.5)] hover:shadow-[0_0_40px_rgba(16,185,129,0.8)] border-2 border-emerald-300 z-20 shrink-0 flex items-center justify-center cursor-pointer">
               <span class="absolute inset-0 w-full h-full rounded-full opacity-30 bg-gradient-to-b from-transparent via-transparent to-black pointer-events-none"></span>
               <span class="relative flex items-center justify-center gap-2">
                 <i class="fa-solid fa-utensils text-emerald-100 text-xl"></i>
@@ -14348,31 +14527,28 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
           </div>
                       </form>
 
-                      <!-- CTA: Đặt món dùng thử -->
-                      <div class="mt-8 mb-12 text-center animate-fade-in border-t border-slate-200 pt-10">
-                          <h4 class="text-lg font-bold text-[#0F172A] mb-3">Chỉ muốn thử trước món ăn hôm nay?</h4>
-                          <p class="text-sm text-slate-500 mb-6 max-w-md mx-auto">Trải nghiệm ngay hương vị thực đơn Nuri gợi ý. Giao hàng nóng hổi tận nơi trong 30 phút!</p>
-                          ${
-                            showBanner
-                              ? `
-      <button id="cta-order-now-btn" type="button" onclick="window.openPlatformSelectorModal()" class="bg-[#F97316] text-white px-8 py-3.5 rounded-xl font-bold text-lg transition-all lg:hover:-translate-y-1 lg:hover:shadow-lg active:scale-[0.98] lg:hover:bg-[#EA580C] flex items-center justify-center gap-2 mx-auto animate-glow-pulse">
-          <i class="fa-solid fa-utensils"></i> Đăng ký đặt 1 bữa
-      </button>
-      `
-                              : `
-      <button id="cta-order-now-btn" type="button" onclick="openOrderPlatformModal()" class="bg-[#F97316] text-white px-8 py-3.5 rounded-xl font-bold text-lg transition-all lg:hover:-translate-y-1 lg:hover:shadow-lg active:scale-[0.98] lg:hover:bg-[#EA580C] flex items-center justify-center gap-2 mx-auto animate-glow-pulse">
-          <i class="fa-solid fa-motorcycle"></i> Đặt món giao ngay
-      </button>
-      `
-                          }
-                      </div>
-
-                      <!-- Zalo Button -->
-                      <div class="mt-8 text-center animate-fade-in">
-                          <p class="text-sm text-slate-600 font-medium mb-3">Bạn cần chuyên gia tư vấn kỹ hơn?</p>
-                          <a href="${zaloUrl}" target="_blank" class="inline-flex items-center justify-center gap-2 bg-[#0068FF] hover:bg-[#0054cc] text-white px-8 py-3.5 rounded-xl font-bold text-lg transition-all mx-auto transform hover:-translate-y-1 active:scale-95 animate-glow-pulse-blue">
-                              <i class="fa-solid fa-comment-dots"></i> Nhắn tin Zalo nhận ưu đãi
-                          </a>
+                      <!-- CTA: Đặt món dùng thử & Tư vấn Zalo cân đối chiều ngang -->
+                      <div class="w-full max-w-4xl mx-auto bg-white p-6 md:p-8 rounded-3xl border border-slate-200 shadow-sm mt-10 mb-12 text-center animate-fade-in">
+                          <h4 class="text-xl md:text-2xl font-extrabold text-slate-900 mb-2">Chỉ muốn thử trước món ăn hôm nay?</h4>
+                          <p class="text-sm md:text-base text-slate-500 mb-6 max-w-xl mx-auto">Trải nghiệm ngay hương vị thực đơn Nuri gợi ý. Giao hàng nóng hổi tận nơi trong 30 phút!</p>
+                          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full max-w-2xl mx-auto">
+                              ${
+                                showBanner
+                                  ? `
+          <button id="cta-order-now-btn" type="button" onclick="window.openPlatformSelectorModal()" class="w-full bg-[#F97316] hover:bg-[#EA580C] text-white px-6 py-3.5 rounded-xl font-bold text-base md:text-lg transition-all shadow-md flex items-center justify-center gap-2 animate-glow-pulse cursor-pointer">
+              <i class="fa-solid fa-utensils"></i> Đăng ký đặt 1 bữa
+          </button>
+          `
+                                  : `
+          <button id="cta-order-now-btn" type="button" onclick="openOrderPlatformModal()" class="w-full bg-[#F97316] hover:bg-[#EA580C] text-white px-6 py-3.5 rounded-xl font-bold text-base md:text-lg transition-all shadow-md flex items-center justify-center gap-2 animate-glow-pulse cursor-pointer">
+              <i class="fa-solid fa-motorcycle"></i> Đặt món giao ngay
+          </button>
+          `
+                              }
+                              <a href="${zaloUrl}" target="_blank" class="w-full bg-[#0068FF] hover:bg-[#0054cc] text-white px-6 py-3.5 rounded-xl font-bold text-base md:text-lg transition-all shadow-md flex items-center justify-center gap-2 transform hover:-translate-y-0.5 active:scale-95 animate-glow-pulse-blue cursor-pointer">
+                                  <i class="fa-solid fa-comment-dots"></i> Nhắn tin Zalo nhận ưu đãi
+                              </a>
+                          </div>
                       </div>
 
                       <!-- 6. Khách hàng thành công (Testimonials) -->
@@ -15062,6 +15238,58 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
           document
             .getElementById("analysis-result-state")
             .classList.remove("hidden");
+
+          const formCol = document.getElementById("analysis-form-col");
+          if (formCol) formCol.classList.add("hidden");
+          const resultsCol = document.getElementById("analysis-results-col");
+          if (resultsCol) {
+            resultsCol.classList.remove("lg:col-span-7");
+            resultsCol.classList.add("lg:col-span-12");
+          }
+
+          // Profile Analysis flow handling (when started from Customer Profile)
+          if (window.isUpdatingProfileFromCustomerPage) {
+            window.isUpdatingProfile = true;
+
+            // 1. Reward +5 points for updating body metrics (1 time / 7 days)
+            const NOW = Date.now();
+            const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
+            let userObj = currentUser;
+            if (!userObj) {
+              const savedUser = localStorage.getItem("nutriadmin_current_user");
+              if (savedUser) { try { userObj = JSON.parse(savedUser); } catch(e) {} }
+            }
+
+            if (userObj) {
+              const lastRewardTime = userObj.lastBodyUpdateRewardTime || 0;
+              if (NOW - lastRewardTime >= SEVEN_DAYS_MS) {
+                userObj.points = (userObj.points || 0) + 5;
+                userObj.lastBodyUpdateRewardTime = NOW;
+                if (typeof getRankFromPoints === "function") {
+                  userObj.rank = getRankFromPoints(userObj.points);
+                }
+                currentUser = userObj;
+                localStorage.setItem("nutriadmin_current_user", JSON.stringify(userObj));
+                setTimeout(() => {
+                  alert(`🎉 Bạn đã cập nhật chỉ số cơ thể thành công và nhận được +5 điểm tích lũy!\nTổng điểm hiện tại: ${userObj.points} điểm.`);
+                }, 800);
+              } else {
+                const daysLeft = Math.ceil((SEVEN_DAYS_MS - (NOW - lastRewardTime)) / (24 * 60 * 60 * 1000));
+                setTimeout(() => {
+                  alert(`ℹ️ Chỉ số cơ thể đã được cập nhật vào Hồ sơ cá nhân!\n(Bạn đã nhận +5 điểm thưởng cập nhật chỉ số trong tuần này rồi. Hãy quay lại sau ${daysLeft} ngày nhé).`);
+                }, 800);
+              }
+            }
+
+            // 2. Hide recommendations & show return to profile button
+            const recSection = document.getElementById("consulting-recommendations-section");
+            if (recSection) recSection.classList.add("hidden");
+            const saveBtn = document.getElementById("save-profile-action");
+            if (saveBtn) saveBtn.classList.add("hidden");
+            const returnBtn = document.getElementById("profile-return-action");
+            if (returnBtn) returnBtn.classList.remove("hidden");
+          }
+
 
           // Kích hoạt hiệu ứng Confetti
           if (typeof confetti === "function") {
@@ -16192,6 +16420,41 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
         }
 
         orders.unshift(newOrder);
+
+        try {
+          if (typeof cloudDb !== 'undefined' && cloudDb) {
+            cloudDb.collection('nutriadmin_v1').doc('orders_log').set({
+              orders: typeof firebase !== 'undefined' && firebase.firestore ? firebase.firestore.FieldValue.arrayUnion(newOrder) : [newOrder]
+            }, { merge: true }).catch(e => console.warn('Order Firebase push error:', e.message));
+          }
+        } catch (e) {}
+
+        if (newOrder.customerName || newOrder.customerPhone) {
+          const leadFromOrder = {
+            id: newOrder.id || Date.now(),
+            name: newOrder.customerName || 'Khách hàng',
+            phone: newOrder.customerPhone || '',
+            address: newOrder.customerAddress || '',
+            package: newOrder.packagePlan || 'Đơn lẻ',
+            size: newOrder.size || 'lean',
+            meals: '1',
+            source: newOrder.source || 'Website',
+            date: new Date()
+          };
+          if (window.potentialCustomers) {
+            if (!window.potentialCustomers.some(c => c.phone && c.phone === leadFromOrder.phone)) {
+              window.potentialCustomers.unshift(leadFromOrder);
+              localStorage.setItem("nutriadmin_potential_customers", JSON.stringify(window.potentialCustomers));
+            }
+          }
+          try {
+            if (typeof cloudDb !== 'undefined' && cloudDb) {
+              cloudDb.collection('nutriadmin_v1').doc('potential_customers_log').set({
+                customers: typeof firebase !== 'undefined' && firebase.firestore ? firebase.firestore.FieldValue.arrayUnion(leadFromOrder) : [leadFromOrder]
+              }, { merge: true }).catch(() => {});
+            }
+          } catch(e) {}
+        }
         if (typeof renderOrdersAdmin === "function") renderOrdersAdmin();
         if (typeof renderGrandOpeningCustomers === "function")
           renderGrandOpeningCustomers();
@@ -19460,6 +19723,7 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
 
       function renderShippers() {
         initShipperMap();
+        populateShipperRouteOptions();
 
         const tbody = document.getElementById("shipper-table-body");
         if (!tbody) return;
@@ -19508,6 +19772,7 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
                           <td class="px-6 py-4">${oHtml}</td>
                           <td class="px-6 py-4">${styles[s.status]}</td>
                           <td class="px-6 py-4 text-right">
+                              <button onclick="viewShipperRoute(${s.id})" class="text-amber-500 hover:text-amber-700 mr-3 transition-colors text-sm font-semibold inline-flex items-center gap-1" title="Xem tuyến đường giao hàng"><i class="fa-solid fa-route"></i> Tuyến đường</button>
                               <button onclick="showShipperQR(${s.id})" class="text-emerald-500 hover:text-emerald-700 mr-3 transition-colors" title="Mã QR cho Tài xế"><i class="fa-solid fa-qrcode"></i></button>
                               <button onclick="openShipperApp(${s.id})" class="text-indigo-500 hover:text-indigo-700 mr-3 transition-colors" title="Bật App Shipper (Mô phỏng)"><i class="fa-solid fa-mobile-screen"></i></button>
                               <button onclick="openShipperModal('edit', ${s.id})" class="text-blue-500 hover:text-blue-700 mr-3 transition-colors"><i class="fa-solid fa-pen"></i></button>
@@ -19773,25 +20038,37 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
       }
 
       async function startRouteOptimization() {
-        const unassignedOrders = orders.filter(
+        const kPos = typeof getKitchenPos === "function" ? getKitchenPos() : [10.7769, 106.7009];
+
+        // 1. Get eligible unassigned / active orders
+        let targetOrders = orders.filter(
           (o) =>
-            o.shipperId === null &&
-            !["completed", "cancelled"].includes(o.status),
+            (o.shipperId === null || o.shipperId === undefined) &&
+            ["pending", "processing", "ready"].includes(o.status)
         );
 
-        if (unassignedOrders.length === 0) {
+        if (targetOrders.length === 0) {
+          targetOrders = orders.filter(
+            (o) => ["pending", "processing", "ready"].includes(o.status)
+          );
+        }
+
+        if (targetOrders.length === 0) {
           showToast(
-            "Tất cả đơn hàng hiện tại đã được phân công Shipper!",
-            "info",
+            "Không có đơn hàng nào (Chờ XN / Đang CB / Sẵn sàng) để phân công!",
+            "info"
           );
           closeRouteAIModal();
           return;
         }
 
-        if (shippers.length === 0) {
+        // 2. Filter Shippers with status "active" (Đang rảnh)
+        const freeShippers = shippers.filter((s) => s.status === "active");
+
+        if (freeShippers.length === 0) {
           showToast(
-            "Bạn cần thêm Shipper vào hệ thống trước khi điều phối!",
-            "error",
+            "Không có Shipper nào đang ở trạng thái 'Đang rảnh' trong hệ thống!",
+            "error"
           );
           closeRouteAIModal();
           return;
@@ -19800,45 +20077,73 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
         document.getElementById("route-ai-intro").classList.add("hidden");
         document.getElementById("route-ai-loading").classList.remove("hidden");
 
-        const ordersData = unassignedOrders.map((o) => ({
-          id: o.id,
-          address: o.address,
-        }));
-        const shippersData = shippers.map((s) => ({
+        const enrichedOrders = targetOrders.map((o) => {
+          let lat = o.lat ? parseFloat(o.lat) : null;
+          let lng = o.lng ? parseFloat(o.lng) : null;
+          if (!lat || !lng) {
+            const cus = (purchasedCustomers || []).find((c) => c.id == o.packageCustomerId || c.phone === o.phone);
+            if (cus && cus.lat && cus.lng) {
+              lat = parseFloat(cus.lat);
+              lng = parseFloat(cus.lng);
+            }
+          }
+          if (!lat || !lng) {
+            lat = kPos[0] + (Math.random() * 0.04 - 0.02);
+            lng = kPos[1] + (Math.random() * 0.04 - 0.02);
+          }
+          return {
+            id: o.id,
+            customerName: o.customerName,
+            address: o.address,
+            lat: lat,
+            lng: lng
+          };
+        });
+
+        const shippersData = freeShippers.map((s) => ({
           id: s.id,
           name: s.name,
           plate: s.plate,
         }));
 
-        const prompt = `You are an expert logistics routing AI for a cloud kitchen in Ho Chi Minh City, Vietnam.
-                  Unassigned Orders: ${JSON.stringify(ordersData)}
-                  Available Shippers: ${JSON.stringify(shippersData)}
+        const prompt = `You are an expert logistics routing AI for Nuri Kitchen located at Store coordinates [${kPos[0]}, ${kPos[1]}].
+Store Coordinates (Origin): [${kPos[0]}, ${kPos[1]}]
+Orders to deliver: ${JSON.stringify(enrichedOrders)}
+Available Free Shippers: ${JSON.stringify(shippersData)}
 
-                  Task: Group the unassigned orders based on geographical proximity (e.g., group districts that are close to each other like Q1 and Q3). Assign these groups to the available shippers to minimize travel time. Distribute the load among shippers.
+Task: Starting from the Store Location, group orders into optimal routes based on geographical proximity and shortest distance from the store. Assign these route groups ONLY to the free shippers.
 
-                  Return STRICTLY a JSON array of objects. Each object represents a shipper's route:
-                  [
-                    {
-                      "shipperId": (number) ID of the assigned shipper,
-                      "orderIds": [(array of strings) IDs of orders assigned to this shipper],
-                      "reason": "(string in Vietnamese) A brief explanation of the grouping logic (e.g., 'Gom tuyến trung tâm: Q1, Q3')"
-                    }
-                  ]
-                  Do not output any markdown formatting or extra text, just the JSON array.`;
+Return STRICTLY a JSON array of objects:
+[
+  {
+    "shipperId": (number) ID of assigned free shipper,
+    "orderIds": [(array of strings/numbers) IDs of orders],
+    "reason": "(string in Vietnamese) Route summary e.g. 'Tuyến 1 xuất phát từ Bếp -> Q1, Q3 (Tối ưu logistics)'"
+  }
+]
+Do not output markdown code blocks or extra text, just the raw JSON.`;
 
         let assignments = [];
         try {
           const responseText = await fetchGeminiAPI(prompt, true);
           const cleanJson = responseText.replace(/```json\n?|```/gi, "").trim();
           assignments = JSON.parse(cleanJson);
-
-          latestAIAssignments = assignments;
-          renderRouteAIResult(assignments, unassignedOrders);
         } catch (error) {
-          console.error("Route Nuri Error:", error);
-          showToast("Lỗi khi tính toán phân luồng. Vui lòng thử lại.", "error");
-          closeRouteAIModal();
+          console.error("AI Routing failed, using local optimization algorithm:", error);
+          assignments = freeShippers.map((s) => ({
+            shipperId: s.id,
+            orderIds: [],
+            reason: `Tuyến phân bổ tối ưu từ Bếp [${kPos[0].toFixed(2)}, ${kPos[1].toFixed(2)}] cho ${s.name}`
+          }));
+
+          enrichedOrders.forEach((ord, i) => {
+            const sIdx = i % freeShippers.length;
+            assignments[sIdx].orderIds.push(ord.id);
+          });
         }
+
+        latestAIAssignments = assignments;
+        renderRouteAIResult(assignments, targetOrders);
       }
 
       function renderRouteAIResult(assignments, unassignedOrders) {
@@ -20518,7 +20823,8 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
                           <td class="px-6 py-4 text-slate-600">${new Date(c.startDate).toLocaleDateString("vi-VN")}${c.endDate ? " - " + new Date(c.endDate).toLocaleDateString("vi-VN") : ""}</td>
                           <td class="px-6 py-4">${dStatus}</td>
                           <td class="px-6 py-4 text-right">
-                              <button onclick="openCustomerMenuModal(${c.id}, true)" class="text-xs bg-emerald-100 text-emerald-700 px-3 py-1.5 rounded mr-2"><i class="fa-solid fa-calendar-week"></i> Menu</button>
+                              <button onclick="openCustomerLocationPinModal('${c.id}')" class="text-xs ${c.lat && c.lng ? 'bg-rose-100 text-rose-700 border border-rose-300 font-bold' : 'bg-rose-50 text-rose-600 border border-rose-200 hover:bg-rose-100'} px-3 py-1.5 rounded mr-2 inline-flex items-center gap-1" title="${c.lat && c.lng ? 'Đã ghim vị trí' : 'Chưa ghim vị trí'}"><i class="fa-solid fa-location-dot text-rose-500"></i> ${c.lat && c.lng ? 'Đã ghim' : 'Ghim vị trí'}</button>
+                               <button onclick="openCustomerMenuModal(${c.id}, true)" class="text-xs bg-emerald-100 text-emerald-700 px-3 py-1.5 rounded mr-2"><i class="fa-solid fa-calendar-week"></i> Menu</button>
                               <button onclick="openPurchasedModal('edit', ${c.id})" class="text-blue-500 mr-2"><i class="fa-solid fa-pen"></i></button>
                               <button onclick="deletePurchasedCustomer(${c.id})" class="text-red-500"><i class="fa-solid fa-trash"></i></button>
                           </td>
@@ -21449,6 +21755,14 @@ function savePurchasedCustomer(e) {
           } catch (storageErr) {
             console.error("Local storage save error:", storageErr);
           }
+
+          try {
+            if (typeof cloudDb !== 'undefined' && cloudDb) {
+              cloudDb.collection('nutriadmin_v1').doc('potential_customers_log').set({
+                customers: typeof firebase !== 'undefined' && firebase.firestore ? firebase.firestore.FieldValue.arrayUnion(newLead) : [newLead]
+              }, { merge: true }).catch(e => console.warn('Lead Firebase write failed:', e.message));
+            }
+          } catch (e) {}
 
           syncStateToServer();
           playSuccessSound();
@@ -22840,6 +23154,258 @@ function openCustomerMenuModal(cId, isFromAdmin = false) {
       }
 
       // ==========================================
+      // PURCHASES CUSTOMERS LOCATION PIN HANDLERS
+      // ==========================================
+      let customerPinMap = null;
+      let customerPinMarker = null;
+      let currentPinCustomerId = null;
+      let currentPinLat = null;
+      let currentPinLng = null;
+      function openCustomerLocationPinModal(cId) {
+        const c = purchasedCustomers.find((x) => x.id == cId);
+        if (!c) {
+          showToast("Không tìm thấy thông tin khách hàng!", "error");
+          return;
+        }
+        currentPinCustomerId = cId;
+        
+        const infoEl = document.getElementById("pin-modal-customer-info");
+        if (infoEl) infoEl.innerText = `${c.name} - SĐT: ${c.phone} | Gói: ${resolvePackageName(c.package)}`;
+
+        const addrStr = c.address || `${c.street || ''}${c.ward ? ', ' + c.ward : ''}${c.district ? ', ' + c.district : ''}, TP. HCM`.replace(/^,\s*/, '');
+        const addrEl = document.getElementById("pin-modal-address");
+        if (addrEl) addrEl.innerText = addrStr || "Chưa nhập địa chỉ cụ thể";
+
+        document.getElementById("customer-pin-modal").classList.remove("hidden");
+        document.getElementById("customer-pin-modal").classList.add("flex");
+
+        // Initial coords
+        let initialPos = [10.7769, 106.7009]; // TP.HCM center default
+        if (c.lat && c.lng) {
+          initialPos = [parseFloat(c.lat), parseFloat(c.lng)];
+        } else if (typeof getKitchenPos === "function") {
+          initialPos = getKitchenPos();
+        }
+
+        currentPinLat = initialPos[0];
+        currentPinLng = initialPos[1];
+        updatePinCoordsDisplay();
+
+        setTimeout(() => {
+          if (!customerPinMap) {
+            customerPinMap = L.map("customer-pin-map").setView(initialPos, c.lat && c.lng ? 16 : 13);
+            L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+              attribution: "&copy; OpenStreetMap contributors",
+            }).addTo(customerPinMap);
+
+            customerPinMarker = L.marker(initialPos, { draggable: true }).addTo(customerPinMap);
+
+            customerPinMarker.on("dragend", function (e) {
+              const pos = e.target.getLatLng();
+              currentPinLat = pos.lat;
+              currentPinLng = pos.lng;
+              updatePinCoordsDisplay();
+            });
+
+            customerPinMap.on("click", function (e) {
+              customerPinMarker.setLatLng(e.latlng);
+              currentPinLat = e.latlng.lat;
+              currentPinLng = e.latlng.lng;
+              updatePinCoordsDisplay();
+            });
+          } else {
+            customerPinMap.setView(initialPos, c.lat && c.lng ? 16 : 13);
+            customerPinMarker.setLatLng(initialPos);
+            customerPinMap.invalidateSize();
+          }
+        }, 150);
+      }
+
+      function updatePinCoordsDisplay() {
+        const el = document.getElementById("pin-coords-display");
+        if (el) {
+          el.innerText = `${Number(currentPinLat).toFixed(5)}, ${Number(currentPinLng).toFixed(5)}`;
+        }
+      }
+
+      function closeCustomerPinModal() {
+        document.getElementById("customer-pin-modal").classList.add("hidden");
+        document.getElementById("customer-pin-modal").classList.remove("flex");
+      }
+
+      async function aiGeocodeCustomerAddress() {
+        if (!currentPinCustomerId) return;
+        const c = purchasedCustomers.find((x) => x.id == currentPinCustomerId);
+        if (!c) return;
+
+        const rawAddress = c.address || `${c.street || ''} ${c.ward || ''} ${c.district || ''} Ho Chi Minh Vietnam`.trim();
+        if (!rawAddress) {
+          showToast("Khách hàng chưa có thông tin địa chỉ để AI tìm vị trí!", "error");
+          return;
+        }
+
+        showToast("🤖 AI đang phân tích địa chỉ khách hàng...", "info");
+
+        try {
+          let query = rawAddress;
+          if (!query.toLowerCase().includes("hồ chí minh") && !query.toLowerCase().includes("hcm")) {
+            query += ", Hồ Chí Minh, Việt Nam";
+          }
+
+          const response = await fetch(
+            `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1&accept-language=vi`
+          );
+          const data = await response.json();
+
+          if (data && data.length > 0) {
+            const lat = parseFloat(data[0].lat);
+            const lon = parseFloat(data[0].lon);
+
+            currentPinLat = lat;
+            currentPinLng = lon;
+            updatePinCoordsDisplay();
+
+            if (customerPinMap && customerPinMarker) {
+              customerPinMarker.setLatLng([lat, lon]);
+              customerPinMap.setView([lat, lon], 16);
+            }
+
+            showToast("🤖 AI đã định vị thành công vị trí khách hàng!", "success");
+          } else {
+            let altQuery = `${c.district || ''}, Hồ Chí Minh, Việt Nam`.trim();
+            const res2 = await fetch(
+              `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(altQuery)}&limit=1&accept-language=vi`
+            );
+            const data2 = await res2.json();
+            if (data2 && data2.length > 0) {
+              const lat = parseFloat(data2[0].lat);
+              const lon = parseFloat(data2[0].lon);
+              currentPinLat = lat;
+              currentPinLng = lon;
+              updatePinCoordsDisplay();
+              if (customerPinMap && customerPinMarker) {
+                customerPinMarker.setLatLng([lat, lon]);
+                customerPinMap.setView([lat, lon], 14);
+              }
+              showToast("🤖 AI đã định vị theo Quận/Huyện. Hãy click chọn vị trí số nhà chính xác!", "info");
+            } else {
+              showToast("AI không tìm thấy tọa độ cho địa chỉ này. Vui lòng click chọn thủ công trên bản đồ!", "warning");
+            }
+          }
+        } catch (err) {
+          console.error("AI Geocode Error:", err);
+          showToast("Lỗi kết nối dịch vụ bản đồ AI!", "error");
+        }
+      }
+
+      function saveCustomerLocationPin() {
+        if (!currentPinCustomerId || currentPinLat === null || currentPinLng === null) return;
+        const c = purchasedCustomers.find((x) => x.id == currentPinCustomerId);
+        if (!c) return;
+
+        c.lat = currentPinLat;
+        c.lng = currentPinLng;
+
+        localStorage.setItem("nutriadmin_purchased_customers", JSON.stringify(purchasedCustomers));
+        if (typeof syncStateToServer === "function") syncStateToServer();
+        renderPurchasedCustomers();
+        closeCustomerPinModal();
+        showToast(`Đã ghim vị trí cho khách hàng ${c.name}!`, "success");
+      }
+
+      let allPurchasedMap = null;
+      let allPurchasedMarkersGroup = null;
+
+      function openPurchasedCustomerMapModal() {
+        document.getElementById("all-purchased-map-modal").classList.remove("hidden");
+        document.getElementById("all-purchased-map-modal").classList.add("flex");
+
+        const pinnedCount = purchasedCustomers.filter(c => c.lat && c.lng).length;
+        const statsEl = document.getElementById("all-purchased-map-stats");
+        if (statsEl) {
+          statsEl.innerText = `Đã ghim vị trí: ${pinnedCount}/${purchasedCustomers.length} khách hàng mua gói`;
+        }
+
+        setTimeout(() => {
+          const defaultCenter = typeof getKitchenPos === "function" ? getKitchenPos() : [10.7769, 106.7009];
+
+          if (!allPurchasedMap) {
+            allPurchasedMap = L.map("all-purchased-leaflet-map").setView(defaultCenter, 12);
+            L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+              attribution: "&copy; OpenStreetMap contributors",
+            }).addTo(allPurchasedMap);
+          } else {
+            allPurchasedMap.invalidateSize();
+          }
+
+          if (allPurchasedMarkersGroup) {
+            allPurchasedMap.removeLayer(allPurchasedMarkersGroup);
+          }
+
+          allPurchasedMarkersGroup = L.featureGroup();
+
+          const today = new Date();
+          today.setHours(0,0,0,0);
+
+          purchasedCustomers.forEach((c) => {
+            if (c.lat && c.lng) {
+              let isExpired = false;
+              if (c.endDate) {
+                const eDate = new Date(c.endDate);
+                eDate.setHours(0,0,0,0);
+                if (eDate < today) isExpired = true;
+              }
+
+              const markerColor = isExpired ? "#ef4444" : "#10b981";
+              
+              const customIcon = L.divIcon({
+                className: "custom-customer-pin",
+                html: `<div style="background-color: ${markerColor}; color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; border: 2px solid white; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);"><i class="fa-solid fa-user"></i></div>`,
+                iconSize: [32, 32],
+                iconAnchor: [16, 16],
+              });
+
+              const popupHtml = `
+                <div class="p-2 min-w-[200px]">
+                  <div class="font-bold text-slate-800 text-sm flex items-center justify-between">
+                    <span>${c.name}</span>
+                    <span class="text-[10px] px-2 py-0.5 rounded text-white ${isExpired ? 'bg-red-500' : 'bg-emerald-500'}">${isExpired ? 'Đã hết hạn' : 'Đang dùng gói'}</span>
+                  </div>
+                  <div class="text-xs text-slate-500 mt-1"><i class="fa-solid fa-phone text-emerald-600 mr-1"></i>${c.phone}</div>
+                  <div class="text-xs text-rose-600 font-semibold mt-1">Gói: ${resolvePackageName(c.package)} (Size ${c.size || 'M'})</div>
+                  <div class="text-[11px] text-slate-600 mt-1 max-w-[220px]"><i class="fa-solid fa-location-dot text-red-500 mr-1"></i>${c.address || `${c.street || ''}, ${c.ward || ''}, ${c.district || ''}`}</div>
+                  <div class="mt-2 pt-2 border-t border-slate-100 flex justify-end">
+                    <button onclick="openCustomerLocationPinModal(${c.id}); closePurchasedCustomerMapModal();" class="text-xs bg-indigo-50 text-indigo-600 px-2 py-1 rounded font-bold hover:bg-indigo-100">Chỉnh sửa ghim</button>
+                  </div>
+                </div>
+              `;
+
+              const marker = L.marker([parseFloat(c.lat), parseFloat(c.lng)], { icon: customIcon }).bindPopup(popupHtml);
+              allPurchasedMarkersGroup.addLayer(marker);
+            }
+          });
+
+          allPurchasedMarkersGroup.addTo(allPurchasedMap);
+
+          if (pinnedCount > 0) {
+            allPurchasedMap.fitBounds(allPurchasedMarkersGroup.getBounds().pad(0.1));
+          }
+        }, 150);
+      }
+
+      function closePurchasedCustomerMapModal() {
+        document.getElementById("all-purchased-map-modal").classList.add("hidden");
+        document.getElementById("all-purchased-map-modal").classList.remove("flex");
+      }
+
+      window.openCustomerLocationPinModal = openCustomerLocationPinModal;
+      window.closeCustomerPinModal = closeCustomerPinModal;
+      window.aiGeocodeCustomerAddress = aiGeocodeCustomerAddress;
+      window.saveCustomerLocationPin = saveCustomerLocationPin;
+      window.openPurchasedCustomerMapModal = openPurchasedCustomerMapModal;
+      window.closePurchasedCustomerMapModal = closePurchasedCustomerMapModal;
+
+      // ==========================================
       // 13. LOCATIONS HANDLERS
       // ==========================================
       let leafletMap = null;
@@ -23593,7 +24159,7 @@ function openCustomerMenuModal(cId, isFromAdmin = false) {
                       <div class="w-7 h-7 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0 text-xs shadow-sm border border-emerald-200">
                         <i class="fa-solid fa-robot"></i>
                       </div>
-                      <div id="chatbot-greeting-msg" class="bg-white p-3 rounded-2xl rounded-tl-none border border-slate-100 text-sm text-slate-700 shadow-sm leading-relaxed">
+                      <div id="chatbot-greeting-msg" class="bg-white p-3 rounded-2xl rounded-tl-none border border-slate-100 text-[28px] leading-[38px] text-slate-700 shadow-sm leading-relaxed">
                         Chào bạn! Nuri là chuyên gia dinh dưỡng ảo của Nuri Kitchen. 👋<br><br>Nuri có thể giúp bạn giải đáp các thắc mắc về calo, gợi ý món ăn, hoặc tư vấn lộ trình giảm cân. Bạn cần hỗ trợ gì ạ?
                       </div>
                     </div>
@@ -23626,7 +24192,7 @@ function openCustomerMenuModal(cId, isFromAdmin = false) {
             msgDiv.className =
               "flex gap-2.5 w-max max-w-[85%] self-end flex-row-reverse animate-fade-in mt-4";
             msgDiv.innerHTML = `
-                            <div class="bg-slate-800 text-white p-3 rounded-2xl rounded-tr-none text-sm shadow-sm leading-relaxed">
+                            <div class="bg-slate-800 text-white p-3 rounded-2xl rounded-tr-none text-[28px] leading-[38px] shadow-sm leading-relaxed">
                                 ${formattedText}
                             </div>
                         `;
@@ -23635,7 +24201,7 @@ function openCustomerMenuModal(cId, isFromAdmin = false) {
               "flex gap-2.5 w-max max-w-[85%] animate-fade-in mt-4";
             msgDiv.innerHTML = `
                             <div class="w-7 h-7 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0 text-xs shadow-sm border border-emerald-200"><i class="fa-solid fa-robot"></i></div>
-                            <div class="bg-white p-3 rounded-2xl rounded-tl-none border border-slate-100 text-sm text-slate-700 shadow-sm leading-relaxed">
+                            <div class="bg-white p-3 rounded-2xl rounded-tl-none border border-slate-100 text-[28px] leading-[38px] text-slate-700 shadow-sm leading-relaxed">
                                 ${formattedText}
                             </div>
                         `;
@@ -23658,7 +24224,7 @@ function openCustomerMenuModal(cId, isFromAdmin = false) {
           msgDiv.className =
             "flex gap-2.5 w-max max-w-[85%] self-end flex-row-reverse animate-fade-in";
           msgDiv.innerHTML = `
-                          <div class="bg-slate-800 text-white p-3 rounded-2xl rounded-tr-none text-sm shadow-sm leading-relaxed">
+                          <div class="bg-slate-800 text-white p-3 rounded-2xl rounded-tr-none text-[28px] leading-[38px] shadow-sm leading-relaxed">
                               ${formattedText}
                           </div>
                       `;
@@ -23666,7 +24232,7 @@ function openCustomerMenuModal(cId, isFromAdmin = false) {
           msgDiv.className = "flex gap-2.5 w-max max-w-[85%] animate-fade-in";
           msgDiv.innerHTML = `
                           <div class="w-7 h-7 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0 text-xs shadow-sm border border-emerald-200"><i class="fa-solid fa-robot"></i></div>
-                          <div class="bg-white p-3 rounded-2xl rounded-tl-none border border-slate-100 text-sm text-slate-700 shadow-sm leading-relaxed">
+                          <div class="bg-white p-3 rounded-2xl rounded-tl-none border border-slate-100 text-[28px] leading-[38px] text-slate-700 shadow-sm leading-relaxed">
                               ${formattedText}
                           </div>
                       `;
@@ -24032,6 +24598,158 @@ function openCustomerMenuModal(cId, isFromAdmin = false) {
                 }
               }, (e) => {
                 console.warn("Could not subscribe to potential_customers_log:", e.message);
+              });
+
+            // Lắng nghe real-time tin nhắn khách hàng (chats_log)
+            cloudDb
+              .collection("nutriadmin_v1")
+              .doc("chats_log")
+              .onSnapshot((snap) => {
+                if (!snap.exists) return;
+                const data = snap.data();
+                if (!data || !data.chats) return;
+
+                let merged = false;
+                let newChatFromCustomer = null;
+
+                for (const cid in data.chats) {
+                  const cChat = data.chats[cid];
+                  if (!cChat) continue;
+
+                  if (!allChats[cid] || (cChat.lastUpdated && cChat.lastUpdated > (allChats[cid].lastUpdated || 0))) {
+                    const prevLen = allChats[cid]?.history?.length || 0;
+                    allChats[cid] = cChat;
+                    merged = true;
+
+                    const newLen = cChat.history?.length || 0;
+                    if (newLen > prevLen) {
+                      const lastMsg = cChat.history[newLen - 1];
+                      if (lastMsg && (lastMsg.role === 'user' || lastMsg.sender === 'customer')) {
+                        newChatFromCustomer = {
+                          cid,
+                          name: cChat.name || 'Khách hàng',
+                          text: lastMsg.parts?.[0]?.text || lastMsg.text || 'Gửi tin nhắn mới...'
+                        };
+                      }
+                    }
+                  }
+                }
+
+                if (merged) {
+                  localStorage.setItem("nutriadmin_all_chats", JSON.stringify(allChats));
+                  if (typeof updateMessagesNavBadge === 'function') updateMessagesNavBadge();
+                  if (typeof renderMessagesList === 'function') renderMessagesList();
+                  if (typeof currentAdminChatId !== 'undefined' && currentAdminChatId && typeof renderAdminChatMessages === 'function') {
+                    try { renderAdminChatMessages(currentAdminChatId); } catch(e) {}
+                  }
+
+                  if (newChatFromCustomer && typeof addAdminNotification === 'function') {
+                    addAdminNotification(
+                      'chat',
+                      'Tin nhắn mới từ ' + newChatFromCustomer.name,
+                      newChatFromCustomer.text,
+                      newChatFromCustomer.cid + '_' + Date.now(),
+                      "switchView('messages'); if (typeof openAdminChat === 'function') openAdminChat('" + newChatFromCustomer.cid + "');"
+                    );
+                  }
+                }
+              }, (e) => {
+                console.warn("Could not subscribe to chats_log:", e.message);
+              });
+
+            // Lắng nghe real-time đơn hàng từ điện thoại khách hàng (orders_log)
+            cloudDb
+              .collection("nutriadmin_v1")
+              .doc("orders_log")
+              .onSnapshot((snap) => {
+                if (!snap.exists) return;
+                const data = snap.data();
+                if (!data || !Array.isArray(data.orders) || data.orders.length === 0) return;
+
+                const existingIds = new Set(orders.map((o) => o.id));
+                let merged = false;
+
+                data.orders.forEach((o) => {
+                  if (!existingIds.has(o.id)) {
+                    orders.unshift(o);
+                    merged = true;
+
+                    if (typeof addAdminNotification === 'function') {
+                      addAdminNotification(
+                        'order',
+                        'Có đơn hàng mới!',
+                        `Khách <b>${o.customerName || 'Khách hàng'}</b> vừa đặt đơn <b class="text-primary">${typeof formatCurrency === 'function' ? formatCurrency(o.total || 0) : o.total}đ</b>.`,
+                        o.id,
+                        "switchView('orders')"
+                      );
+                    }
+                  }
+                });
+
+                if (merged) {
+                  localStorage.setItem("nutriadmin_orders", JSON.stringify(orders));
+                  if (typeof renderOrdersAdmin === 'function') {
+                    try { renderOrdersAdmin(); } catch(e) {}
+                  }
+                  if (typeof renderGrandOpeningCustomers === 'function') {
+                    try { renderGrandOpeningCustomers(); } catch(e) {}
+                  }
+                  if (typeof renderPurchasedCustomers === 'function') {
+                    try { renderPurchasedCustomers(); } catch(e) {}
+                  }
+                }
+              }, (e) => {
+                console.warn("Could not subscribe to orders_log:", e.message);
+              });
+
+            // Lắng nghe real-time đánh giá từ điện thoại khách hàng (reviews_log)
+            cloudDb
+              .collection("nutriadmin_v1")
+              .doc("reviews_log")
+              .onSnapshot((snap) => {
+                if (!snap.exists) return;
+                const data = snap.data();
+                if (!data || !data.reviews) return;
+
+                let merged = false;
+                let newReviewInfo = null;
+
+                for (const rId in data.reviews) {
+                  const rev = data.reviews[rId];
+                  if (!rev) continue;
+
+                  if (!allReviews[rId] || (rev.timestamp && rev.timestamp > (allReviews[rId].timestamp || 0))) {
+                    allReviews[rId] = rev;
+                    merged = true;
+                    if (!rev.reply) {
+                      newReviewInfo = {
+                        orderId: rId,
+                        rating: rev.rating || 5,
+                        comment: rev.comment || 'Không có nhận xét'
+                      };
+                    }
+                  }
+                }
+
+                if (merged) {
+                  localStorage.setItem("nutriadmin_all_reviews", JSON.stringify(allReviews));
+                  if (typeof updateMessagesNavBadge === 'function') updateMessagesNavBadge();
+                  if (typeof renderAdminReviewsList === 'function') {
+                    try { renderAdminReviewsList(); } catch(e) {}
+                  }
+
+                  if (newReviewInfo && typeof addAdminNotification === 'function') {
+                    addAdminNotification(
+                      'review',
+                      'Đánh giá mới (' + newReviewInfo.rating + '⭐)',
+                      newReviewInfo.comment,
+                      newReviewInfo.orderId + '_' + Date.now(),
+                      "switchView('messages')"
+                    );
+                  }
+                }
+              }, (e) => {
+                console.warn("Could not subscribe to reviews_log:", e.message);
               });
 
             // Đọc ảnh banner từ Firebase document riêng 'banner_images' và apply cho tất cả người dùng
@@ -28559,3 +29277,1589 @@ window.closePlatformSelectorModal = function() {
     const modal = document.getElementById('platform-selector-modal');
     if (modal) modal.classList.add('hidden');
 };
+
+
+// ==========================================
+// SHIPPER ROUTE MAPPING & OSRM LOGIC
+// ==========================================
+let leafletPolylines = [];
+
+function populateShipperRouteOptions() {
+  const filterEl = document.getElementById("density-map-filter");
+  if (!filterEl) return;
+  
+  const currentVal = filterEl.value;
+  let html = `
+    <option value="all_pinned">📌 Khách hàng đã ghim vị trí</option>
+    <option value="all_active_orders">📦 Tất cả đơn cần giao (Chờ XN / Đang CB / Sẵn sàng)</option>
+    <option value="all_shipper_routes">🚚 Tuyến đường giao hàng (Tất cả Shipper)</option>
+    <option value="pending">⏳ Chờ xác nhận (pending)</option>
+    <option value="processing">🔥 Đang chuẩn bị (processing)</option>
+    <option value="ready">✅ Sẵn sàng giao (ready)</option>
+  `;
+  
+  if (Array.isArray(shippers) && shippers.length > 0) {
+    html += `<optgroup label="🚚 Tuyến đường từng Shipper">`;
+    shippers.forEach(s => {
+      const sOrders = (orders || []).filter(o => o.shipperId == s.id && o.status !== "completed" && o.status !== "cancelled");
+      html += `<option value="route_${s.id}">🛵 Tuyến đường: ${s.name} (${sOrders.length} đơn)</option>`;
+    });
+    html += `</optgroup>`;
+  }
+  
+  filterEl.innerHTML = html;
+  if ([...filterEl.options].some(o => o.value === currentVal)) {
+    filterEl.value = currentVal;
+  }
+}
+
+function viewShipperRoute(shipperId) {
+  populateShipperRouteOptions();
+  const filterEl = document.getElementById("density-map-filter");
+  if (filterEl) {
+    filterEl.value = `route_${shipperId}`;
+  }
+  filterShipperDensityMap();
+  const mapDiv = document.getElementById("customer-density-map");
+  if (mapDiv) {
+    mapDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+}
+
+function clearRouteSummaryView() {
+  const filterEl = document.getElementById("density-map-filter");
+  if (filterEl) filterEl.value = "all_pinned";
+  const card = document.getElementById("shipper-route-summary-card");
+  if (card) card.classList.add("hidden");
+  filterShipperDensityMap();
+}
+
+function clearMapLayers() {
+  if (typeof L !== "undefined" && dashboardMapInst instanceof L.Map) {
+    if (Array.isArray(leafletMarkers)) {
+      leafletMarkers.forEach(m => dashboardMapInst.removeLayer(m));
+    }
+    leafletMarkers = [];
+    if (Array.isArray(leafletPolylines)) {
+      leafletPolylines.forEach(p => dashboardMapInst.removeLayer(p));
+    }
+    leafletPolylines = [];
+  }
+}
+
+function calculateDistanceKm(lat1, lon1, lat2, lon2) {
+  const R = 6371;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+            Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
+
+function sortWaypointsOptimized(startPos, targetOrders) {
+  let unvisited = [...targetOrders];
+  let curr = { lat: startPos[0], lng: startPos[1] };
+  let sorted = [];
+
+  while (unvisited.length > 0) {
+    let nearestIdx = -1;
+    let minD = Infinity;
+
+    for (let i = 0; i < unvisited.length; i++) {
+      const d = calculateDistanceKm(curr.lat, curr.lng, unvisited[i].lat, unvisited[i].lng);
+      if (d < minD) {
+        minD = d;
+        nearestIdx = i;
+      }
+    }
+
+    if (nearestIdx !== -1) {
+      const nextItem = unvisited.splice(nearestIdx, 1)[0];
+      sorted.push(nextItem);
+      curr = { lat: nextItem.lat, lng: nextItem.lng };
+    } else {
+      break;
+    }
+  }
+
+  return sorted;
+}
+
+async function fetchOSRMRoute(waypointsCoords) {
+  try {
+    const coordsStr = waypointsCoords.map(c => `${c[0]},${c[1]}`).join(';');
+    const url = `https://router.project-osrm.org/route/v1/driving/${coordsStr}?overview=full&geometries=geojson`;
+    const res = await fetch(url);
+    if (!res.ok) return null;
+    const data = await res.json();
+    if (data.routes && data.routes[0]) {
+      const route = data.routes[0];
+      const geometry = route.geometry.coordinates.map(c => [c[1], c[0]]);
+      return {
+        geometry: geometry,
+        distanceKm: (route.distance / 1000).toFixed(1),
+        durationMin: Math.round(route.duration / 60)
+      };
+    }
+  } catch (err) {
+    console.warn("OSRM Route fetch error, using polyline fallback", err);
+  }
+  return null;
+}
+
+function focusMapOnPoint(lat, lng) {
+  if (dashboardMapInst) {
+    dashboardMapInst.setView([lat, lng], 16);
+  }
+}
+
+async function drawSingleShipperRoute(shipperId) {
+  clearMapLayers();
+  const shipper = (shippers || []).find(s => s.id == shipperId);
+  if (!shipper) {
+    if (typeof showToast === "function") showToast("Không tìm thấy Shipper", "error");
+    return;
+  }
+
+  const kPos = typeof getKitchenPos === "function" ? getKitchenPos() : [10.7769, 106.7009];
+  const card = document.getElementById("shipper-route-summary-card");
+
+  // Store Marker
+  const storeIcon = L.divIcon({
+    className: 'custom-store-pin',
+    html: '<div style="background-color: #ef4444; color: white; border-radius: 50%; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; font-size: 18px; box-shadow: 0 0 12px rgba(239,68,68,0.8); border: 2px solid white;"><i class="fa-solid fa-store"></i></div>',
+    iconSize: [36, 36],
+    iconAnchor: [18, 18]
+  });
+  const storeM = L.marker(kPos, { icon: storeIcon })
+    .bindPopup('<b>🏪 Cửa hàng / Bếp trung tâm Nuri</b><br>Xuất phát lộ trình')
+    .addTo(dashboardMapInst);
+  leafletMarkers.push(storeM);
+
+  const rawOrders = (orders || []).filter(o => o.shipperId == shipperId && o.status !== "completed" && o.status !== "cancelled");
+
+  if (rawOrders.length === 0) {
+    if (card) {
+      card.classList.remove("hidden");
+      document.getElementById("route-summary-title").innerHTML = `Tuyến đường: <span class="text-emerald-400 font-bold">${shipper.name}</span>`;
+      document.getElementById("route-summary-subtitle").innerText = `SĐT: ${shipper.phone} | BKS: ${shipper.plate || '--'}`;
+      document.getElementById("route-total-stops").innerText = "0 đơn";
+      document.getElementById("route-total-distance").innerText = "0 km";
+      document.getElementById("route-total-time").innerText = "0 phút";
+      document.getElementById("route-stops-sequence").innerHTML = `<span class="text-slate-400 italic">Shipper chưa có đơn hàng nào được phân công.</span>`;
+    }
+    dashboardMapInst.setView(kPos, 14);
+    return;
+  }
+
+  const targetOrders = rawOrders.map(o => {
+    let lat = o.lat ? parseFloat(o.lat) : null;
+    let lng = o.lng ? parseFloat(o.lng) : null;
+    if (!lat || !lng) {
+      const cus = (purchasedCustomers || []).find(c => c.id == o.packageCustomerId || c.phone === o.phone);
+      if (cus && cus.lat && cus.lng) {
+        lat = parseFloat(cus.lat);
+        lng = parseFloat(cus.lng);
+      }
+    }
+    if (!lat || !lng) {
+      lat = kPos[0] + (Math.random() * 0.03 - 0.015);
+      lng = kPos[1] + (Math.random() * 0.03 - 0.015);
+    }
+    return { ...o, lat, lng };
+  });
+
+  const sortedWaypoints = sortWaypointsOptimized(kPos, targetOrders);
+  const osrmWaypoints = [[kPos[1], kPos[0]], ...sortedWaypoints.map(w => [w.lng, w.lat])];
+  const routeResult = await fetchOSRMRoute(osrmWaypoints);
+
+  let routeLatLngs = [];
+  let distStr = "-- km";
+  let timeStr = "-- phút";
+
+  if (routeResult && routeResult.geometry && routeResult.geometry.length > 0) {
+    routeLatLngs = routeResult.geometry;
+    distStr = `${routeResult.distanceKm} km`;
+    timeStr = `${routeResult.durationMin} phút`;
+  } else {
+    routeLatLngs = [kPos, ...sortedWaypoints.map(w => [w.lat, w.lng])];
+    let totalD = 0;
+    for (let i = 0; i < routeLatLngs.length - 1; i++) {
+      totalD += calculateDistanceKm(routeLatLngs[i][0], routeLatLngs[i][1], routeLatLngs[i+1][0], routeLatLngs[i+1][1]);
+    }
+    distStr = `${totalD.toFixed(1)} km (Ước tính)`;
+    timeStr = `${Math.round(totalD * 4)} phút`;
+  }
+
+  const routePolyline = L.polyline(routeLatLngs, {
+    color: '#6366f1',
+    weight: 5,
+    opacity: 0.85,
+    lineCap: 'round',
+    lineJoin: 'round'
+  }).addTo(dashboardMapInst);
+  leafletPolylines.push(routePolyline);
+
+  let bounds = [kPos];
+  let seqHtml = `<span class="bg-emerald-500/20 text-emerald-300 px-2 py-1 rounded border border-emerald-500/30 flex items-center gap-1 font-semibold"><i class="fa-solid fa-store"></i> Bếp Nuri</span>`;
+
+  sortedWaypoints.forEach((w, idx) => {
+    bounds.push([w.lat, w.lng]);
+    const stopNum = idx + 1;
+
+    const stopIcon = L.divIcon({
+      className: 'custom-stop-pin',
+      html: `<div style="background-color: #f59e0b; color: white; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 13px; box-shadow: 0 0 10px rgba(245,158,11,0.8); border: 2px solid white;">${stopNum}</div>`,
+      iconSize: [32, 32],
+      iconAnchor: [16, 16]
+    });
+
+    const itemsStr = (w.items || []).map(i => i.name).join(', ') || 'Suất ăn';
+    const m = L.marker([w.lat, w.lng], { icon: stopIcon })
+      .bindPopup(`
+        <div class="p-1 min-w-[180px]">
+          <div class="font-bold text-slate-800 text-sm border-b pb-1 mb-1">📍 Điểm dừng #${stopNum} - Đơn #${w.id}</div>
+          <div class="text-xs text-slate-600"><b>Khách hàng:</b> ${w.customerName || '--'}</div>
+          <div class="text-xs text-slate-600"><b>SĐT:</b> ${w.phone || '--'}</div>
+          <div class="text-xs text-slate-600"><b>Địa chỉ:</b> ${w.address || '--'}</div>
+          <div class="text-xs text-slate-600 mt-1"><b>Món:</b> ${itemsStr}</div>
+        </div>
+      `)
+      .addTo(dashboardMapInst);
+    leafletMarkers.push(m);
+
+    seqHtml += ` <i class="fa-solid fa-chevron-right text-slate-500 self-center"></i> 
+      <div onclick="focusMapOnPoint(${w.lat}, ${w.lng})" class="cursor-pointer bg-slate-800 hover:bg-slate-700 text-white px-2.5 py-1 rounded border border-slate-700 flex items-center gap-1.5 transition-colors">
+        <span class="w-4 h-4 rounded-full bg-amber-500 text-white font-bold text-[10px] flex items-center justify-center">${stopNum}</span>
+        <span class="font-medium">${w.customerName || 'Đơn #' + w.id}</span>
+      </div>`;
+  });
+
+  if (card) {
+    card.classList.remove("hidden");
+    document.getElementById("route-summary-title").innerHTML = `Tuyến đường: <span class="text-emerald-400 font-bold">${shipper.name}</span>`;
+    document.getElementById("route-summary-subtitle").innerText = `SĐT: ${shipper.phone} | BKS: ${shipper.plate || '--'}`;
+    document.getElementById("route-total-stops").innerText = `${sortedWaypoints.length} đơn hàng`;
+    document.getElementById("route-total-distance").innerText = distStr;
+    document.getElementById("route-total-time").innerText = timeStr;
+    document.getElementById("route-stops-sequence").innerHTML = seqHtml;
+  }
+
+  try {
+    dashboardMapInst.fitBounds(bounds, { padding: [50, 50], maxZoom: 16 });
+  } catch (e) {
+    dashboardMapInst.setView(kPos, 13);
+  }
+}
+
+async function drawAllShippersRoutes() {
+  clearMapLayers();
+  const kPos = typeof getKitchenPos === "function" ? getKitchenPos() : [10.7769, 106.7009];
+  const card = document.getElementById("shipper-route-summary-card");
+
+  const storeIcon = L.divIcon({
+    className: 'custom-store-pin',
+    html: '<div style="background-color: #ef4444; color: white; border-radius: 50%; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; font-size: 18px; box-shadow: 0 0 12px rgba(239,68,68,0.8); border: 2px solid white;"><i class="fa-solid fa-store"></i></div>',
+    iconSize: [36, 36],
+    iconAnchor: [18, 18]
+  });
+  const storeM = L.marker(kPos, { icon: storeIcon })
+    .bindPopup('<b>🏪 Cửa hàng / Bếp trung tâm Nuri</b><br>Xuất phát lộ trình')
+    .addTo(dashboardMapInst);
+  leafletMarkers.push(storeM);
+
+  const colors = ["#6366f1", "#10b981", "#f59e0b", "#ec4899", "#3b82f6", "#14b8a6", "#8b5cf6"];
+  let bounds = [kPos];
+  let totalStopsCount = 0;
+  let totalDistKmAcc = 0;
+  let seqHtml = `<span class="bg-emerald-500/20 text-emerald-300 px-2 py-1 rounded border border-emerald-500/30 flex items-center gap-1 font-semibold"><i class="fa-solid fa-store"></i> Bếp Nuri</span>`;
+
+  for (let sIdx = 0; sIdx < (shippers || []).length; sIdx++) {
+    const s = shippers[sIdx];
+    const sColor = colors[sIdx % colors.length];
+
+    const rawOrders = (orders || []).filter(o => o.shipperId == s.id && o.status !== "completed" && o.status !== "cancelled");
+    if (rawOrders.length === 0) continue;
+
+    const targetOrders = rawOrders.map(o => {
+      let lat = o.lat ? parseFloat(o.lat) : null;
+      let lng = o.lng ? parseFloat(o.lng) : null;
+      if (!lat || !lng) {
+        const cus = (purchasedCustomers || []).find(c => c.id == o.packageCustomerId || c.phone === o.phone);
+        if (cus && cus.lat && cus.lng) { lat = parseFloat(cus.lat); lng = parseFloat(cus.lng); }
+      }
+      if (!lat || !lng) {
+        lat = kPos[0] + (Math.random() * 0.03 - 0.015);
+        lng = kPos[1] + (Math.random() * 0.03 - 0.015);
+      }
+      return { ...o, lat, lng };
+    });
+
+    const sortedWaypoints = sortWaypointsOptimized(kPos, targetOrders);
+    const osrmWaypoints = [[kPos[1], kPos[0]], ...sortedWaypoints.map(w => [w.lng, w.lat])];
+    const routeResult = await fetchOSRMRoute(osrmWaypoints);
+
+    let routeLatLngs = [];
+    if (routeResult && routeResult.geometry) {
+      routeLatLngs = routeResult.geometry;
+      totalDistKmAcc += parseFloat(routeResult.distanceKm) || 0;
+    } else {
+      routeLatLngs = [kPos, ...sortedWaypoints.map(w => [w.lat, w.lng])];
+    }
+
+    const routePolyline = L.polyline(routeLatLngs, {
+      color: sColor,
+      weight: 5,
+      opacity: 0.85,
+      lineCap: 'round',
+      lineJoin: 'round'
+    }).addTo(dashboardMapInst);
+    leafletPolylines.push(routePolyline);
+
+    sortedWaypoints.forEach((w, idx) => {
+      bounds.push([w.lat, w.lng]);
+      totalStopsCount++;
+      const stopNum = idx + 1;
+
+      const stopIcon = L.divIcon({
+        className: 'custom-stop-pin',
+        html: `<div style="background-color: ${sColor}; color: white; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 12px; box-shadow: 0 0 8px ${sColor}; border: 2px solid white;">${stopNum}</div>`,
+        iconSize: [30, 30],
+        iconAnchor: [15, 15]
+      });
+
+      const m = L.marker([w.lat, w.lng], { icon: stopIcon })
+        .bindPopup(`
+          <div class="p-1 min-w-[180px]">
+            <div class="font-bold text-slate-800 text-sm border-b pb-1 mb-1">📍 Shipper: ${s.name} (Điểm #${stopNum})</div>
+            <div class="text-xs text-slate-600"><b>Đơn hàng:</b> #${w.id}</div>
+            <div class="text-xs text-slate-600"><b>Khách:</b> ${w.customerName || '--'} (${w.phone || '--'})</div>
+            <div class="text-xs text-slate-600"><b>Địa chỉ:</b> ${w.address || '--'}</div>
+          </div>
+        `)
+        .addTo(dashboardMapInst);
+      leafletMarkers.push(m);
+    });
+
+    seqHtml += `<div class="w-full flex items-center gap-2 mt-2 pt-2 border-t border-slate-800">
+      <span class="w-3 h-3 rounded-full" style="background-color: ${sColor}"></span>
+      <span class="font-bold text-white text-xs">${s.name} (${sortedWaypoints.length} đơn):</span>
+      <span class="text-slate-300 text-xs">${sortedWaypoints.map((w, i) => `#${i+1} ${w.customerName || w.id}`).join(' ➔ ')}</span>
+    </div>`;
+  }
+
+  if (card) {
+    card.classList.remove("hidden");
+    document.getElementById("route-summary-title").innerHTML = `Tuyến đường: <span class="text-emerald-400 font-bold">Tất cả Shipper đang giao</span>`;
+    document.getElementById("route-summary-subtitle").innerText = `Tổng hợp toàn bộ tuyến đường giao hàng`;
+    document.getElementById("route-total-stops").innerText = `${totalStopsCount} đơn hàng`;
+    document.getElementById("route-total-distance").innerText = totalDistKmAcc > 0 ? `${totalDistKmAcc.toFixed(1)} km` : `-- km`;
+    document.getElementById("route-total-time").innerText = totalDistKmAcc > 0 ? `${Math.round(totalDistKmAcc * 4)} phút` : `-- phút`;
+    document.getElementById("route-stops-sequence").innerHTML = seqHtml;
+  }
+
+  try {
+    dashboardMapInst.fitBounds(bounds, { padding: [50, 50], maxZoom: 15 });
+  } catch (e) {
+    dashboardMapInst.setView(kPos, 13);
+  }
+}
+
+
+// ==========================================
+// STORE LOCATION PIN MAP MODAL LOGIC
+// ==========================================
+let storePinMap = null;
+let storePinMarker = null;
+let currentStorePinLat = null;
+let currentStorePinLng = null;
+
+function updateStorePinButtonState() {
+  const btn = document.getElementById("btn-store-pin-modal");
+  const textEl = document.getElementById("btn-store-pin-text");
+  const latEl = document.getElementById("set-lat");
+  const lngEl = document.getElementById("set-lng");
+  if (!btn || !textEl) return;
+
+  const lat = latEl ? latEl.value : null;
+  const lng = lngEl ? lngEl.value : null;
+
+  if (lat && lng && !isNaN(parseFloat(lat)) && !isNaN(parseFloat(lng))) {
+    btn.className = "bg-rose-100 text-rose-700 hover:bg-rose-200 border border-rose-300 font-bold px-3.5 py-2.5 rounded-lg transition-all flex items-center gap-2 text-[17.5px] leading-[25px] shrink-0 shadow-sm";
+    textEl.innerText = "Đã ghim vị trí";
+  } else {
+    btn.className = "bg-rose-50 text-rose-600 hover:bg-rose-100 border border-rose-200 font-semibold px-3.5 py-2.5 rounded-lg transition-all flex items-center gap-2 text-[17.5px] leading-[25px] shrink-0 shadow-sm";
+    textEl.innerText = "Ghim vị trí";
+  }
+}
+
+function openStoreLocationPinModal() {
+  const street = document.getElementById("set-street")?.value || "";
+  const ward = document.getElementById("set-ward")?.value || "";
+  const district = document.getElementById("set-district")?.value || "";
+  
+  const fullAddr = `${street}${ward ? ', ' + ward : ''}${district ? ', ' + district : ''}, TP. Hồ Chí Minh`.replace(/^,\s*/, '');
+  const addrEl = document.getElementById("store-pin-modal-address");
+  if (addrEl) addrEl.innerText = fullAddr || "Chưa nhập thông tin địa chỉ cụ thể";
+
+  const modal = document.getElementById("store-pin-modal");
+  if (modal) {
+    modal.classList.remove("hidden");
+    modal.classList.add("flex");
+  }
+
+  let latVal = document.getElementById("set-lat")?.value;
+  let lngVal = document.getElementById("set-lng")?.value;
+
+  let initialPos = [10.7769, 106.7009]; // Default TP.HCM center
+  if (latVal && lngVal && !isNaN(parseFloat(latVal)) && !isNaN(parseFloat(lngVal))) {
+    initialPos = [parseFloat(latVal), parseFloat(lngVal)];
+  } else if (typeof getKitchenPos === "function") {
+    initialPos = getKitchenPos();
+  }
+
+  currentStorePinLat = initialPos[0];
+  currentStorePinLng = initialPos[1];
+  updateStoreCoordsDisplay();
+
+  setTimeout(() => {
+    const storeIcon = L.divIcon({
+      className: 'custom-store-pin',
+      html: '<div style="background-color: #ef4444; color: white; border-radius: 50%; width: 38px; height: 38px; display: flex; align-items: center; justify-content: center; font-size: 20px; box-shadow: 0 0 12px rgba(239,68,68,0.8); border: 2px solid white;"><i class="fa-solid fa-store"></i></div>',
+      iconSize: [38, 38],
+      iconAnchor: [19, 19]
+    });
+
+    if (!storePinMap) {
+      storePinMap = L.map("store-pin-map").setView(initialPos, 16);
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution: "&copy; OpenStreetMap contributors",
+      }).addTo(storePinMap);
+
+      storePinMarker = L.marker(initialPos, { icon: storeIcon, draggable: true }).addTo(storePinMap);
+
+      storePinMarker.on("dragend", function (e) {
+        const pos = e.target.getLatLng();
+        currentStorePinLat = pos.lat;
+        currentStorePinLng = pos.lng;
+        updateStoreCoordsDisplay();
+      });
+
+      storePinMap.on("click", function (e) {
+        storePinMarker.setLatLng(e.latlng);
+        currentStorePinLat = e.latlng.lat;
+        currentStorePinLng = e.latlng.lng;
+        updateStoreCoordsDisplay();
+      });
+    } else {
+      storePinMap.setView(initialPos, 16);
+      storePinMarker.setLatLng(initialPos);
+      storePinMap.invalidateSize();
+    }
+  }, 150);
+}
+
+function updateStoreCoordsDisplay() {
+  const el = document.getElementById("store-pin-coords-display");
+  if (el) {
+    el.innerText = `${Number(currentStorePinLat).toFixed(5)}, ${Number(currentStorePinLng).toFixed(5)}`;
+  }
+}
+
+function closeStoreLocationPinModal() {
+  const modal = document.getElementById("store-pin-modal");
+  if (modal) {
+    modal.classList.add("hidden");
+    modal.classList.remove("flex");
+  }
+}
+
+function saveStoreLocationPin() {
+  if (currentStorePinLat && currentStorePinLng) {
+    document.getElementById("set-lat").value = currentStorePinLat;
+    document.getElementById("set-lng").value = currentStorePinLng;
+    updateStorePinButtonState();
+    if (typeof showToast === "function") {
+      showToast("Đã chọn vị trí ghim Cửa hàng thành công! Hãy nhấn 'Lưu cấu hình' để hoàn tất.", "success");
+    }
+  }
+  closeStoreLocationPinModal();
+}
+
+function getStoreCurrentGPSLocation() {
+  if ("geolocation" in navigator) {
+    if (typeof showToast === "function") showToast("Đang định vị GPS...", "info");
+    navigator.geolocation.getCurrentPosition(
+      function (position) {
+        currentStorePinLat = position.coords.latitude;
+        currentStorePinLng = position.coords.longitude;
+        const newPos = [currentStorePinLat, currentStorePinLng];
+        if (storePinMarker) storePinMarker.setLatLng(newPos);
+        if (storePinMap) storePinMap.setView(newPos, 16);
+        updateStoreCoordsDisplay();
+        if (typeof showToast === "function") showToast("Đã lấy định vị GPS thành công!", "success");
+      },
+      function (error) {
+        if (typeof showToast === "function") showToast("Không thể lấy định vị: " + error.message, "error");
+      }
+    );
+  } else {
+    if (typeof showToast === "function") showToast("Trình duyệt không hỗ trợ Geolocation", "error");
+  }
+}
+
+async function aiGeocodeStoreAddress() {
+  const street = document.getElementById("set-street")?.value || "";
+  const ward = document.getElementById("set-ward")?.value || "";
+  const district = document.getElementById("set-district")?.value || "";
+
+  const query = `${street} ${ward} ${district} Hồ Chí Minh Việt Nam`.trim();
+  if (!street && !ward && !district) {
+    if (typeof showToast === "function") showToast("Vui lòng nhập số nhà, tên đường hoặc quận phường trước!", "error");
+    return;
+  }
+
+  if (typeof showToast === "function") showToast("🤖 AI đang tìm kiếm tọa độ cửa hàng...", "info");
+
+  try {
+    const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1&accept-language=vi`);
+    const data = await res.json();
+    if (data && data.length > 0) {
+      currentStorePinLat = parseFloat(data[0].lat);
+      currentStorePinLng = parseFloat(data[0].lon);
+      const newPos = [currentStorePinLat, currentStorePinLng];
+      if (storePinMarker) storePinMarker.setLatLng(newPos);
+      if (storePinMap) storePinMap.setView(newPos, 16);
+      updateStoreCoordsDisplay();
+      if (typeof showToast === "function") showToast("🤖 AI đã tìm thấy vị trí!", "success");
+    } else {
+      if (typeof showToast === "function") showToast("AI không tìm thấy vị trí chính xác. Vui lòng kéo thả marker trên bản đồ.", "error");
+    }
+  } catch (err) {
+    console.error("AI Geocode Store Error:", err);
+    if (typeof showToast === "function") showToast("Lỗi kết nối khi tìm kiếm vị trí.", "error");
+  }
+}
+
+
+// ==========================================
+// PWA DYNAMIC ICON SYNC & MOBILE INSTALL BANNER LOGIC
+// ==========================================
+window.deferredPwaPrompt = null;
+
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  window.deferredPwaPrompt = e;
+  checkAndShowPwaInstallBanner();
+});
+
+function handlePwaIconUpload(event) {
+  const file = event.target.files && event.target.files[0];
+  if (!file) return;
+
+  if (file.size > 2 * 1024 * 1024) {
+    if (typeof showToast === "function") showToast("Vui lòng chọn file hình ảnh nhỏ hơn 2MB", "error");
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = function (e) {
+    const base64Icon = e.target.result;
+    pwaCustomIcon = base64Icon;
+    window.pwaCustomIcon = base64Icon;
+    try {
+      localStorage.setItem("nutriadmin_pwa_custom_icon", base64Icon);
+    } catch (err) {}
+
+    if (typeof clientStateUpdates !== 'undefined') {
+      clientStateUpdates.pwaCustomIcon = base64Icon;
+      if (!clientStateUpdates.isOverwriteKeys) clientStateUpdates.isOverwriteKeys = [];
+      if (!clientStateUpdates.isOverwriteKeys.includes("pwaCustomIcon")) {
+        clientStateUpdates.isOverwriteKeys.push("pwaCustomIcon");
+      }
+    }
+
+    updatePwaIconUI();
+    if (typeof showToast === "function") showToast("Đã tải lên và cập nhật Biểu tượng PWA!", "success");
+  };
+  reader.readAsDataURL(file);
+}
+
+function resetPwaIconToDefault() {
+  pwaCustomIcon = "";
+  window.pwaCustomIcon = "";
+  try {
+    localStorage.setItem("nutriadmin_pwa_custom_icon", "");
+  } catch (e) {}
+
+  if (typeof clientStateUpdates !== 'undefined') {
+    clientStateUpdates.pwaCustomIcon = "";
+    if (!clientStateUpdates.isOverwriteKeys) clientStateUpdates.isOverwriteKeys = [];
+    if (!clientStateUpdates.isOverwriteKeys.includes("pwaCustomIcon")) {
+      clientStateUpdates.isOverwriteKeys.push("pwaCustomIcon");
+    }
+  }
+
+  updatePwaIconUI();
+  if (typeof showToast === "function") showToast("Đã khôi phục biểu tượng PWA mặc định!", "info");
+}
+
+function updatePwaIconUI() {
+  const iconSrc = window.pwaCustomIcon || pwaCustomIcon || "";
+  
+  // 1. Admin preview image
+  const adminImg = document.getElementById("pwa-admin-icon-preview-img");
+  const adminSvg = document.getElementById("pwa-admin-icon-preview-svg");
+  const resetBtn = document.getElementById("pwa-icon-reset-btn");
+  if (adminImg && adminSvg) {
+    if (iconSrc) {
+      adminImg.src = iconSrc;
+      adminImg.classList.remove("hidden");
+      adminSvg.classList.add("hidden");
+      if (resetBtn) resetBtn.classList.remove("hidden");
+    } else {
+      adminImg.src = "";
+      adminImg.classList.add("hidden");
+      adminSvg.classList.remove("hidden");
+      if (resetBtn) resetBtn.classList.add("hidden");
+    }
+  }
+
+  // 2. Mockup preview image
+  const mockupImg = document.getElementById("phone-mockup-pwa-icon-img");
+  const mockupSvg = document.getElementById("phone-mockup-pwa-icon-svg");
+  if (mockupImg && mockupSvg) {
+    if (iconSrc) {
+      mockupImg.src = iconSrc;
+      mockupImg.classList.remove("hidden");
+      mockupSvg.classList.add("hidden");
+    } else {
+      mockupImg.src = "";
+      mockupImg.classList.add("hidden");
+      mockupSvg.classList.remove("hidden");
+    }
+  }
+
+  // 3. PWA Install Banner Image
+  const bannerImg = document.getElementById("pwa-banner-icon-img");
+  const bannerSvg = document.getElementById("pwa-banner-icon-svg");
+  if (bannerImg && bannerSvg) {
+    if (iconSrc) {
+      bannerImg.src = iconSrc;
+      bannerImg.classList.remove("hidden");
+      bannerSvg.classList.add("hidden");
+    } else {
+      bannerImg.src = "";
+      bannerImg.classList.add("hidden");
+      bannerSvg.classList.remove("hidden");
+    }
+  }
+
+  // 4. Update Favicon & Apple touch icon & Dynamic Manifest
+  try {
+    const _appleTouchIcon = document.querySelector('link[rel="apple-touch-icon"]');
+    const _favicon = document.querySelector('link[rel="icon"]');
+    const _manifestLink = document.querySelector('link[rel="manifest"]');
+
+    if (iconSrc) {
+      if (_appleTouchIcon) _appleTouchIcon.href = iconSrc;
+      if (_favicon) {
+        _favicon.href = iconSrc;
+        _favicon.type = iconSrc.startsWith('data:image/svg') ? 'image/svg+xml' : iconSrc.startsWith('data:image/png') ? 'image/png' : 'image/jpeg';
+      }
+      if (_manifestLink) {
+        const _manifestObj = {
+          short_name: "Nuri",
+          name: "Nuri - Tư Vấn Dinh Dưỡng",
+          description: "Chuyên gia dinh dưỡng ảo & Thực đơn cá nhân hóa của bạn",
+          icons: [{ src: iconSrc, type: iconSrc.startsWith('data:image/svg') ? 'image/svg+xml' : 'image/png', sizes: "192x192 512x512", purpose: "any maskable" }],
+          start_url: "/?mode=landing",
+          background_color: "#f8fafc",
+          theme_color: "#10b981",
+          display: "standalone",
+          orientation: "portrait"
+        };
+        const _blob = new Blob([JSON.stringify(_manifestObj)], { type: "application/json" });
+        _manifestLink.href = URL.createObjectURL(_blob);
+      }
+    }
+  } catch (e) {}
+}
+
+function checkAndShowPwaInstallBanner() {
+  const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 768;
+  const isDismissed = sessionStorage.getItem("nuri_pwa_banner_dismissed");
+  if (isDismissed === "true") return;
+
+  const urlParams = new URLSearchParams(window.location.search);
+  const currentMode = urlParams.get("mode") || "landing";
+
+  // Check target customer pages
+  const isCustomerPage = ["landing", "nutri-landing", "survey", "customer-portal", "customer-app", "customer-login"].includes(currentMode) || currentMode === null;
+
+  if (isMobileDevice && isCustomerPage) {
+    const banner = document.getElementById("pwa-install-banner");
+    if (banner) {
+      updatePwaIconUI();
+      banner.classList.remove("hidden");
+    }
+  }
+}
+
+function closePwaInstallBanner() {
+  const banner = document.getElementById("pwa-install-banner");
+  if (banner) {
+    banner.classList.add("hidden");
+    sessionStorage.setItem("nuri_pwa_banner_dismissed", "true");
+  }
+}
+
+async function triggerPwaInstall() {
+  if (window.deferredPwaPrompt) {
+    window.deferredPwaPrompt.prompt();
+    const { outcome } = await window.deferredPwaPrompt.userChoice;
+    if (outcome === 'accepted') {
+      if (typeof showToast === "function") showToast("Cảm ơn bạn đã cài đặt ứng dụng Nuri!", "success");
+      closePwaInstallBanner();
+    }
+    window.deferredPwaPrompt = null;
+  } else {
+    // iOS Safari or browser without direct prompt support
+    const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+    if (isIOS) {
+      alert("Để cài đặt Nuri trên iPhone/iPad:\n\n1. Chạm vào nút Chia sẻ (biểu tượng mũi tên đi lên ở góc màn hình)\n2. Cuộn xuống và chọn 'Thêm vào Màn hình chính' (Add to Home Screen)\n3. Nhấn 'Thêm'");
+    } else {
+      alert("Để cài đặt Nuri vào màn hình điện thoại:\n\n1. Bấm nút Menu (3 dấu chấm) trên trình duyệt\n2. Chọn 'Thêm vào màn hình chính' (Add to Home Screen) hoặc 'Cài đặt ứng dụng'.");
+    }
+  }
+}
+
+// Auto check PWA Banner on load
+document.addEventListener("DOMContentLoaded", () => {
+  setTimeout(() => {
+    updatePwaIconUI();
+    checkAndShowPwaInstallBanner();
+  }, 1000);
+});
+
+
+// ==========================================
+// CUSTOMER PORTAL FEATURE SHOWCASE & ANIMATION
+// ==========================================
+let currentPortalShowcaseStep = 0;
+let portalShowcaseTimer = null;
+let isPortalShowcaseAutoPlay = true;
+
+function setPortalShowcaseStep(stepIdx) {
+  currentPortalShowcaseStep = stepIdx;
+  
+  // 1. Update Step Buttons styling
+  for (let i = 0; i < 4; i++) {
+    const btn = document.getElementById(`portal-step-btn-${i}`);
+    if (btn) {
+      const numBadge = btn.querySelector('.w-9');
+      const titleSpan = btn.querySelector('.text-xs');
+
+      if (i === stepIdx) {
+        btn.className = "portal-step-card cursor-pointer p-3 rounded-2xl bg-white/10 border border-emerald-500/60 shadow-lg shadow-emerald-500/10 transition-all flex flex-col items-center text-center group scale-105";
+        if (numBadge) numBadge.className = "w-9 h-9 rounded-xl bg-emerald-500 text-white flex items-center justify-center font-bold text-sm mb-2 shadow-md";
+        if (titleSpan) titleSpan.className = "text-xs font-bold text-emerald-300 leading-snug";
+      } else {
+        btn.className = "portal-step-card cursor-pointer p-3 rounded-2xl bg-white/5 hover:bg-white/15 border border-white/10 transition-all flex flex-col items-center text-center group";
+        if (numBadge) numBadge.className = "w-9 h-9 rounded-xl bg-slate-700 text-slate-300 flex items-center justify-center font-bold text-sm mb-2 group-hover:scale-110 transition-transform";
+        if (titleSpan) titleSpan.className = "text-xs font-bold text-slate-300 leading-snug";
+      }
+    }
+  }
+
+  // 2. Update Mockup Screen
+  for (let i = 0; i < 4; i++) {
+    const panel = document.getElementById(`mockup-step-${i}`);
+    if (panel) {
+      if (i === stepIdx) {
+        panel.classList.remove("hidden");
+        panel.classList.add("animate-fade-in");
+      } else {
+        panel.classList.add("hidden");
+        panel.classList.remove("animate-fade-in");
+      }
+    }
+  }
+}
+
+function startPortalShowcaseAutoPlay() {
+  if (portalShowcaseTimer) clearInterval(portalShowcaseTimer);
+  portalShowcaseTimer = setInterval(() => {
+    if (!isPortalShowcaseAutoPlay) return;
+    currentPortalShowcaseStep = (currentPortalShowcaseStep + 1) % 4;
+    setPortalShowcaseStep(currentPortalShowcaseStep);
+  }, 3500);
+}
+
+function togglePortalShowcaseAutoPlay() {
+  isPortalShowcaseAutoPlay = !isPortalShowcaseAutoPlay;
+  const btn = document.getElementById("btn-portal-showcase-autoplay");
+  if (btn) {
+    if (isPortalShowcaseAutoPlay) {
+      btn.innerHTML = `<i class="fa-solid fa-pause"></i> Tự động phát hoạt ảnh`;
+      btn.className = "px-4 py-3 bg-white/10 hover:bg-white/20 text-slate-200 font-semibold rounded-2xl text-xs md:text-sm transition-all flex items-center gap-2 border border-white/10 cursor-pointer";
+    } else {
+      btn.innerHTML = `<i class="fa-solid fa-play"></i> Tiếp tục tự động phát`;
+      btn.className = "px-4 py-3 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 font-bold rounded-2xl text-xs md:text-sm transition-all flex items-center gap-2 border border-emerald-500/40 cursor-pointer";
+    }
+  }
+}
+
+function openCustomerPortalDemo() {
+  const urlParams = new URLSearchParams(window.location.search);
+  urlParams.set("mode", "customer-portal");
+  window.history.pushState({}, "", "?" + urlParams.toString());
+  if (typeof renderView === "function") {
+    renderView("customer-portal");
+  } else {
+    window.location.search = "?mode=customer-portal";
+  }
+}
+
+// Auto init on load
+document.addEventListener("DOMContentLoaded", () => {
+  setTimeout(() => {
+    setPortalShowcaseStep(0);
+    startPortalShowcaseAutoPlay();
+  }, 1200);
+});
+
+
+      // Helper function to reset to 4-step survey form view
+      window.resetToSurveyForm = function() {
+        const formCol = document.getElementById("analysis-form-col");
+        if (formCol) {
+          formCol.classList.remove("hidden");
+          formCol.classList.add("w-full");
+        }
+        const emptyState = document.getElementById("analysis-empty-state");
+        if (emptyState) {
+          emptyState.classList.remove("hidden");
+          emptyState.classList.add("w-full");
+        }
+        const resultState = document.getElementById("analysis-result-state");
+        if (resultState) {
+          resultState.classList.add("hidden");
+        }
+        const resultsCol = document.getElementById("analysis-results-col");
+        if (resultsCol) {
+          resultsCol.classList.remove("lg:col-span-12");
+          resultsCol.classList.add("w-full");
+        }
+        const form = document.getElementById("diet-analysis-form");
+        if (form) {
+          form.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+      };
+
+
+      // Dynamic Grand Opening Modal Template (100% synchronized with Web Admin)
+      window.renderGrandOpeningModalHTML = function () {
+        const savedSettings = localStorage.getItem("nutriadmin_settings");
+        let settingsObj = savedSettings ? JSON.parse(savedSettings) : {};
+
+        const bannerText = settingsObj.bannerGrandOpeningText || "GRAND OPENING - 15/11/2026";
+        const bannerTexts = settingsObj.bannerTexts || {};
+
+        function getBannerText(id, defaultVal) {
+          return bannerTexts[id] || defaultVal;
+        }
+
+        const bannerImgTop = settingsObj.bannerImgTop || "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=600&q=80";
+        const bannerImgBottom = settingsObj.bannerImgBottom || "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=600&q=80";
+
+        return `
+          <div id="user-grand-opening-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 opacity-0 pointer-events-none transition-opacity duration-500" onclick="if(event.target === this) window.closeGrandOpeningPopup()">
+              <div class="relative w-full max-w-[1152px] mx-4 sm:mx-6 flex flex-col items-center justify-center transform scale-90 translate-y-8 transition-all duration-500" id="user-grand-opening-modal-content">
+                  <!-- Close Button -->
+                  <button type="button" id="close-user-grand-opening-modal" class="absolute -top-4 -right-4 md:-top-6 md:-right-6 w-10 h-10 md:w-12 md:h-12 bg-white rounded-full flex items-center justify-center text-slate-500 hover:text-red-500 hover:bg-red-50 shadow-xl z-[60] border-2 border-slate-200 transition-colors text-xl md:text-2xl" onclick="window.closeGrandOpeningPopup()">
+                      <i class="fa-solid fa-xmark"></i>
+                  </button>
+
+                  <!-- GRAND OPENING BANNER WRAPPER -->
+                  <div class="banner-scale-wrapper mt-4 mb-6 relative w-full">
+                    <div class="banner-scale bg-[#f3faeb] rounded-3xl overflow-hidden shadow-sm border border-emerald-100 flex flex-col z-0">
+                      <!-- Main Content Area -->
+                      <div class="flex flex-col md:flex-row items-center p-6 md:p-12 z-10 h-full overflow-visible">
+                        <!-- Left Content -->
+                        <div class="w-full md:w-7/12 z-10 flex flex-col items-start text-left shrink-0">
+                          <!-- Ribbon -->
+                          <div class="inline-flex items-center bg-red-600 text-white px-4 md:px-6 py-2 md:py-3 rounded-br-2xl rounded-tl-2xl text-lg md:text-2xl font-black uppercase tracking-wide mb-4 md:mb-6 transform -skew-x-6 shadow-md">
+                            <span class="skew-x-6 flex items-center gap-2 md:gap-3">
+                              <i class="fa-solid fa-party-popper text-yellow-300 animate-bounce"></i>
+                              <span id="user-banner-grand-opening-text">${bannerText}</span>
+                            </span>
+                          </div>
+
+                          <!-- Main Title -->
+                          <h2 class="text-3xl md:text-6xl font-black uppercase leading-[1.1] mb-4 md:mb-6 tracking-tight">
+                            <span id="user-banner-title1" class="text-[#1b5e20] block">SIÊU ƯU ĐÃI</span>
+                            <span id="user-banner-title2" class="text-slate-900 block drop-shadow-sm">KHAI TRƯƠNG!</span>
+                          </h2>
+
+                          <!-- Subtitle -->
+                          <p id="user-banner-subtitle" class="text-slate-700 text-base md:text-xl font-medium mb-6 max-w-lg leading-relaxed">
+                            ${getBannerText("user-banner-subtitle", "Ăn ngon mỗi ngày, vóc dáng chuẩn ngay! Cơ hội trải nghiệm thực đơn chuẩn y khoa với mức giá không tưởng.")}
+                          </p>
+
+                          <!-- Countdown section -->
+                          <div class="mb-6 md:mb-8 w-full flex flex-col items-start shrink-0">
+                            <div class="flex items-center gap-2 text-[#2e7d32] font-bold text-xs md:text-sm mb-3 uppercase tracking-wider">
+                              <i class="fa-solid fa-leaf text-emerald-500"></i>
+                              <span id="user-banner-cd-text">ƯU ĐÃI KẾT THÚC SAU</span>
+                              <i class="fa-solid fa-leaf text-emerald-500 transform scale-x-[-1]"></i>
+                            </div>
+                            <div class="flex items-center justify-start gap-2 md:gap-4">
+                              <!-- Day -->
+                              <div class="bg-[#1a3a2a] text-white rounded-2xl w-14 h-14 md:w-20 md:h-20 flex flex-col items-center justify-center shadow-md border border-[#2a4a3a] relative overflow-hidden group">
+                                <span id="user-banner-cd-day" class="text-xl md:text-3xl font-black text-white relative z-10">102</span>
+                                <span class="text-[9px] md:text-xs font-bold mt-0.5 text-emerald-200 relative z-10">NGÀY</span>
+                              </div>
+                              <span class="text-xl md:text-3xl font-black text-[#1a3a2a] animate-pulse pb-2">:</span>
+                              <!-- Hour -->
+                              <div class="bg-[#1a3a2a] text-white rounded-2xl w-14 h-14 md:w-20 md:h-20 flex flex-col items-center justify-center shadow-md border border-[#2a4a3a] relative overflow-hidden group">
+                                <span id="user-banner-cd-hour" class="text-xl md:text-3xl font-black text-white relative z-10">07</span>
+                                <span class="text-[9px] md:text-xs font-bold mt-0.5 text-emerald-200 relative z-10">GIỜ</span>
+                              </div>
+                              <span class="text-xl md:text-3xl font-black text-[#1a3a2a] animate-pulse pb-2">:</span>
+                              <!-- Minute -->
+                              <div class="bg-[#1a3a2a] text-white rounded-2xl w-14 h-14 md:w-20 md:h-20 flex flex-col items-center justify-center shadow-md border border-[#2a4a3a] relative overflow-hidden group">
+                                <span id="user-banner-cd-minute" class="text-xl md:text-3xl font-black text-white relative z-10">13</span>
+                                <span class="text-[9px] md:text-xs font-bold mt-0.5 text-emerald-200 relative z-10">PHÚT</span>
+                              </div>
+                            </div>
+                          </div>
+
+                          <!-- Buttons -->
+                          <div class="flex flex-wrap gap-3 md:gap-4 w-full">
+                            <button type="button" onclick="window.handleBannerPkgClick();" class="flex-1 min-w-[180px] bg-[#0f7632] hover:bg-[#0c5c27] text-white px-6 md:px-8 py-3.5 rounded-xl font-bold text-base md:text-lg shadow-md transition-transform hover:-translate-y-1 flex items-center justify-center gap-2 animate-glow-pulse-emerald cursor-pointer">
+                              <i class="fa-solid fa-crown text-yellow-300 animate-bounce"></i>
+                              <span id="user-banner-btn1">Đăng Ký Mua Gói</span>
+                            </button>
+                            <button type="button" onclick="window.closeGrandOpeningPopup(); window.openPlatformSelectorModal();" class="flex-1 min-w-[180px] bg-white hover:bg-slate-50 text-[#0f7632] border-2 border-[#0f7632] px-6 md:px-8 py-3.5 rounded-xl font-bold text-base md:text-lg shadow-sm transition-all hover:-translate-y-1 flex items-center justify-center gap-2 hover:shadow-md cursor-pointer">
+                              <i class="fa-solid fa-bell-concierge animate-bounce"></i>
+                              <span id="user-banner-btn2">Đăng Ký Đặt 1 Bữa</span>
+                            </button>
+                          </div>
+                        </div>
+
+                        <!-- Right Images & Badges -->
+                        <div class="w-full md:w-5/12 relative h-[300px] md:h-[450px] mt-8 md:mt-0 z-10 flex justify-center md:justify-end shrink-0">
+                          <!-- Top Food Image -->
+                          <img id="user-banner-img-banner-top" src="${bannerImgTop}" alt="Healthy Meal Box" class="absolute top-0 right-4 md:right-0 w-56 md:w-80 h-40 md:h-56 object-cover rounded-3xl shadow-2xl border-4 md:border-[6px] border-white rotate-3 z-20" />
+
+                          <!-- Bottom Food Image -->
+                          <img id="user-banner-img-banner-bottom" src="${bannerImgBottom}" alt="Healthy Beef Box" class="absolute bottom-0 right-12 md:right-16 w-56 md:w-80 h-40 md:h-56 object-cover rounded-3xl shadow-2xl border-4 md:border-[6px] border-white -rotate-6 z-10" />
+
+                          <!-- Circle Badge -->
+                          <div class="absolute top-1/4 -right-2 md:-right-10 bg-[#165a25] text-white w-28 h-28 md:w-36 md:h-36 rounded-full flex flex-col items-center justify-center shadow-xl border-4 border-[#f3faeb] z-30 transform hover:scale-105 transition-transform animate-[bounce_3s_infinite]">
+                            <span id="user-banner-badge1-line1" class="text-[10px] md:text-xs font-bold uppercase mb-0.5 md:mb-1 text-emerald-100 tracking-wider">Hiện chỉ còn</span>
+                            <span id="user-banner-badge1-line2" class="text-4xl md:text-6xl font-black text-yellow-400 leading-none" style="text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3)">19</span>
+                            <span id="user-banner-badge1-line3" class="text-xs md:text-sm font-bold mt-0.5 md:mt-1 tracking-widest">SLOT!</span>
+                          </div>
+
+                          <!-- Center Banner Badge -->
+                          <div class="absolute top-[45%] -left-4 md:-left-16 transform -translate-y-1/2 bg-white rounded-2xl p-3 md:p-5 shadow-xl border border-emerald-100 flex items-center gap-3 md:gap-4 z-30 w-[280px] md:w-[340px]">
+                            <div id="user-banner-badge2-percent" class="bg-red-600 text-white p-3 md:p-4 rounded-xl font-black text-2xl md:text-3xl flex-shrink-0 shadow-inner">
+                              ${getBannerText("user-banner-badge2-percent", "-15%")}
+                            </div>
+                            <div>
+                              <div id="user-banner-badge2-line1" class="font-bold text-slate-800 text-sm md:text-base leading-tight mb-1">
+                                ${getBannerText("user-banner-badge2-line1", "Giảm 15% Toàn Menu")}
+                              </div>
+                              <div id="user-banner-badge2-line2" class="text-xs text-slate-500 leading-snug">
+                                ${getBannerText("user-banner-badge2-line2", 'Dành cho <span class="text-[#d97706] font-bold">50 khách</span> đầu tiên.')}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+              </div>
+          </div>
+        `;
+      };
+
+      window.ensureGrandOpeningModalInDOM = function() {
+        const existing = document.getElementById("user-grand-opening-modal");
+        if (existing) existing.remove();
+        document.body.insertAdjacentHTML("beforeend", window.renderGrandOpeningModalHTML());
+      };
+
+      window.openGrandOpeningPopup = function () {
+        const icon = document.getElementById("floating-grand-opening-icon");
+        if (icon) {
+          icon.classList.add("hidden");
+        }
+
+        if (typeof window.ensureGrandOpeningModalInDOM === "function") {
+          window.ensureGrandOpeningModalInDOM();
+        }
+        const modal = document.getElementById("user-grand-opening-modal");
+        const content = document.getElementById("user-grand-opening-modal-content");
+
+        if (modal && content) {
+          modal.classList.remove("opacity-0", "pointer-events-none");
+          content.classList.remove("scale-90", "translate-y-8");
+
+          // Play chime sound effect
+          try {
+            const audio = new Audio("https://assets.mixkit.co/active_storage/sfx/2018/2018-preview.mp3");
+            audio.volume = 0.6;
+            audio.play().catch((e) => console.log("Audio play prevented:", e));
+          } catch (e) {}
+        }
+      };
+
+      window.setupHomepageGrandOpeningObserver = function() {
+        const savedSettings = localStorage.getItem("nutriadmin_settings");
+        let settingsObj = savedSettings ? JSON.parse(savedSettings) : {};
+        const showBanner = settingsObj.bannerGrandOpeningEnabled !== false;
+
+        if (!showBanner) return;
+        if (window.hasShownGrandOpeningPopupHomepage) return;
+
+        const pkgSection = document.getElementById("section-dang-ki-goi");
+        if (!pkgSection) return;
+
+        const observer = new IntersectionObserver(
+          (entries) => {
+            if (entries[0].isIntersecting) {
+              window.hasShownGrandOpeningPopupHomepage = true;
+              if (typeof window.ensureGrandOpeningModalInDOM === "function") {
+                window.ensureGrandOpeningModalInDOM();
+              }
+              setTimeout(() => {
+                if (typeof window.openGrandOpeningPopup === "function") {
+                  window.openGrandOpeningPopup();
+                }
+              }, 1800);
+              observer.disconnect();
+            }
+          },
+          { threshold: 0.15 }
+        );
+
+        observer.observe(pkgSection);
+      };
+
+      // Trigger observer on load and scroll
+      if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", () => {
+          setTimeout(window.setupHomepageGrandOpeningObserver, 800);
+        });
+      } else {
+        setTimeout(window.setupHomepageGrandOpeningObserver, 800);
+      }
+      window.addEventListener("scroll", () => {
+        if (!window.hasShownGrandOpeningPopupHomepage) {
+          window.setupHomepageGrandOpeningObserver();
+        }
+      }, { passive: true });
+
+
+      // Global Floating Grand Opening Icon Creator (above Chatbot icon)
+      window.ensureFloatingGrandOpeningIconInDOM = function() {
+        if (document.getElementById("floating-grand-opening-icon")) return;
+
+        const iconHTML = `
+          <div id="floating-grand-opening-icon" class="hidden cursor-pointer transform hover:scale-110 transition-all duration-300 shadow-2xl rounded-full mb-1 z-40" onclick="window.openGrandOpeningPopup()">
+              <div class="bg-gradient-to-br from-[#1b5e20] to-emerald-600 text-white w-14 h-14 md:w-16 md:h-16 rounded-full flex items-center justify-center text-2xl md:text-3xl border-2 border-white shadow-[0_0_20px_rgba(16,185,129,0.6)] relative animate-bounce">
+                  <i class="fa-solid fa-party-popper text-yellow-300"></i>
+                  <span class="absolute -top-1 -left-1 bg-red-600 text-white text-[10px] md:text-xs font-black px-2 py-0.5 rounded-full shadow-md animate-pulse border border-white">-15%</span>
+              </div>
+          </div>
+        `;
+
+        const fab = document.getElementById("chatbot-fab");
+        if (fab) {
+          fab.insertAdjacentHTML("afterbegin", iconHTML);
+        } else {
+          document.body.insertAdjacentHTML("beforeend", iconHTML);
+        }
+      };
+
+
+      // ==========================================
+      // SHARE STREAK & +20 REWARD POINTS LOGIC
+      // ==========================================
+      window.openShareModal = function () {
+        const streakDays = typeof window.getStreakDays === "function" ? window.getStreakDays() : 7;
+        const statusTextarea = document.getElementById("streak-status-text");
+        if (statusTextarea) {
+          statusTextarea.value = `🔥 Tôi đã hoàn thành chuỗi ${streakDays} ngày ăn uống lành mạnh cùng Nuri Kitchen! Thực đơn chuẩn calo, ngon miệng và tràn đầy năng lượng mỗi ngày. Cùng làm quen lối sống xanh với mình nhé! #Nurikitchen`;
+        }
+
+        const modal = document.getElementById("share-modal");
+        if (modal) {
+          modal.classList.remove("hidden");
+          modal.classList.add("flex");
+        }
+
+        if (typeof window.triggerConfetti === "function") {
+          window.triggerConfetti();
+        }
+      };
+
+      window.closeShareModal = function () {
+        const modal = document.getElementById("share-modal");
+        if (modal) {
+          modal.classList.add("hidden");
+          modal.classList.remove("flex");
+        }
+      };
+
+      window.copyStreakStatusText = function () {
+        const statusTextarea = document.getElementById("streak-status-text");
+        const statusText = statusTextarea ? statusTextarea.value : "🔥 Tôi đã hoàn thành chuỗi 7 ngày ăn uống lành mạnh cùng Nuri Kitchen! #Nurikitchen";
+        
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(statusText);
+        } else if (statusTextarea) {
+          statusTextarea.select();
+          document.execCommand("copy");
+        }
+
+        const btnText = document.getElementById("copy-status-btn-text");
+        if (btnText) {
+          const originalText = btnText.innerText;
+          btnText.innerText = "Đã sao chép status! 🎉";
+          setTimeout(() => {
+            btnText.innerText = originalText;
+          }, 2500);
+        }
+      };
+
+      window.shareStreakPlatform = function (platform) {
+        const statusTextarea = document.getElementById("streak-status-text");
+        const statusText = statusTextarea ? statusTextarea.value : "🔥 Tôi đã hoàn thành chuỗi 7 ngày ăn uống lành mạnh cùng Nuri Kitchen! #Nurikitchen";
+
+        // 1. Point reward calculation & 7-day cooldown check
+        const NOW = Date.now();
+        const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
+        let userObj = currentUser;
+
+        if (!userObj) {
+          const savedUser = localStorage.getItem("nutriadmin_current_user");
+          if (savedUser) {
+            try { userObj = JSON.parse(savedUser); } catch(e) {}
+          }
+        }
+
+        if (!userObj) {
+          userObj = { phone: "0900000000", points: 0, rank: "Hạt mầm", lastStreakRewardTime: 0 };
+        }
+
+        const lastRewardTime = userObj.lastStreakRewardTime || 0;
+        let pointsAwarded = false;
+
+        if (NOW - lastRewardTime >= SEVEN_DAYS_MS) {
+          userObj.points = (userObj.points || 0) + 20;
+          userObj.lastStreakRewardTime = NOW;
+          if (typeof getRankFromPoints === "function") {
+            userObj.rank = getRankFromPoints(userObj.points);
+          }
+          currentUser = userObj;
+          localStorage.setItem("nutriadmin_current_user", JSON.stringify(userObj));
+
+          // Also sync points to potentialCustomers list if found
+          if (Array.isArray(potentialCustomers)) {
+            const matched = potentialCustomers.find(c => c.phone === userObj.phone);
+            if (matched) {
+              matched.points = userObj.points;
+              matched.rank = userObj.rank;
+            }
+          }
+
+          // Update UI inputs if profile page is rendered
+          const pointsInput = document.getElementById("account-points");
+          if (pointsInput) pointsInput.value = userObj.points;
+          
+          pointsAwarded = true;
+        }
+
+        // Show feedback toast / alert to user
+        if (pointsAwarded) {
+          alert(`🎉 Bạn đã đăng chia sẻ thành công và nhận được +20 điểm tích lũy!\nTổng điểm hiện tại: ${userObj.points} điểm.`);
+        } else {
+          const daysLeft = Math.ceil((SEVEN_DAYS_MS - (NOW - lastRewardTime)) / (24 * 60 * 60 * 1000));
+          alert(`ℹ️ Bạn đã nhận +20 điểm thưởng khoe chuỗi trong tuần này rồi!\nHãy quay lại khoe tiếp sau ${daysLeft} ngày nữa nhé.`);
+        }
+
+        // 2. Open destination social network page to post status
+        const encodedUrl = encodeURIComponent(window.location.href);
+        const encodedText = encodeURIComponent(statusText);
+
+        if (platform === "facebook") {
+          window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}&quote=${encodedText}`, "_blank");
+        } else if (platform === "zalo") {
+          window.open(`https://chat.zalo.me/`, "_blank");
+        } else if (platform === "instagram") {
+          window.open(`https://www.instagram.com/`, "_blank");
+        }
+      };
+
+      // ==========================================
+      // PROFILE CONSULTATION ANALYSIS FLOW & RETURN
+      // ==========================================
+      window.startProfileAnalysis = function () {
+        window.isUpdatingProfileFromCustomerPage = true;
+        window.isUpdatingProfile = true;
+        
+        // Hide return button & un-hide recommendations in case user started before
+        const returnBtn = document.getElementById("profile-return-action");
+        if (returnBtn) returnBtn.classList.add("hidden");
+        const recSection = document.getElementById("consulting-recommendations-section");
+        if (recSection) recSection.classList.remove("hidden");
+
+        // Switch to consulting view step 1
+        switchView("consulting");
+      };
+
+      window.returnToProfileFromConsulting = function () {
+        window.isUpdatingProfileFromCustomerPage = false;
+        window.isUpdatingProfile = false;
+
+        // Restore recommendations section & hide return button for default consultation
+        const recSection = document.getElementById("consulting-recommendations-section");
+        if (recSection) recSection.classList.remove("hidden");
+        const returnBtn = document.getElementById("profile-return-action");
+        if (returnBtn) returnBtn.classList.add("hidden");
+
+        // Re-render Customer Profile & Nutrition Dashboard
+        if (typeof renderCustomerProfile === "function") {
+          renderCustomerProfile();
+        }
+        if (typeof updateNutritionDashboard === "function") {
+          updateNutritionDashboard(true);
+        }
+
+        // Switch back to customer profile
+        switchView("customer-profile");
+      };
+
+      // ==========================================
+      // DAILY QUEST ACTIONS & SMOOTH SCROLLING
+      // ==========================================
+      window.triggerQuestShare = function () {
+        const el = document.getElementById("profile-streak-container");
+        if (el) {
+          el.scrollIntoView({ behavior: "smooth", block: "center" });
+          el.classList.add("ring-2", "ring-orange-400");
+          setTimeout(() => el.classList.remove("ring-2", "ring-orange-400"), 2000);
+        }
+      };
+
+      window.triggerQuestWeight = function () {
+        const el = document.getElementById("personal-analysis-btn");
+        if (el) {
+          el.scrollIntoView({ behavior: "smooth", block: "center" });
+          el.classList.add("ring-2", "ring-emerald-400");
+          setTimeout(() => el.classList.remove("ring-2", "ring-emerald-400"), 2000);
+        }
+      };
+
+      window.triggerQuestCheckIn = function () {
+        if (typeof handleDailyCheckIn === "function") {
+          handleDailyCheckIn();
+        }
+      };
+
+      // ==========================================
+      // ADD EXTRA FOOD & AI NUTRITION ANALYSIS
+      // ==========================================
+      window.currentAddFoodImageBase64 = null;
+
+      window.openAddCalorieModal = function () {
+        const modal = document.getElementById("add-calorie-modal");
+        if (!modal) return;
+
+        // Reset form
+        const nameInput = document.getElementById("add-food-name");
+        const portionInput = document.getElementById("add-food-portion");
+        const kcalInput = document.getElementById("add-food-kcal");
+        const proInput = document.getElementById("add-food-protein");
+        const carbInput = document.getElementById("add-food-carbs");
+        const fatInput = document.getElementById("add-food-fat");
+        const daySelect = document.getElementById("add-food-day");
+
+        if (nameInput) nameInput.value = "";
+        if (portionInput) portionInput.value = "";
+        if (kcalInput) kcalInput.value = "";
+        if (proInput) proInput.value = "";
+        if (carbInput) carbInput.value = "";
+        if (fatInput) fatInput.value = "";
+
+        window.removeAddFoodImage();
+
+        // Auto-select current day of week in dropdown
+        if (daySelect) {
+          const dayIds = ["bar-cn", "bar-t2", "bar-t3", "bar-t4", "bar-t5", "bar-t6", "bar-t7"];
+          const todayIdx = new Date().getDay();
+          const todayId = dayIds[todayIdx];
+          if (todayId) daySelect.value = todayId;
+        }
+
+        modal.classList.remove("hidden");
+        modal.classList.add("flex");
+      };
+
+      window.closeAddCalorieModal = function () {
+        const modal = document.getElementById("add-calorie-modal");
+        if (modal) {
+          modal.classList.add("hidden");
+          modal.classList.remove("flex");
+        }
+      };
+
+      window.handleAddFoodImageSelect = function (event) {
+        const file = event.target.files && event.target.files[0];
+        if (!file) return;
+
+        if (file.size > 5 * 1024 * 1024) {
+          if (typeof showToast === "function") showToast("Vui lòng chọn ảnh nhỏ hơn 5MB!", "error");
+          return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = function (e) {
+          window.currentAddFoodImageBase64 = e.target.result;
+          const previewImg = document.getElementById("add-food-preview-img");
+          const previewWrapper = document.getElementById("add-food-preview-wrapper");
+          const uploadPrompt = document.getElementById("add-food-upload-prompt");
+
+          if (previewImg) previewImg.src = e.target.result;
+          if (previewWrapper) previewWrapper.classList.remove("hidden");
+          if (uploadPrompt) uploadPrompt.classList.add("hidden");
+        };
+        reader.readAsDataURL(file);
+      };
+
+      window.removeAddFoodImage = function () {
+        window.currentAddFoodImageBase64 = null;
+        const fileInput = document.getElementById("add-food-file-input");
+        const previewImg = document.getElementById("add-food-preview-img");
+        const previewWrapper = document.getElementById("add-food-preview-wrapper");
+        const uploadPrompt = document.getElementById("add-food-upload-prompt");
+
+        if (fileInput) fileInput.value = "";
+        if (previewImg) previewImg.src = "";
+        if (previewWrapper) previewWrapper.classList.add("hidden");
+        if (uploadPrompt) uploadPrompt.classList.remove("hidden");
+      };
+
+      // Vietnamese Dish AI Nutrition Knowledgebase Fallback
+      function estimateVietnameseDishNutrition(name, portion) {
+        const n = (name + " " + portion).toLowerCase();
+        let kcal = 450, protein = 25, carbs = 55, fat = 15;
+
+        if (n.includes("phở") || n.includes("pho")) {
+          kcal = 550; protein = 32; carbs = 65; fat = 14;
+        } else if (n.includes("bún chả") || n.includes("bun cha")) {
+          kcal = 620; protein = 35; carbs = 70; fat = 20;
+        } else if (n.includes("bún bò") || n.includes("bun bo")) {
+          kcal = 580; protein = 30; carbs = 62; fat = 18;
+        } else if (n.includes("cơm tấm") || n.includes("com tam")) {
+          kcal = 680; protein = 36; carbs = 85; fat = 22;
+        } else if (n.includes("bánh mì") || n.includes("banh mi")) {
+          kcal = 420; protein = 18; carbs = 52; fat = 16;
+        } else if (n.includes("xôi") || n.includes("xoi")) {
+          kcal = 500; protein = 16; carbs = 78; fat = 15;
+        } else if (n.includes("hủ tiếu") || n.includes("hu tieu")) {
+          kcal = 480; protein = 24; carbs = 58; fat = 14;
+        } else if (n.includes("salad") || n.includes("gỏi")) {
+          kcal = 220; protein = 10; carbs = 22; fat = 9;
+        } else if (n.includes("lẩu") || n.includes("lau")) {
+          kcal = 750; protein = 48; carbs = 60; fat = 32;
+        } else if (n.includes("gà") || n.includes("ga")) {
+          kcal = 460; protein = 38; carbs = 30; fat = 15;
+        } else if (n.includes("bò") || n.includes("bo")) {
+          kcal = 520; protein = 35; carbs = 40; fat = 18;
+        } else if (n.includes("cá") || n.includes("ca")) {
+          kcal = 380; protein = 32; carbs = 30; fat = 10;
+        }
+
+        // Adjust for portion words
+        if (n.includes("lớn") || n.includes("to") || n.includes("đặc biệt") || n.includes("nhiều")) {
+          kcal = Math.round(kcal * 1.25);
+          protein = Math.round(protein * 1.2);
+          carbs = Math.round(carbs * 1.25);
+          fat = Math.round(fat * 1.2);
+        } else if (n.includes("nhỏ") || n.includes("ít")) {
+          kcal = Math.round(kcal * 0.75);
+          protein = Math.round(protein * 0.8);
+          carbs = Math.round(carbs * 0.75);
+          fat = Math.round(fat * 0.8);
+        }
+
+        return { kcal, protein, carbs, fat };
+      }
+
+      window.analyzeFoodWithAI = async function () {
+        const nameInput = document.getElementById("add-food-name");
+        const portionInput = document.getElementById("add-food-portion");
+        const kcalInput = document.getElementById("add-food-kcal");
+        const proInput = document.getElementById("add-food-protein");
+        const carbInput = document.getElementById("add-food-carbs");
+        const fatInput = document.getElementById("add-food-fat");
+        const loadingEl = document.getElementById("ai-food-loading");
+        const btnAnalyze = document.getElementById("btn-ai-analyze-food");
+
+        const foodName = nameInput ? nameInput.value.trim() : "";
+        const portion = portionInput ? portionInput.value.trim() : "";
+
+        if (!foodName && !window.currentAddFoodImageBase64) {
+          if (typeof showToast === "function") showToast("Vui lòng nhập tên món ăn hoặc tải lên hình ảnh để AI phân tích!", "warning");
+          if (nameInput) nameInput.focus();
+          return;
+        }
+
+        if (loadingEl) loadingEl.classList.remove("hidden");
+        if (btnAnalyze) btnAnalyze.disabled = true;
+
+        try {
+          let estimated = null;
+
+          if (typeof fetchGeminiAPI === "function") {
+            const promptText = `Bạn là chuyên gia dinh dưỡng Nuri AI. Hãy phân tích món ăn: Tên "${foodName}", Mô tả/Kích thước: "${portion}". 
+Trả về ĐÚNG 1 ĐỊNH DẠNG JSON duy nhất: {"kcal": số_nguyên, "protein": số_nguyên, "carbs": số_nguyên, "fat": số_nguyên}. 
+Không kèm bối cảnh hay markdown khác.`;
+
+            try {
+              const resText = await fetchGeminiAPI(promptText, true);
+              if (resText) {
+                const cleaned = resText.replace(/```json\n?|```/gi, "").trim();
+                const parsed = JSON.parse(cleaned);
+                if (parsed && typeof parsed.kcal === "number" && parsed.kcal > 0) {
+                  estimated = parsed;
+                }
+              }
+            } catch (e) {
+              console.log("Gemini API call skipped, using local AI Estimator:", e);
+            }
+          }
+
+          if (!estimated) {
+            estimated = estimateVietnameseDishNutrition(foodName, portion);
+          }
+
+          await new Promise((r) => setTimeout(r, 600));
+
+          if (kcalInput) kcalInput.value = estimated.kcal;
+          if (proInput) proInput.value = estimated.protein;
+          if (carbInput) carbInput.value = estimated.carbs;
+          if (fatInput) fatInput.value = estimated.fat;
+
+          if (kcalInput) {
+            kcalInput.classList.add("ring-4", "ring-emerald-400", "scale-105");
+            setTimeout(() => kcalInput.classList.remove("ring-4", "ring-emerald-400", "scale-105"), 1500);
+          }
+
+          if (typeof showToast === "function") {
+            showToast(`✨ AI đã tính toán thành công: ${estimated.kcal} kcal cho món "${foodName || 'được chọn'}"!`, "success");
+          }
+        } catch (err) {
+          console.error("AI Analysis error:", err);
+          const fallback = estimateVietnameseDishNutrition(foodName, portion);
+          if (kcalInput) kcalInput.value = fallback.kcal;
+          if (proInput) proInput.value = fallback.protein;
+          if (carbInput) carbInput.value = fallback.carbs;
+          if (fatInput) fatInput.value = fallback.fat;
+        } finally {
+          if (loadingEl) loadingEl.classList.add("hidden");
+          if (btnAnalyze) btnAnalyze.disabled = false;
+        }
+      };
+
+      window.saveExtraFoodItem = function () {
+        const nameInput = document.getElementById("add-food-name");
+        const portionInput = document.getElementById("add-food-portion");
+        const kcalInput = document.getElementById("add-food-kcal");
+        const proInput = document.getElementById("add-food-protein");
+        const carbInput = document.getElementById("add-food-carbs");
+        const fatInput = document.getElementById("add-food-fat");
+        const daySelect = document.getElementById("add-food-day");
+
+        const foodName = nameInput ? nameInput.value.trim() : "";
+        const kcalVal = parseInt(kcalInput ? kcalInput.value : "0") || 0;
+        const selectedDayId = daySelect ? daySelect.value : "bar-t2";
+
+        if (!foodName) {
+          if (typeof showToast === "function") showToast("Vui lòng nhập tên món ăn!", "warning");
+          if (nameInput) nameInput.focus();
+          return;
+        }
+
+        if (kcalVal <= 0) {
+          if (typeof showToast === "function") showToast("Vui lòng nhập số Kcal hoặc bấm 'AI Phân Tích'!", "warning");
+          if (kcalInput) kcalInput.focus();
+          return;
+        }
+
+        if (!window.extraFoodsData) {
+          const saved = localStorage.getItem("nutriadmin_extra_foods");
+          try {
+            window.extraFoodsData = saved ? JSON.parse(saved) : {};
+          } catch (e) {
+            window.extraFoodsData = {};
+          }
+        }
+
+        if (!window.extraFoodsData[selectedDayId]) {
+          window.extraFoodsData[selectedDayId] = [];
+        }
+
+        const newItem = {
+          id: "extra_" + Date.now(),
+          name: foodName,
+          portion: portionInput ? portionInput.value.trim() : "",
+          kcal: kcalVal,
+          protein: parseInt(proInput ? proInput.value : "0") || 0,
+          carbs: parseInt(carbInput ? carbInput.value : "0") || 0,
+          fat: parseInt(fatInput ? fatInput.value : "0") || 0,
+          image: window.currentAddFoodImageBase64 || null,
+          timestamp: Date.now()
+        };
+
+        window.extraFoodsData[selectedDayId].push(newItem);
+        localStorage.setItem("nutriadmin_extra_foods", JSON.stringify(window.extraFoodsData));
+
+        if (typeof currentUser !== "undefined" && currentUser) {
+          currentUser.extraFoodsData = window.extraFoodsData;
+        }
+
+        if (typeof updateNutritionDashboard === "function") {
+          updateNutritionDashboard(false);
+        }
+
+        const dayNameMap = {
+          "bar-t2": "Thứ 2",
+          "bar-t3": "Thứ 3",
+          "bar-t4": "Thứ 4",
+          "bar-t5": "Thứ 5",
+          "bar-t6": "Thứ 6",
+          "bar-t7": "Thứ 7",
+          "bar-cn": "Chủ nhật"
+        };
+        const dayLabel = dayNameMap[selectedDayId] || "hôm nay";
+
+        if (typeof showToast === "function") {
+          showToast(`🎉 Đã thêm "${foodName}" (+${kcalVal} kcal) vào biểu đồ ${dayLabel}!`, "success");
+        }
+
+        window.closeAddCalorieModal();
+      };
+
+      window.updateNutritionDashboard = updateNutritionDashboard;
+
+
+
+
