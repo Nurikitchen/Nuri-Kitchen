@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1280, initial-scale=0.35, maximum-scale=5.0, user-scalable=yes" />
+    <title>Nuri Kitchen</title>
+    <!-- PWA Configurations -->
+    <link rel="manifest" href="./manifest.json">
+    <meta name="theme-color" content="#10b981">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Nuri">
+    <link rel="apple-touch-icon" href="./logo.svg">
+    <link rel="icon" type="image/svg+xml" href="./logo.svg">
+    
+    
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet">
+    <!-- Thư viện html2pdf để xuất file PDF -->
+    
+
+    <!-- Thư viện Google Identity Services (GSI) -->
+    
+    <!-- Thư viện Chart.js cho Biểu đồ thống kê -->
+    
+    <!-- Thư viện Canvas Confetti cho hiệu ứng ăn mừng -->
+    
+    <!-- Thêm Tone.js để tạo âm thanh thông báo -->
+    
+    <!-- Thư viện Leaflet cho Bản đồ -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css">
+    
+    
+    
+
+    <!-- Thư viện Firebase -->
+    
+    
+    
+
+    
+    
+    
+    
+    
+
+    <!-- Cấu hình Firebase & Gemini cho Github Pages -->
+    
+
+    <!-- Fetch config từ Server hoặc config.json cục bộ -->
+    
+  
+    
+
+    <script>
+      window.tailwind = {
+        config: {
+          theme: {
+            extend: {
+              fontSize: {
+                'xs': ['0.9375rem', { lineHeight: '1.25rem' }],
+                'sm': ['1.09375rem', { lineHeight: '1.5625rem' }],
+                'base': ['1.25rem', { lineHeight: '1.875rem' }],
+                'lg': ['1.40625rem', { lineHeight: '2.1875rem' }],
+                'xl': ['1.5625rem', { lineHeight: '2.1875rem' }],
+                '2xl': ['1.875rem', { lineHeight: '2.5rem' }],
+                '3xl': ['2.34375rem', { lineHeight: '2.8125rem' }],
+                '4xl': ['2.8125rem', { lineHeight: '3.125rem' }],
+                '5xl': ['3.75rem', { lineHeight: '1.25' }],
+                '6xl': ['4.6875rem', { lineHeight: '1.25' }],
+                '7xl': ['5.625rem', { lineHeight: '1.25' }],
+                '8xl': ['7.5rem', { lineHeight: '1.25' }],
+                '9xl': ['10rem', { lineHeight: '1.25' }],
+              }
+            }
+          }
+        }
+      }
+    </script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" crossorigin="anonymous" defer></script>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js" crossorigin="anonymous" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js" crossorigin="anonymous" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js" crossorigin="anonymous" defer></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin="anonymous" defer></script>
+    <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js" crossorigin="anonymous" defer></script>
+    <script src="https://unpkg.com/leaflet.heat/dist/leaflet-heat.js" crossorigin="anonymous" defer></script>
+    <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-app-compat.js" crossorigin="anonymous" defer></script>
+    <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-auth-compat.js" crossorigin="anonymous" defer></script>
+    <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore-compat.js" crossorigin="anonymous" defer></script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="./src/main.jsx"></script>
+  </body>
+</html>
