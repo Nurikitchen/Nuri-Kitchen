@@ -102,6 +102,18 @@
     
 
 
+      function formatSocialUrl(val, platform) {
+        if (!val || !val.trim()) return "#";
+        let str = val.trim();
+        if (str.startsWith("http://") || str.startsWith("https://")) return str;
+        str = str.replace(/^@/, "");
+        if (platform === "instagram") return `https://instagram.com/${str}`;
+        if (platform === "tiktok") return `https://tiktok.com/@${str}`;
+        if (platform === "facebook") return `https://facebook.com/${str}`;
+        return `https://${str}`;
+      }
+      window.formatSocialUrl = formatSocialUrl;
+
       // Load theme preference: default to light mode unless explicitly set to dark
       if (localStorage.getItem("theme") === "dark") {
         document.documentElement.classList.add("dark");
@@ -249,8 +261,17 @@
   appId: "1:401182710108:web:f5c66f6da027bdc285c999",
   measurementId: "G-BWPSJWE34S"
 }); // Dán chuỗi JSON config của Firebase vào đây. VD: '{"apiKey": "...", ...}'
-      window.NURI_GEMINI_API_KEY = "AQ.Ab8RN6Lyw_pjttG71vA4MRm8NtVglw6pFItmgn6XfNvUCejayw"; // Dán API Key Gemini vào đây. VD: 'AIzaSy...'
-      window.NURI_CONFIG_SOURCE = "default"; // Nguồn cấu hình ("default", "server", "config_file")
+      window.DEFAULT_GEMINI_API_KEY = window.DEFAULT_GEMINI_API_KEY || "";
+      window.NURI_GEMINI_API_KEY = window.NURI_GEMINI_API_KEY || "";
+      window.NURI_CONFIG_SOURCE = "default";
+
+      window.getGeminiApiKey = function() {
+        const customKey = localStorage.getItem("nutriadmin_custom_api_key") || (window.appSettings && window.appSettings.customGeminiApiKey);
+        if (customKey && customKey.trim() !== "") {
+          return customKey.trim();
+        }
+        return (window.NURI_GEMINI_API_KEY || window.DEFAULT_GEMINI_API_KEY || window.VITE_GEMINI_API_KEY || "").trim();
+      };
     
 
 
@@ -584,7 +605,7 @@
               short_name: "Nuri", name: "Nuri - Tư Vấn Dinh Dưỡng",
               description: "Chuyên gia dinh dưỡng ảo & Thực đơn cá nhân hóa của bạn",
               icons: [{ src: pwaCustomIcon, type: pwaCustomIcon.startsWith('data:image/svg') ? 'image/svg+xml' : 'image/png', sizes: "192x192 512x512", purpose: "any maskable" }],
-              start_url: "/?mode=landing", background_color: "#f8fafc", theme_color: "#10b981", display: "standalone", orientation: "portrait"
+              start_url: "./?mode=customer-profile", background_color: "#f8fafc", theme_color: "#10b981", display: "standalone", orientation: "portrait"
             };
             const _blob = new Blob([JSON.stringify(_manifestObj)], { type: "application/json" });
             _manifestLink.href = URL.createObjectURL(_blob);
@@ -928,6 +949,7 @@
             mascotAges,
             activeMascotId,
             pwaCustomIcon,
+            weeklyFixedDishes: window.weeklyFixedDishes || { lunch: [], dinner: [] },
             isAdmin: isSenderAdmin,
           };
           const currentStr = JSON.stringify(currentState);
@@ -1155,8 +1177,18 @@
       }
 
       function updateLocalStateFromServer(serverState) {
+        const isFirstPoll = !window.isFirstPollCompleted;
+        window.isFirstPollCompleted = true;
         window.isInitialStateLoaded = true;
-        
+
+        if (typeof serverState.notificationsReadTimestamp !== "undefined" && serverState.notificationsReadTimestamp) {
+          window.notificationsReadTimestamp = serverState.notificationsReadTimestamp;
+          try { localStorage.setItem("admin_notifications_read_time", serverState.notificationsReadTimestamp.toString()); } catch(e) {}
+        }
+        if (serverState.adminNotifications && Array.isArray(serverState.adminNotifications)) {
+          try { localStorage.setItem("admin_notifications_v1", JSON.stringify(serverState.adminNotifications)); } catch(e) {}
+          if (typeof renderAdminNotifications === "function") renderAdminNotifications();
+        }
 
         const serverStr = JSON.stringify(serverState);
         if (lastServerStateStr === serverStr) return;
@@ -1204,48 +1236,43 @@
         }
 
         if (serverState.settings) {
-          const savedSettingsRaw = localStorage.getItem("nutriadmin_settings");
-          const savedSettings = savedSettingsRaw
-            ? JSON.parse(savedSettingsRaw)
-            : {};
-          const s = { ...savedSettings, ...serverState.settings };
-          if (
-            !serverState.settings.bannerImagesCloud &&
-            savedSettings.bannerImagesCloud
-          ) {
-            s.bannerImagesCloud = savedSettings.bannerImagesCloud;
-          }
-          if (
-            !serverState.settings.bannerImages &&
-            savedSettings.bannerImages
-          ) {
-            s.bannerImages = savedSettings.bannerImages;
+          const s = { ...serverState.settings };
+          if (serverState.settings.bannerImages || serverState.settings.bannerImagesCloud) {
+            s.bannerImages = serverState.settings.bannerImages || {};
+            s.bannerImagesCloud = serverState.settings.bannerImagesCloud || {};
           }
           window.appSettings = s;
           
           if (s.customGeminiApiKey) {
             localStorage.setItem("nutriadmin_custom_api_key", s.customGeminiApiKey);
+            const elKey = document.getElementById("custom-api-key");
+            if (elKey && elKey !== document.activeElement) elKey.value = s.customGeminiApiKey;
           } else {
+            delete s.customGeminiApiKey;
             localStorage.removeItem("nutriadmin_custom_api_key");
+            const elKey = document.getElementById("custom-api-key");
+            if (elKey && elKey !== document.activeElement) elKey.value = "";
           }
           
           if (s.customFirebaseConfig) {
             localStorage.setItem("nutriadmin_custom_firebase_config", s.customFirebaseConfig);
+            const elFb = document.getElementById("custom-firebase-config");
+            if (elFb && elFb !== document.activeElement) elFb.value = s.customFirebaseConfig;
           } else {
             localStorage.removeItem("nutriadmin_custom_firebase_config");
           }
           
           if (s.customAppUrl) {
             localStorage.setItem("nutriadmin_custom_app_url", s.customAppUrl);
+            const elUrl = document.getElementById("custom-app-url");
+            if (elUrl && elUrl !== document.activeElement) elUrl.value = s.customAppUrl;
           } else {
             localStorage.removeItem("nutriadmin_custom_app_url");
           }
 
           localStorage.setItem("nutriadmin_settings", JSON.stringify(s));
-          
-          if (typeof initFirebaseSync === "function") {
-            initFirebaseSync();
-          }
+          if (typeof loadSettings === "function") loadSettings();
+          if (typeof refreshBrandUI === "function") refreshBrandUI();
           if (s.bannerImagesCloud) {
             (async () => {
               if (window.MascotDB) {
@@ -1298,12 +1325,17 @@
           if (typeof updateAppBadgeUI === "function") updateAppBadgeUI();
         }
         if (typeof serverState.pwaCustomIcon !== "undefined") {
-          pwaCustomIcon = serverState.pwaCustomIcon || "";
-          window.pwaCustomIcon = pwaCustomIcon;
-          localStorage.setItem("nutriadmin_pwa_custom_icon", pwaCustomIcon);
-          // Cập nhật UI và manifest ngay sau khi nhận icon từ Firebase
-          if (typeof updatePwaIconUI === "function") updatePwaIconUI();
-          // updatePwaIconUI gọi updatePageFavicons bên trong => manifest cũng được rebuild
+          const lastUp = window.lastPwaIconUploadTime || 0;
+          const isRecentUpload = (Date.now() - lastUp) < 60000;
+          if (serverState.pwaCustomIcon || !isRecentUpload) {
+            pwaCustomIcon = serverState.pwaCustomIcon || "";
+            window.pwaCustomIcon = pwaCustomIcon;
+            try {
+              localStorage.setItem("nutriadmin_pwa_custom_icon", pwaCustomIcon);
+            } catch (e) {}
+            // Cập nhật UI và manifest ngay sau khi nhận icon từ Firebase
+            if (typeof updatePwaIconUI === "function") updatePwaIconUI();
+          }
         }
         if (serverState.allReviews) {
           const prevReviewsCount = Object.keys(allReviews || {}).length;
@@ -1363,140 +1395,80 @@
         }
 
         if (serverState.orders) {
-          let prevCount = 0;
-          try {
-            prevCount = orders ? orders.length : 0;
-          } catch (e) {}
-
-          const mergedOrders = [...orders];
-          serverState.orders.forEach((sOrder) => {
-            const idx = mergedOrders.findIndex((o) => o.id === sOrder.id);
-            if (idx > -1) {
-              mergedOrders[idx] = { ...mergedOrders[idx], ...sOrder };
-            } else {
-              mergedOrders.push(sOrder);
-            }
-          });
-
-          orders = mergedOrders.map((o) => ({
+          orders = serverState.orders.map((o) => ({
             ...o,
             timestamp: parseSafeDate(o.timestamp),
           }));
           orders.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
-
-          if (orders.length > prevCount) {
-            const latestOrder = orders[0];
-            const urlParams = new URLSearchParams(window.location.search);
-            if (urlParams.get("mode") !== "landing") {
-              if (typeof triggerRealtimeNotification === "function") {
-                triggerRealtimeNotification(
-                  "order",
-                  "Có đơn hàng mới!",
-                  `Khách <b>${latestOrder.customerName}</b> vừa đặt đơn hàng trị giá ${formatCurrency(latestOrder.total)}đ.`,
-                  "Xem đơn",
-                  () => {
-                    switchView("orders");
-                  },
-                );
-              }
-              if (typeof showNewOrderPopup === "function") {
-                showNewOrderPopup(latestOrder);
-              }
-              const badge = document.getElementById("order-badge");
-              if (badge) {
-                badge.innerText =
-                  (parseInt(badge.innerText) || 0) +
-                  (orders.length - prevCount);
-                badge.classList.remove("hidden");
-              }
-            }
-          }
+          try {
+            localStorage.setItem("nutriadmin_orders", JSON.stringify(orders));
+          } catch (e) {}
+          try { if (typeof renderOrdersAdmin === "function") renderOrdersAdmin(); } catch (e) {}
+          try { if (typeof renderShippers === "function") renderShippers(); } catch (e) {}
           updatedUI = true;
         }
-        if (serverState.dishes) dishes = serverState.dishes;
+        if (serverState.weeklyFixedDishes) {
+          window.weeklyFixedDishes = serverState.weeklyFixedDishes;
+          try {
+            localStorage.setItem("nutriadmin_weekly_fixed_dishes", JSON.stringify(window.weeklyFixedDishes));
+          } catch (e) {}
+        }
+        if (serverState.dishes) {
+          dishes = serverState.dishes;
+          try {
+            localStorage.setItem("nutriadmin_dishes", JSON.stringify(dishes));
+          } catch (e) {}
+          if (typeof window.recalculateCompleteDishes === "function") {
+            try { window.recalculateCompleteDishes(); } catch (e) {}
+          }
+          try { renderCategories(); } catch (e) {}
+          try { renderDishes(); } catch (e) {}
+        }
         if (serverState.inventory) {
           inventory = serverState.inventory;
-          localStorage.setItem(
-            "nutriadmin_inventory",
-            JSON.stringify(inventory),
-          );
+          try {
+            localStorage.setItem("nutriadmin_inventory", JSON.stringify(inventory));
+          } catch (e) {}
+          try { if (typeof renderInventory === "function") renderInventory(); } catch (e) {}
         }
         if (serverState.trackingSources)
           trackingSources = serverState.trackingSources;
         if (serverState.discountCodes)
           discountCodes = serverState.discountCodes;
         if (serverState.potentialCustomers) {
-          let prevPotCount = 0;
-          try {
-            prevPotCount = potentialCustomers ? potentialCustomers.length : 0;
-          } catch (e) {}
-
-          const mergedPotential = [...potentialCustomers];
-          serverState.potentialCustomers.forEach((sPot) => {
-            const idx = mergedPotential.findIndex((p) => p.id === sPot.id || (p.phone && p.phone === sPot.phone));
-            if (idx > -1) {
-              mergedPotential[idx] = { ...mergedPotential[idx], ...sPot };
-            } else {
-              mergedPotential.push(sPot);
-            }
-          });
-
-          potentialCustomers = mergedPotential.map(p => ({
+          potentialCustomers = serverState.potentialCustomers.map(p => ({
             ...p,
             timestamp: p.timestamp ? parseSafeDate(p.timestamp) : undefined,
             date: p.date ? parseSafeDate(p.date) : undefined
           }));
-          potentialCustomers.sort((a, b) => (b.date || b.timestamp || new Date(0)).getTime() - (a.date || a.timestamp || new Date(0)).getTime());
-
-          if (potentialCustomers.length > prevPotCount) {
-            const latestPot = potentialCustomers[0];
-            const urlParams = new URLSearchParams(window.location.search);
-            if (urlParams.get("mode") !== "landing") {
-              if (typeof triggerRealtimeNotification === "function") {
-                triggerRealtimeNotification(
-                  "registration",
-                  "Khách hàng đăng ký mới!",
-                  `Khách <b>${latestPot.name}</b> (${latestPot.phone}) vừa đăng ký lộ trình mới thành công.`,
-                  "Xem ngay",
-                  () => {
-                    switchView("customers");
-                    switchCustomerTab("potential");
-                  },
-                );
-              }
-              const badge = document.getElementById("nav-customers-badge");
-              const mobileBadge = document.getElementById(
-                "nav-mobile-customers-badge",
-              );
-              if (badge) {
-                badge.innerText =
-                  (parseInt(badge.innerText) || 0) +
-                  (potentialCustomers.length - prevPotCount);
-                badge.classList.remove("hidden");
-              }
-              if (mobileBadge && badge) {
-                mobileBadge.innerText = badge.innerText;
-                mobileBadge.classList.remove("hidden");
-              }
-            }
-          }
+          try {
+            localStorage.setItem("nutriadmin_potential_customers", JSON.stringify(potentialCustomers));
+          } catch (e) {}
+          try { if (typeof renderAccountsList === "function") renderAccountsList(); } catch (e) {}
+          try { if (typeof renderPotentialCustomers === "function") renderPotentialCustomers(); } catch (e) {}
           updatedUI = true;
         }
         if (serverState.purchasedCustomers) {
-          const mergedPurchased = [...purchasedCustomers];
-          serverState.purchasedCustomers.forEach((sPur) => {
-            const idx = mergedPurchased.findIndex((p) => p.id === sPur.id || (p.phone && p.phone === sPur.phone));
-            if (idx > -1) {
-              mergedPurchased[idx] = { ...mergedPurchased[idx], ...sPur };
-            } else {
-              mergedPurchased.push(sPur);
-            }
-          });
-          purchasedCustomers = mergedPurchased.map(p => ({
+          purchasedCustomers = serverState.purchasedCustomers.map(p => ({
             ...p,
             timestamp: p.timestamp ? parseSafeDate(p.timestamp) : undefined,
             date: p.date ? parseSafeDate(p.date) : undefined
           }));
+          try {
+            localStorage.setItem("nutriadmin_purchased_customers", JSON.stringify(purchasedCustomers));
+          } catch (e) {}
+          if (typeof currentUser !== "undefined" && currentUser && currentUser.phone) {
+            const updatedMe = purchasedCustomers.find((c) => c.phone === currentUser.phone);
+            if (updatedMe) {
+              currentUser = { ...currentUser, ...updatedMe };
+              try {
+                localStorage.setItem("nutriadmin_current_user", JSON.stringify(currentUser));
+              } catch (e) {}
+              if (typeof renderCustomerProfile === "function") renderCustomerProfile();
+            }
+          }
+          try { if (typeof renderAccountsList === "function") renderAccountsList(); } catch (e) {}
+          try { if (typeof renderPurchasedCustomers === "function") renderPurchasedCustomers(); } catch (e) {}
           updatedUI = true;
         }
         if (serverState.shippers) {
@@ -1929,7 +1901,7 @@
           (c) => c.needsSupport || c.hasUnread,
         ).length;
         const unreadReviewsCount = Object.values(allReviews).filter(
-          (r) => !r.reply,
+          (r) => !r.reply && !r.read,
         ).length;
         count += unreadReviewsCount;
 
@@ -1937,13 +1909,19 @@
           if (count > 0) {
             badge1.classList.remove("hidden");
             badge1.innerText = count;
-          } else badge1.classList.add("hidden");
+          } else {
+            badge1.classList.add("hidden");
+            badge1.innerText = "0";
+          }
         }
         if (badge2) {
           if (count > 0) {
             badge2.classList.remove("hidden");
             badge2.innerText = count;
-          } else badge2.classList.add("hidden");
+          } else {
+            badge2.classList.add("hidden");
+            badge2.innerText = "0";
+          }
         }
       }
 
@@ -2044,7 +2022,38 @@
         const notifs = getAdminNotifications();
         notifs.forEach(n => n.read = true);
         saveAdminNotifications(notifs);
+
+        if (typeof allChats !== "undefined" && allChats) {
+          Object.values(allChats).forEach(c => {
+            c.hasUnread = false;
+            c.needsSupport = false;
+          });
+          try { localStorage.setItem("nutriadmin_all_chats", JSON.stringify(allChats)); } catch(e) {}
+        }
+
+        if (typeof allReviews !== "undefined" && allReviews) {
+          Object.values(allReviews).forEach(r => {
+            r.read = true;
+          });
+          try { localStorage.setItem("nutriadmin_all_reviews", JSON.stringify(allReviews)); } catch(e) {}
+        }
+
+        const badgeIds = ["admin-notification-badge", "nav-customers-badge", "nav-mobile-customers-badge", "nav-messages-badge", "nav-mobile-messages-badge", "order-badge", "mobile-order-badge"];
+        badgeIds.forEach(id => {
+          const el = document.getElementById(id);
+          if (el) {
+            el.innerText = "0";
+            el.classList.add("hidden");
+          }
+        });
+
+        const readTime = Date.now();
+        try { localStorage.setItem("admin_notifications_read_time", readTime.toString()); } catch(e) {}
+        window.notificationsReadTimestamp = readTime;
+
+        if (typeof updateMessagesNavBadge === "function") updateMessagesNavBadge();
         toggleAdminNotifications(); // Hide dropdown
+        if (typeof syncStateToServer === "function") syncStateToServer();
       };
 
       window.renderAdminNotifications = function() {
@@ -4106,10 +4115,7 @@
       }
 
       async function fetchGeminiAPI(prompt, isJson = false) {
-        const customKey =
-          localStorage.getItem("nutriadmin_custom_api_key") ||
-          window.NURI_GEMINI_API_KEY ||
-          "";
+        const customKey = window.getGeminiApiKey ? window.getGeminiApiKey() : (localStorage.getItem("nutriadmin_custom_api_key") || window.NURI_GEMINI_API_KEY);
         const url = `/api/gemini`;
         const payload = {
           contents: [{ parts: [{ text: prompt }] }],
@@ -6537,68 +6543,74 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
 
 
             questsContainer.innerHTML = `
-            <!-- Quest 1 -->
-            <div class="flex items-center justify-between p-3 rounded-2xl transition-all ${hasCheckedIn ? "bg-slate-50 border border-slate-100 opacity-75" : "bg-emerald-50/25 border border-emerald-100/50 hover:bg-emerald-50/40"}">
+            <!-- Quest 1: Điểm danh (1 ngày, +5đ) -->
+            <div class="flex items-center justify-between p-3.5 rounded-2xl transition-all ${hasCheckedIn ? "bg-slate-100/80 border border-slate-200 opacity-50 grayscale-[20%] pointer-events-none select-none shadow-none" : "bg-emerald-50/25 border border-emerald-100/50 hover:bg-emerald-50/40 shadow-sm"}">
               <div class="flex items-center gap-3">
-                <div class="w-8 h-8 rounded-full flex items-center justify-center ${hasCheckedIn ? "bg-emerald-100 text-emerald-600" : "bg-slate-100 text-slate-400"}">
-                  <i class="fa-solid ${hasCheckedIn ? "fa-check" : "fa-calendar-check"} text-sm"></i>
+                <div class="w-9 h-9 rounded-full flex items-center justify-center ${hasCheckedIn ? "bg-emerald-100 text-emerald-600 shadow-sm" : "bg-slate-100 text-slate-400"}">
+                  <i class="fa-solid ${hasCheckedIn ? "fa-check text-base font-black" : "fa-calendar-check text-sm"}"></i>
                 </div>
                 <div>
-                  <p class="text-xs font-bold ${hasCheckedIn ? "text-slate-400 line-through" : "text-slate-700"}">Điểm danh hôm nay</p>
-                  <p class="text-[10px] text-emerald-600 font-bold">+10 điểm</p>
+                  <p class="text-xs md:text-sm font-bold ${hasCheckedIn ? "text-slate-500 flex items-center gap-1.5" : "text-slate-700"}">
+                    ${hasCheckedIn ? '<i class="fa-solid fa-circle-check text-emerald-500"></i>' : ''}Điểm danh hôm nay
+                  </p>
+                  <p class="text-[11px] ${hasCheckedIn ? "text-slate-400 font-medium" : "text-emerald-600 font-bold"}">+5 điểm${hasCheckedIn ? " (Đã nhận)" : ""}</p>
                 </div>
               </div>
               ${
                 hasCheckedIn
                   ? `
-                <span class="text-[10px] font-extrabold text-emerald-600 bg-emerald-50 border border-emerald-100 px-2.5 py-1 rounded-lg">Đã xong</span>
+                <span class="text-[11px] font-extrabold text-emerald-700 bg-emerald-100/90 border border-emerald-200 px-3 py-1 rounded-xl flex items-center gap-1.5 shadow-xs"><i class="fa-solid fa-check text-xs font-black"></i> Đã hoàn thành</span>
               `
                   : `
-                <button onclick="triggerQuestCheckIn()" class="text-[10px] font-bold bg-emerald-500 hover:bg-emerald-600 text-white px-3 py-1.5 rounded-lg shadow-sm transition-all hover:scale-105 active:scale-95">Điểm danh</button>
+                <button onclick="triggerQuestCheckIn()" class="text-[11px] font-bold bg-emerald-500 hover:bg-emerald-600 text-white px-3.5 py-1.5 rounded-xl shadow-sm transition-all hover:scale-105 active:scale-95 cursor-pointer">Điểm danh</button>
               `
               }
             </div>
 
-            <!-- Quest 2 -->
-            <div class="flex items-center justify-between p-3 rounded-2xl transition-all ${hasLoggedWeightThisWeek ? "bg-slate-50 border border-slate-100 opacity-75" : "bg-emerald-50/25 border border-emerald-100/50 hover:bg-emerald-50/40"}">
+            <!-- Quest 2: Ghi nhận cân nặng (7 ngày, +10đ) -->
+            <div class="flex items-center justify-between p-3.5 rounded-2xl transition-all ${hasLoggedWeightThisWeek ? "bg-slate-100/80 border border-slate-200 opacity-50 grayscale-[20%] pointer-events-none select-none shadow-none" : "bg-emerald-50/25 border border-emerald-100/50 hover:bg-emerald-50/40 shadow-sm"}">
               <div class="flex items-center gap-3">
-                <div class="w-8 h-8 rounded-full flex items-center justify-center ${hasLoggedWeightThisWeek ? "bg-emerald-100 text-emerald-600" : "bg-slate-100 text-slate-400"}">
-                  <i class="fa-solid ${hasLoggedWeightThisWeek ? "fa-check" : "fa-weight-scale"} text-sm"></i>
+                <div class="w-9 h-9 rounded-full flex items-center justify-center ${hasLoggedWeightThisWeek ? "bg-emerald-100 text-emerald-600 shadow-sm" : "bg-slate-100 text-slate-400"}">
+                  <i class="fa-solid ${hasLoggedWeightThisWeek ? "fa-check text-base font-black" : "fa-weight-scale text-sm"}"></i>
                 </div>
                 <div>
-                  <p class="text-xs font-bold ${hasLoggedWeightThisWeek ? "text-slate-400 line-through" : "text-slate-700"}">Ghi nhận cân nặng tuần này</p>
-                  <p class="text-[10px] text-emerald-600 font-bold">+5 điểm</p>
+                  <p class="text-xs md:text-sm font-bold ${hasLoggedWeightThisWeek ? "text-slate-500 flex items-center gap-1.5" : "text-slate-700"}">
+                    ${hasLoggedWeightThisWeek ? '<i class="fa-solid fa-circle-check text-emerald-500"></i>' : ''}Ghi nhận cân nặng tuần này
+                  </p>
+                  <p class="text-[11px] ${hasLoggedWeightThisWeek ? "text-slate-400 font-medium" : "text-emerald-600 font-bold"}">+10 điểm${hasLoggedWeightThisWeek ? " (Đã nhận)" : ""}</p>
                 </div>
               </div>
               ${
                 hasLoggedWeightThisWeek
                   ? `
-                <span class="text-[10px] font-extrabold text-emerald-600 bg-emerald-50 border border-emerald-100 px-2.5 py-1 rounded-lg">Đã xong</span>
+                <span class="text-[11px] font-extrabold text-emerald-700 bg-emerald-100/90 border border-emerald-200 px-3 py-1 rounded-xl flex items-center gap-1.5 shadow-xs"><i class="fa-solid fa-check text-xs font-black"></i> Đã hoàn thành</span>
               `
                   : `
-                <button onclick="triggerQuestWeight()" class="text-[10px] font-bold bg-emerald-500 hover:bg-emerald-600 text-white px-3 py-1.5 rounded-lg shadow-sm transition-all hover:scale-105 active:scale-95">Cập nhật</button>
+                <button onclick="triggerQuestWeight()" class="text-[11px] font-bold bg-emerald-500 hover:bg-emerald-600 text-white px-3.5 py-1.5 rounded-xl shadow-sm transition-all hover:scale-105 active:scale-95 cursor-pointer">Cập nhật</button>
               `
               }
             </div>
 
-            <!-- Quest 3 -->
-            <div class="flex items-center justify-between p-3 rounded-2xl transition-all ${hasSharedThisWeek ? "bg-slate-50 border border-slate-100 opacity-75" : "bg-emerald-50/25 border border-emerald-100/50 hover:bg-emerald-50/40"}">
+            <!-- Quest 3: Chia sẻ thành tích (7 ngày, +20đ) -->
+            <div class="flex items-center justify-between p-3.5 rounded-2xl transition-all ${hasSharedThisWeek ? "bg-slate-100/80 border border-slate-200 opacity-50 grayscale-[20%] pointer-events-none select-none shadow-none" : "bg-emerald-50/25 border border-emerald-100/50 hover:bg-emerald-50/40 shadow-sm"}">
               <div class="flex items-center gap-3">
-                <div class="w-8 h-8 rounded-full flex items-center justify-center ${hasSharedThisWeek ? "bg-emerald-100 text-emerald-600" : "bg-slate-100 text-slate-400"}">
-                  <i class="fa-solid ${hasSharedThisWeek ? "fa-check" : "fa-share-nodes"} text-sm"></i>
+                <div class="w-9 h-9 rounded-full flex items-center justify-center ${hasSharedThisWeek ? "bg-emerald-100 text-emerald-600 shadow-sm" : "bg-slate-100 text-slate-400"}">
+                  <i class="fa-solid ${hasSharedThisWeek ? "fa-check text-base font-black" : "fa-share-nodes text-sm"}"></i>
                 </div>
                 <div>
-                  <p class="text-xs font-bold ${hasSharedThisWeek ? "text-slate-400 line-through" : "text-slate-700"}">Chia sẻ thành tích tuần này</p>
-                  <p class="text-[10px] text-emerald-600 font-bold">+20 điểm</p>
+                  <p class="text-xs md:text-sm font-bold ${hasSharedThisWeek ? "text-slate-500 flex items-center gap-1.5" : "text-slate-700"}">
+                    ${hasSharedThisWeek ? '<i class="fa-solid fa-circle-check text-emerald-500"></i>' : ''}Chia sẻ thành tích tuần này
+                  </p>
+                  <p class="text-[11px] ${hasSharedThisWeek ? "text-slate-400 font-medium" : "text-emerald-600 font-bold"}">+20 điểm${hasSharedThisWeek ? " (Đã nhận)" : ""}</p>
                 </div>
               </div>
               ${
                 hasSharedThisWeek
                   ? `
-                <span class="text-[10px] font-extrabold text-emerald-600 bg-emerald-50 border border-emerald-100 px-2.5 py-1 rounded-lg">Đã xong</span>
+                <span class="text-[11px] font-extrabold text-emerald-700 bg-emerald-100/90 border border-emerald-200 px-3 py-1 rounded-xl flex items-center gap-1.5 shadow-xs"><i class="fa-solid fa-check text-xs font-black"></i> Đã hoàn thành</span>
               `
                   : `
-                <button onclick="triggerQuestShare()" class="text-[10px] font-bold bg-emerald-500 hover:bg-emerald-600 text-white px-3 py-1.5 rounded-lg shadow-sm transition-all hover:scale-105 active:scale-95">Chia sẻ</button>
+                <button onclick="triggerQuestShare()" class="text-[11px] font-bold bg-emerald-500 hover:bg-emerald-600 text-white px-3.5 py-1.5 rounded-xl shadow-sm transition-all hover:scale-105 active:scale-95 cursor-pointer">Chia sẻ</button>
               `
               }
             </div>
@@ -6953,11 +6965,12 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
                             <span class="bg-emerald-100 text-emerald-700 text-xs font-bold px-2 py-1 rounded-md mt-1 shrink-0 self-start md:self-auto">ACTIVE</span>
                         </div>
                         ${todayMenuHtml}
+                        ${currentUser.renewalPending ? `<div class="mt-3 p-3 bg-amber-50 border border-amber-200 rounded-xl text-amber-800 text-xs font-bold flex items-center justify-between gap-2 shadow-sm"><div class="flex items-center gap-2"><i class="fa-solid fa-clock-rotate-left text-amber-600 text-sm animate-spin"></i><span>Chờ Nuri xác nhận thanh toán và gia hạn gói cho bạn nhé</span></div><button onclick="openRenewSubscriptionModal()" class="text-indigo-600 hover:underline shrink-0 text-[11px]">Xem QR</button></div>` : ""}
                         <div class="mt-2 space-y-3">
                             <button onclick="openCustomerMenuModal(${currentUser.id})" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2.5 rounded-xl text-sm transition-colors flex justify-center items-center gap-2">
                                 <i class="fa-solid fa-utensils"></i> Chọn lại menu tuần
                             </button>
-                            <button onclick="window.openPlatformSelectorModal()" class="w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold py-2.5 rounded-xl text-sm transition-colors flex justify-center items-center gap-2 shadow-sm">
+                            <button id="btn-order-outside-pkg" onclick="window.openPlatformSelectorModal()" class="w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold py-2.5 rounded-xl text-sm transition-colors flex justify-center items-center gap-2 shadow-sm">
                                 <i class="fa-solid fa-cart-shopping"></i> Đặt hàng ngoài gói đăng ký
                             </button>
                             <button onclick="openRenewSubscriptionModal()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2.5 rounded-xl text-sm transition-colors flex justify-center items-center gap-2 shadow-sm">
@@ -6967,7 +6980,7 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
                     `;
         }
 
-        // Suggestions
+        // Suggestions (Chỉ lấy Món theo công thức & Món mới mỗi tuần)
         const hiddenKeywordsSug = dishes
           .filter((d) => d.isActive === false)
           .map((d) => d.name)
@@ -6979,12 +6992,24 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
               )
               .filter(Boolean),
           );
+        const fixedLunchIds = (window.weeklyFixedDishes && window.weeklyFixedDishes.lunch) || [];
+        const fixedDinnerIds = (window.weeklyFixedDishes && window.weeklyFixedDishes.dinner) || [];
         const suggestedDishes = [...dishes]
           .filter(
             (d) =>
               d.isActive !== false &&
-              d.sizes &&
               !d.isCustom &&
+              (
+                d.category === "complete" ||
+                d.category === "weekly_special" ||
+                d.isWeekly ||
+                fixedLunchIds.some((id) => String(id) === String(d.id)) ||
+                fixedDinnerIds.some((id) => String(id) === String(d.id))
+              ) &&
+              d.category !== "protein" &&
+              d.category !== "carbs" &&
+              d.category !== "veggies" &&
+              d.category !== "sauce" &&
               !hiddenKeywordsSug.some(
                 (kw) =>
                   d.name.includes(kw) ||
@@ -7024,85 +7049,139 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
           "meal-timeline-container",
         );
         if (timelineContainer) {
-          const days = [
-            "Thứ 2",
-            "Thứ 3",
-            "Thứ 4",
-            "Thứ 5",
-            "Thứ 6",
-            "Thứ 7",
-            "CN",
+          const dayConfigs = [
+            { key: "monday", label: "Thứ 2" },
+            { key: "tuesday", label: "Thứ 3" },
+            { key: "wednesday", label: "Thứ 4" },
+            { key: "thursday", label: "Thứ 5" },
+            { key: "friday", label: "Thứ 6" },
+            { key: "saturday", label: "Thứ 7" },
+            { key: "sunday", label: "CN" },
           ];
           const todayIndex =
             new Date().getDay() === 0 ? 6 : new Date().getDay() - 1; // 0-6 (Mon-Sun)
 
-          let timelineHtml = days
-            .map((day, idx) => {
-              const isPast = idx < todayIndex;
+          if (typeof ensureCustomerWeeklyMenuDefaults === "function") {
+            ensureCustomerWeeklyMenuDefaults(currentUser);
+          }
+          const weeklyMenu = currentUser.weeklyMenu || {};
+          const userOrders = (typeof orders !== "undefined" && Array.isArray(orders))
+            ? orders.filter((o) => (o.phone === currentUser.phone || o.customerPhone === currentUser.phone))
+            : [];
+
+          let timelineHtml = dayConfigs
+            .map((config, idx) => {
               const isToday = idx === todayIndex;
+              const dayKey = config.key;
+              const dayLabel = config.label;
+              const dayMenu = weeklyMenu[dayKey] || {};
 
-              // Dummy dishes for timeline
-              const randomDish = dishes[idx % dishes.length];
-              const isFavorite =
-                localStorage.getItem(`fav_${randomDish.id}`) === "true";
-              const userRating =
-                localStorage.getItem(`rating_${randomDish.id}`) || 0;
-
-              let statusDot = isPast
-                ? '<div class="absolute -left-[5px] top-4 w-3 h-3 rounded-full bg-emerald-500 border-2 border-white"></div>'
-                : isToday
-                  ? '<div class="absolute -left-[5px] top-4 w-3 h-3 rounded-full bg-amber-500 border-2 border-white animate-ping"></div><div class="absolute -left-[5px] top-4 w-3 h-3 rounded-full bg-amber-500 border-2 border-white"></div>'
-                  : '<div class="absolute -left-[5px] top-4 w-3 h-3 rounded-full bg-slate-300 border-2 border-white"></div>';
-
-              let contentHtml = "";
-              if (isPast) {
-                contentHtml = `
-                 <div class="flex items-center justify-between">
-                   <div>
-                     <p class="text-xs font-bold text-slate-500 line-through">${randomDish.name}</p>
-                     <p class="text-[10px] text-emerald-500 font-semibold"><i class="fa-solid fa-check mr-1"></i> Đã hoàn thành</p>
-                   </div>
-                   <div class="flex items-center gap-2">
-                     ${userRating > 0 ? `<div class="text-amber-400 text-xs">${"★".repeat(userRating)}</div>` : `<button onclick="openRatingModal(${randomDish.id})" class="text-[10px] bg-slate-100 text-slate-500 px-2 py-1 rounded hover:bg-slate-200">Đánh giá</button>`}
-                   </div>
-                 </div>
-               `;
-              } else if (isToday) {
-                contentHtml = `
-                 <div class="flex bg-amber-50/50 border border-amber-100 rounded-lg p-2 gap-3 items-center">
-                   <img src="${randomDish.image}" class="w-12 h-12 object-cover rounded-md shadow-sm">
-                   <div class="flex-1">
-                     <div class="flex justify-between items-start">
-                       <p class="text-xs font-bold text-amber-700">${randomDish.name}</p>
-                       <button onclick="toggleFavorite(${randomDish.id})" class="text-rose-500 hover:scale-110 transition-transform">
-                         <i class="${isFavorite ? "fa-solid" : "fa-regular"} fa-heart"></i>
-                       </button>
-                     </div>
-                     <p class="text-[10px] text-slate-500">${randomDish.calo} kcal</p>
-                   </div>
-                 </div>
-               `;
-              } else {
-                contentHtml = `
-                 <div class="flex gap-3 items-center opacity-60">
-                   <img src="${randomDish.image}" class="w-10 h-10 object-cover rounded-md grayscale">
-                   <div class="flex-1">
-                     <p class="text-xs font-bold text-slate-600">${randomDish.name}</p>
-                     <p class="text-[10px] text-slate-400">Dự kiến giao: 11:00 - 12:00</p>
-                   </div>
-                 </div>
-               `;
+              // Extract Meals for Lunch (meal1) and Dinner (meal2)
+              const meals = [];
+              if (dayMenu.meal1 && dayMenu.meal1.dishId) {
+                const dish = dishes.find((d) => d.id == dayMenu.meal1.dishId);
+                if (dish) {
+                  const sizeData = dish.sizes ? dish.sizes[dayMenu.meal1.size] : null;
+                  meals.push({
+                    type: "meal1",
+                    mealLabel: "Bữa Trưa",
+                    dish: dish,
+                    sizeLabel: dayMenu.meal1.size === "power" ? "Power (L)" : dayMenu.meal1.size === "lean" ? "Lean (S)" : "Balance (M)",
+                    kcal: sizeData ? sizeData.kcal : (dish.calo || 0),
+                  });
+                }
+              }
+              if (dayMenu.meal2 && dayMenu.meal2.dishId) {
+                const dish = dishes.find((d) => d.id == dayMenu.meal2.dishId);
+                if (dish) {
+                  const sizeData = dish.sizes ? dish.sizes[dayMenu.meal2.size] : null;
+                  meals.push({
+                    type: "meal2",
+                    mealLabel: "Bữa Tối",
+                    dish: dish,
+                    sizeLabel: dayMenu.meal2.size === "power" ? "Power (L)" : dayMenu.meal2.size === "lean" ? "Lean (S)" : "Balance (M)",
+                    kcal: sizeData ? sizeData.kcal : (dish.calo || 0),
+                  });
+                }
               }
 
+              // Check if order for this day has status "completed" (Đã giao) in admin order management
+              const matchingOrder = userOrders.find((o) => {
+                if (o.notes && o.notes.includes(dayLabel)) return true;
+                if (o.dayKey === dayKey) return true;
+                return false;
+              });
+
+              let statusDot = isToday
+                ? '<div class="absolute -left-[5px] top-4 w-3 h-3 rounded-full bg-amber-500 border-2 border-white animate-ping"></div><div class="absolute -left-[5px] top-4 w-3 h-3 rounded-full bg-amber-500 border-2 border-white"></div>'
+                : '<div class="absolute -left-[5px] top-4 w-3 h-3 rounded-full bg-slate-300 border-2 border-white"></div>';
+
+              const mealsHtml = meals
+                .map((m) => {
+                  const isFavorite = localStorage.getItem(`fav_${m.dish.id}`) === "true";
+                  const isMealDelivered = matchingOrder ? matchingOrder.status === "completed" : false;
+
+                  if (isMealDelivered) {
+                    return `
+                      <div class="flex bg-slate-100/90 border border-slate-200 rounded-xl p-2.5 gap-3 items-center opacity-60 grayscale shadow-xs">
+                        <img src="${m.dish.image}" class="w-11 h-11 object-cover rounded-lg shrink-0">
+                        <div class="flex-1 min-w-0">
+                          <div class="flex justify-between items-center">
+                            <span class="text-[10px] font-bold text-slate-500 bg-slate-200 px-1.5 py-0.5 rounded">${m.mealLabel}</span>
+                            <span class="text-[10px] font-extrabold text-emerald-700 bg-emerald-100 border border-emerald-200 px-2 py-0.5 rounded-md flex items-center gap-1">
+                              <i class="fa-solid fa-check text-xs"></i> Đã giao
+                            </span>
+                          </div>
+                          <p class="text-xs font-bold text-slate-700 truncate line-through mt-0.5">${m.dish.name}</p>
+                          <p class="text-[10px] text-slate-500 font-semibold">${m.kcal} kcal • ${m.sizeLabel}</p>
+                        </div>
+                      </div>
+                    `;
+                  } else if (isToday) {
+                    return `
+                      <div class="flex bg-amber-50/70 border border-amber-200/80 rounded-xl p-2.5 gap-3 items-center shadow-xs">
+                        <img src="${m.dish.image}" class="w-12 h-12 object-cover rounded-lg shadow-2xs shrink-0">
+                        <div class="flex-1 min-w-0">
+                          <div class="flex justify-between items-start">
+                            <span class="text-[10px] font-bold text-amber-700 bg-amber-100/90 px-1.5 py-0.5 rounded">${m.mealLabel}</span>
+                            <button onclick="toggleFavorite(${m.dish.id})" class="text-rose-500 hover:scale-110 transition-transform">
+                              <i class="${isFavorite ? "fa-solid" : "fa-regular"} fa-heart"></i>
+                            </button>
+                          </div>
+                          <p class="text-xs font-bold text-slate-800 truncate mt-0.5">${m.dish.name}</p>
+                          <p class="text-[10px] text-amber-900 font-semibold">${m.kcal} kcal • ${m.sizeLabel}</p>
+                        </div>
+                      </div>
+                    `;
+                  } else {
+                    return `
+                      <div class="flex bg-white border border-slate-100 rounded-xl p-2.5 gap-3 items-center opacity-75 shadow-2xs">
+                        <img src="${m.dish.image}" class="w-10 h-10 object-cover rounded-lg grayscale shrink-0">
+                        <div class="flex-1 min-w-0">
+                          <div class="flex justify-between items-center">
+                            <span class="text-[10px] font-bold text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded">${m.mealLabel}</span>
+                            <span class="text-[10px] text-slate-400">Dự kiến: ${m.type === "meal1" ? "11:00 - 12:00" : "17:30 - 18:30"}</span>
+                          </div>
+                          <p class="text-xs font-bold text-slate-700 truncate mt-0.5">${m.dish.name}</p>
+                          <p class="text-[10px] text-slate-400">${m.kcal} kcal • ${m.sizeLabel}</p>
+                        </div>
+                      </div>
+                    `;
+                  }
+                })
+                .join("");
+
               return `
-              <div class="relative pl-6">
-                ${statusDot}
-                <div class="mb-1">
-                  <span class="text-xs font-bold ${isToday ? "text-amber-600" : isPast ? "text-slate-400" : "text-slate-600"}">${day} ${isToday ? "(Hôm nay)" : ""}</span>
+                <div class="relative pl-6 space-y-2">
+                  ${statusDot}
+                  <div class="mb-1">
+                    <span class="text-xs font-bold ${isToday ? "text-amber-600" : "text-slate-600"}">${dayLabel} ${isToday ? "(Hôm nay)" : ""}</span>
+                  </div>
+                  <div class="space-y-2">
+                    ${mealsHtml}
+                  </div>
                 </div>
-                ${contentHtml}
-              </div>
-            `;
+              `;
             })
             .join("");
 
@@ -7118,6 +7197,9 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
         }
         if (typeof updateProfileWarningMascot === "function") {
           updateProfileWarningMascot();
+        }
+        if (typeof window.updateOrderPlatformButtonsVisibility === "function") {
+          window.updateOrderPlatformButtonsVisibility();
         }
       }
 
@@ -7502,6 +7584,13 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
         const footerKitchenZalo = document.getElementById("footer-kitchen-zalo");
         if (footerKitchenZalo) footerKitchenZalo.innerText = settings.zalo || "Chưa cập nhật";
 
+        const fbIcon = document.getElementById("footer-social-facebook");
+        if (fbIcon) fbIcon.href = formatSocialUrl(settings.facebook, "facebook");
+        const igIcon = document.getElementById("footer-social-instagram");
+        if (igIcon) igIcon.href = formatSocialUrl(settings.instagram, "instagram");
+        const ttIcon = document.getElementById("footer-social-tiktok");
+        if (ttIcon) ttIcon.href = formatSocialUrl(settings.tiktok, "tiktok");
+
         const successOverlayText = document.getElementById(
           "success-overlay-text",
         );
@@ -7514,7 +7603,40 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
         if (landingBrandName) {
           landingBrandName.innerText = storeName;
         }
+        if (typeof window.updateOrderPlatformButtonsVisibility === "function") {
+          window.updateOrderPlatformButtonsVisibility();
+        }
       }
+
+      window.updateOrderPlatformButtonsVisibility = function() {
+        try {
+          const settingsStr = localStorage.getItem("nutriadmin_settings");
+          const settings = settingsStr ? JSON.parse(settingsStr) : {};
+          const isWebsiteOn = settings.orderWebsiteEnable !== false;
+          const isShopeeOn = !!settings.orderShopeeFoodEnable;
+          const isGrabOn = !!settings.orderGrabFoodEnable;
+          const isXanhsmOn = !!settings.orderXanhSMEnable;
+
+          const hasAnyPlatform = isWebsiteOn || isShopeeOn || isGrabOn || isXanhsmOn;
+
+          const btnRegisterSingle = document.getElementById("btn-register-single-meal");
+          if (btnRegisterSingle) {
+            btnRegisterSingle.style.display = hasAnyPlatform ? "" : "none";
+          }
+
+          const btnSkipAnalysis = document.getElementById("skip-analysis-btn");
+          if (btnSkipAnalysis) {
+            btnSkipAnalysis.style.display = hasAnyPlatform ? "" : "none";
+          }
+
+          const btnOrderOutside = document.getElementById("btn-order-outside-pkg");
+          if (btnOrderOutside) {
+            btnOrderOutside.style.display = hasAnyPlatform ? "" : "none";
+          }
+        } catch(e) {
+          console.error("Lỗi cập nhật ẩn hiện nút đặt hàng:", e);
+        }
+      };
 
       function getKitchenPos() {
         const savedSettings = localStorage.getItem("nutriadmin_settings");
@@ -8027,6 +8149,10 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
             if (setZalo) setZalo.value = settings.zalo || "";
             const setFacebook = document.getElementById("set-facebook");
             if (setFacebook) setFacebook.value = settings.facebook || "";
+            const setInstagram = document.getElementById("set-instagram");
+            if (setInstagram) setInstagram.value = settings.instagram || "";
+            const setTiktok = document.getElementById("set-tiktok");
+            if (setTiktok) setTiktok.value = settings.tiktok || "";
             const setBrandName = document.getElementById("set-brand-name");
             if (setBrandName) setBrandName.value = settings.brandName || "";
 
@@ -8208,10 +8334,8 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
 
         try {
           const customKey = localStorage.getItem("nutriadmin_custom_api_key");
-          if (customKey) {
-            const el = document.getElementById("custom-api-key");
-            if (el) el.value = customKey;
-          }
+          const elKey = document.getElementById("custom-api-key");
+          if (elKey) elKey.value = customKey || "";
 
           const customFirebase =
             localStorage.getItem("nutriadmin_custom_firebase_config") ||
@@ -8512,6 +8636,9 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
         settings.bannerImages[position] = `IDB:seq_${position}`;
         settings.bannerImagesCloud[position] = frames;
 
+        window.lastUploadedBannerTime = window.lastUploadedBannerTime || {};
+        window.lastUploadedBannerTime[position] = Date.now();
+
         localStorage.setItem("nutriadmin_settings", JSON.stringify(settings));
 
         if (typeof syncStateToServer === "function") {
@@ -8522,8 +8649,14 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
         // (bannerImagesCloud bị xóa khỏi system_data trước khi sync để tránh vượt giới hạn 1MB)
         if (typeof cloudDb !== "undefined" && cloudDb !== null && frames && frames.length > 0) {
           try {
+            let syncFrames = frames;
+            const jsonStr = JSON.stringify(frames);
+            if (jsonStr.length > 800000 && frames.length > 5) {
+              const step = Math.ceil(frames.length / 10);
+              syncFrames = frames.filter((_, idx) => idx % step === 0);
+            }
             const bannerDoc = {};
-            bannerDoc[position] = frames;
+            bannerDoc[position] = syncFrames;
             await cloudDb
               .collection("nutriadmin_v1")
               .doc("banner_images")
@@ -8701,22 +8834,27 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
       }
 
       window.silentSaveSettings = function(e) {
+        const savedSettings = localStorage.getItem("nutriadmin_settings");
+        let existingSettings = savedSettings ? JSON.parse(savedSettings) : {};
+        
+        existingSettings.orderWebsiteEnable = document.getElementById("set-order-website-enable")?.checked ?? true;
+        existingSettings.orderShopeeFoodEnable = document.getElementById("set-order-shopeefood-enable")?.checked ?? false;
+        existingSettings.orderShopeeFoodUrl = document.getElementById("set-order-shopeefood-url")?.value || "";
+        existingSettings.orderGrabFoodEnable = document.getElementById("set-order-grabfood-enable")?.checked ?? false;
+        existingSettings.orderGrabFoodUrl = document.getElementById("set-order-grabfood-url")?.value || "";
+        existingSettings.orderXanhSMEnable = document.getElementById("set-order-xanhsm-enable")?.checked ?? false;
+        existingSettings.orderXanhSMUrl = document.getElementById("set-order-xanhsm-url")?.value || "";
 
-        if (e) e.preventDefault();
+        localStorage.setItem("nutriadmin_settings", JSON.stringify(existingSettings));
+        window.appSettings = existingSettings;
+        if (typeof lastSyncedStateStr !== "undefined") lastSyncedStateStr = "";
+
+        if (typeof window.updateOrderPlatformButtonsVisibility === "function") {
+          window.updateOrderPlatformButtonsVisibility();
+        }
+
         if (window.silentSaveTimeout) clearTimeout(window.silentSaveTimeout);
         window.silentSaveTimeout = setTimeout(() => {
-          const savedSettings = localStorage.getItem("nutriadmin_settings");
-          let existingSettings = savedSettings ? JSON.parse(savedSettings) : {};
-          
-          existingSettings.orderWebsiteEnable = document.getElementById("set-order-website-enable")?.checked ?? true;
-          existingSettings.orderShopeeFoodEnable = document.getElementById("set-order-shopeefood-enable")?.checked ?? false;
-          existingSettings.orderShopeeFoodUrl = document.getElementById("set-order-shopeefood-url")?.value || "";
-          existingSettings.orderGrabFoodEnable = document.getElementById("set-order-grabfood-enable")?.checked ?? false;
-          existingSettings.orderGrabFoodUrl = document.getElementById("set-order-grabfood-url")?.value || "";
-          existingSettings.orderXanhSMEnable = document.getElementById("set-order-xanhsm-enable")?.checked ?? false;
-          existingSettings.orderXanhSMUrl = document.getElementById("set-order-xanhsm-url")?.value || "";
-
-          localStorage.setItem("nutriadmin_settings", JSON.stringify(existingSettings));
           if (typeof syncStateToServer === "function") {
             syncStateToServer();
           }
@@ -8870,6 +9008,10 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
         const bannerImages = existingSettings.bannerImages || {};
         // Banner images are handled via handleBannerImageUpload
 
+        const customApiKeyEl = document.getElementById("custom-api-key");
+        const customFirebaseEl = document.getElementById("custom-firebase-config");
+        const customAppUrlEl = document.getElementById("custom-app-url");
+
         const settings = {
           ...existingSettings,
           bannerImages: bannerImages,
@@ -8885,6 +9027,8 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
           address: `${document.getElementById("set-street").value}, ${document.getElementById("set-ward").value}, ${document.getElementById("set-district").value}, TP. Hồ Chí Minh`,
           zalo: document.getElementById("set-zalo").value,
           facebook: document.getElementById("set-facebook").value,
+          instagram: document.getElementById("set-instagram")?.value || "",
+          tiktok: document.getElementById("set-tiktok")?.value || "",
           paymentMomoInfo: document.getElementById("set-payment-momo-info")
             .value,
           paymentMomoQr: momoQrBase64,
@@ -8911,8 +9055,13 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
           bannerGrandOpeningEnabled:
             document.getElementById("toggle-grand-opening-banner")?.checked ??
             true,
+          customGeminiApiKey: customApiKeyEl ? customApiKeyEl.value.trim() : (existingSettings.customGeminiApiKey || ""),
+          customFirebaseConfig: customFirebaseEl ? customFirebaseEl.value.trim() : (existingSettings.customFirebaseConfig || ""),
+          customAppUrl: customAppUrlEl ? customAppUrlEl.value.trim() : (existingSettings.customAppUrl || ""),
         };
         localStorage.setItem("nutriadmin_settings", JSON.stringify(settings));
+        window.appSettings = settings;
+        if (typeof lastSyncedStateStr !== "undefined") lastSyncedStateStr = "";
         showToast("Đã lưu cấu hình hệ thống!", "success");
 
         refreshBrandUI();
@@ -8952,15 +9101,27 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
 
       function saveCustomApiKey() {
         const key = document.getElementById("custom-api-key").value.trim();
-        localStorage.setItem("nutriadmin_custom_api_key", key);
+        const settingsRaw = localStorage.getItem("nutriadmin_settings");
+        let settings = settingsRaw ? JSON.parse(settingsRaw) : {};
+
         if (key) {
+          localStorage.setItem("nutriadmin_custom_api_key", key);
+          settings.customGeminiApiKey = key;
+          if (window.appSettings) window.appSettings.customGeminiApiKey = key;
           showToast("Đã lưu API Key cá nhân thành công.", "success");
         } else {
+          localStorage.removeItem("nutriadmin_custom_api_key");
+          delete settings.customGeminiApiKey;
+          if (window.appSettings) delete window.appSettings.customGeminiApiKey;
+          const el = document.getElementById("custom-api-key");
+          if (el) el.value = "";
           showToast(
             "Đã xóa API Key cá nhân. Hệ thống sẽ dùng key mặc định.",
             "info",
           );
         }
+        localStorage.setItem("nutriadmin_settings", JSON.stringify(settings));
+        if (typeof lastSyncedStateStr !== "undefined") lastSyncedStateStr = "";
         if (typeof syncStateToServer === "function") syncStateToServer();
       }
 
@@ -9485,13 +9646,8 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
                 "customer-profile",
               ].includes(viewName))
           ) {
-            if (window.innerWidth <= 768) {
-              main.classList.remove("px-4", "sm:px-6", "lg:px-8", "py-8");
-              main.classList.add("px-0", "py-0");
-            } else {
-              main.classList.add("px-4", "sm:px-6", "lg:px-8", "py-8");
-              main.classList.remove("px-0", "py-0");
-            }
+            main.classList.add("px-4", "sm:px-6", "lg:px-8", "py-8");
+            main.classList.remove("px-0", "py-0");
           } else {
             main.classList.add("px-4", "sm:px-6", "lg:px-8", "py-8");
             main.classList.remove("px-0", "py-0");
@@ -9593,13 +9749,19 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
         const targetView = document.getElementById(`view-${viewName}`);
         const targetNav = document.getElementById(`nav-${viewName}`);
 
-        const navElement = document.querySelector("nav");
+        const navElement = document.getElementById("main-navbar") || document.querySelector("nav");
         if (navElement) {
           if (viewName === "shipper-app" || isLandingMode || !isAdminViewActive()) {
             navElement.classList.add("hidden");
           } else {
             navElement.classList.remove("hidden");
           }
+        }
+
+        const initialLoader = document.getElementById("page-initial-loader");
+        if (initialLoader) {
+          initialLoader.classList.add("hidden");
+          initialLoader.setAttribute("aria-busy", "false");
         }
 
         if (targetView) targetView.classList.remove("hidden");
@@ -9631,11 +9793,17 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
             setTrackingViewMode("desktop");
           }
         }
-        if (viewName === "customer-profile") {
+        if (viewName === "customer-profile" || viewName === "customer-portal") {
           renderCustomerProfile();
           if (typeof updateNutritionDashboard === "function") {
             updateNutritionDashboard(true);
           }
+          if (typeof checkAndShowPwaInstallBanner === "function") {
+            checkAndShowPwaInstallBanner();
+          }
+        } else {
+          const pwaBanner = document.getElementById("pwa-install-banner");
+          if (pwaBanner) pwaBanner.classList.add("hidden");
         }
         if (viewName === "messages") {
           if (currentMessagesTab === "messages") {
@@ -10491,6 +10659,30 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
       // 5. DASHBOARDS (OVERVIEW & MARKETING)
       // ==========================================
       let currentFunnelSource = "all";
+      let currentMktTimeFilter = "7days";
+
+      window.handleMarketingTimeFilterChange = function(val) {
+        currentMktTimeFilter = val;
+        const customContainer = document.getElementById("mkt-custom-date-range");
+        if (customContainer) {
+          if (val === "custom") {
+            customContainer.classList.remove("hidden");
+            const dateFrom = document.getElementById("mkt-date-from");
+            const dateTo = document.getElementById("mkt-date-to");
+            if (dateFrom && !dateFrom.value) {
+              const d = new Date();
+              d.setDate(d.getDate() - 7);
+              dateFrom.value = d.toISOString().split("T")[0];
+            }
+            if (dateTo && !dateTo.value) {
+              dateTo.value = new Date().toISOString().split("T")[0];
+            }
+          } else {
+            customContainer.classList.add("hidden");
+          }
+        }
+        renderMarketingDashboard();
+      };
 
       function setFunnelSource(src) {
         currentFunnelSource = src;
@@ -10504,25 +10696,69 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
       }
 
       function renderMarketingDashboard() {
-        document.getElementById("mkt-kpi-links").innerText =
-          trackingSources.length;
+        const filterSelect = document.getElementById("mkt-time-filter");
+        if (filterSelect) {
+          currentMktTimeFilter = filterSelect.value || "7days";
+        }
 
-        const leadsCount = potentialCustomers.length;
-        const ordersCount = orders.length;
-        const subsCount = purchasedCustomers.length;
-        const scansCount =
-          qrScans.length > 0
-            ? qrScans.length
-            : leadsCount * 5 + Math.floor(Math.random() * 50) + 150;
+        let startDate = null;
+        let endDate = new Date();
+        let trendPeriodText = "so với tuần trước";
 
-        document.getElementById("mkt-kpi-scans").innerText =
-          formatCurrency(scansCount);
-        document.getElementById("mkt-kpi-leads").innerText =
-          formatCurrency(leadsCount);
-        document.getElementById("mkt-kpi-orders").innerText =
-          formatCurrency(ordersCount);
-        document.getElementById("mkt-kpi-subs").innerText =
-          formatCurrency(subsCount);
+        const now = new Date();
+        if (currentMktTimeFilter === "today") {
+          startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
+          trendPeriodText = "so với hôm qua";
+        } else if (currentMktTimeFilter === "7days") {
+          startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+          trendPeriodText = "so với tuần trước";
+        } else if (currentMktTimeFilter === "30days") {
+          startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+          trendPeriodText = "so với 30 ngày trước";
+        } else if (currentMktTimeFilter === "this_month") {
+          startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+          trendPeriodText = "so với tháng trước";
+        } else if (currentMktTimeFilter === "last_month") {
+          startDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+          endDate = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59);
+          trendPeriodText = "so với tháng trước nữa";
+        } else if (currentMktTimeFilter === "custom") {
+          const fromVal = document.getElementById("mkt-date-from")?.value;
+          const toVal = document.getElementById("mkt-date-to")?.value;
+          if (fromVal) startDate = new Date(fromVal + "T00:00:00");
+          if (toVal) endDate = new Date(toVal + "T23:59:59");
+          trendPeriodText = "so với kỳ trước";
+        } else if (currentMktTimeFilter === "all") {
+          startDate = null;
+          trendPeriodText = "tất cả thời gian";
+        }
+
+        const isInRange = (itemDateStr) => {
+          if (!startDate && currentMktTimeFilter === "all") return true;
+          if (!itemDateStr) return false;
+          const d = new Date(itemDateStr);
+          if (isNaN(d.getTime())) return false;
+          if (startDate && d < startDate) return false;
+          if (endDate && d > endDate) return false;
+          return true;
+        };
+
+        const filteredLeadsList = potentialCustomers.filter((c) => isInRange(c.createdAt || c.date || c.timestamp));
+        const filteredOrdersList = orders.filter((o) => isInRange(o.timestamp || o.createdAt || o.date));
+        const filteredSubsList = purchasedCustomers.filter((s) => isInRange(s.purchasedAt || s.createdAt || s.date || s.timestamp));
+        const filteredScansList = qrScans.filter((q) => isInRange(q.timestamp || q.createdAt || q.date));
+
+        const linksCount = trackingSources.length;
+        const leadsCount = filteredLeadsList.length;
+        const ordersCount = filteredOrdersList.length;
+        const subsCount = filteredSubsList.length;
+        const scansCount = filteredScansList.length;
+
+        document.getElementById("mkt-kpi-links").innerText = linksCount;
+        document.getElementById("mkt-kpi-scans").innerText = formatCurrency(scansCount);
+        document.getElementById("mkt-kpi-leads").innerText = formatCurrency(leadsCount);
+        document.getElementById("mkt-kpi-orders").innerText = formatCurrency(ordersCount);
+        document.getElementById("mkt-kpi-subs").innerText = formatCurrency(subsCount);
 
         const getTrend = () => {
           const dir = Math.random() > 0.3 ? 1 : -1;
@@ -10534,9 +10770,9 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
           if (!el) return;
           const { dir, val } = getTrend();
           if (dir > 0) {
-            el.innerHTML = `<span class="text-emerald-400 bg-emerald-500/20 px-1.5 py-0.5 rounded"><i class="fa-solid fa-arrow-up"></i> ${val}%</span> <span class="text-slate-500 ml-1">so với tuần trước</span>`;
+            el.innerHTML = `<span class="text-emerald-400 bg-emerald-500/20 px-1.5 py-0.5 rounded"><i class="fa-solid fa-arrow-up"></i> ${val}%</span> <span class="text-slate-500 ml-1">${trendPeriodText}</span>`;
           } else {
-            el.innerHTML = `<span class="text-rose-400 bg-rose-500/20 px-1.5 py-0.5 rounded"><i class="fa-solid fa-arrow-down"></i> ${val}%</span> <span class="text-slate-500 ml-1">so với tuần trước</span>`;
+            el.innerHTML = `<span class="text-rose-400 bg-rose-500/20 px-1.5 py-0.5 rounded"><i class="fa-solid fa-arrow-down"></i> ${val}%</span> <span class="text-slate-500 ml-1">${trendPeriodText}</span>`;
           }
         };
         applyTrend("mkt-trend-links");
@@ -10552,18 +10788,12 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
         sourceCounts["Tự nhiên"] = 0;
 
         potentialCustomers.forEach((c) => {
-          const src = trackingSources.find((s) => s.code === c.source);
-          const name = src ? src.name : "Tự nhiên";
-          sourceCounts[name] = (sourceCounts[name] || 0) + 1;
+          if (isInRange(c.createdAt || c.date || c.timestamp)) {
+            const src = trackingSources.find((s) => s.code === c.source);
+            const name = src ? src.name : "Tự nhiên";
+            sourceCounts[name] = (sourceCounts[name] || 0) + 1;
+          }
         });
-
-        if (leadsCount < 10) {
-          sourceCounts["ShopeeFood"] += 15;
-          sourceCounts["Facebook"] += 12;
-          sourceCounts["TikTok"] += 8;
-          sourceCounts["QR Hộp cơm"] += 20;
-          sourceCounts["GrabFood"] += 5;
-        }
 
         const sourceLabels = Object.keys(sourceCounts).filter(
           (k) => sourceCounts[k] > 0,
@@ -11845,15 +12075,25 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
           }
         }
 
+        window.weeklyFixedDishes = window.weeklyFixedDishes || JSON.parse(
+          localStorage.getItem("nutriadmin_weekly_fixed_dishes") || '{"lunch":[],"dinner":[]}'
+        );
+        if (!window.weeklyFixedDishes.lunch) window.weeklyFixedDishes.lunch = [];
+        if (!window.weeklyFixedDishes.dinner) window.weeklyFixedDishes.dinner = [];
+
         if (filteredDishes.length === 0) {
-          container.innerHTML = `<div class="col-span-full py-12 text-center text-slate-500"><i class="fa-solid fa-box-open text-4xl mb-3 opacity-50"></i><p>Chưa có món ăn nào trong nhóm này.</p></div>`;
+          if (currentFilter === "weekly_special") {
+            container.innerHTML = renderWeeklyFixedDishesSection() + `<div class="col-span-full py-8 text-center text-slate-400"><i class="fa-solid fa-box-open text-4xl mb-2 opacity-40"></i><p class="text-sm font-medium">Chưa có món mới nào được tạo trong tuần này.</p></div>`;
+          } else {
+            container.innerHTML = `<div class="col-span-full py-12 text-center text-slate-500"><i class="fa-solid fa-box-open text-4xl mb-3 opacity-50"></i><p>Chưa có món ăn nào trong nhóm này.</p></div>`;
+          }
           return;
         }
 
-        container.innerHTML = filteredDishes
+        const cardsHtml = filteredDishes
           .map(
             (dish) => `
-                          <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden lg:hover:shadow-lg lg:hover:scale-105 active:scale-[0.98] transition-all duration-300 relative flex flex-col">
+                          <div ${currentFilter === "weekly_special" ? `draggable="true" ondragstart="handleDishDragStart(event, '${dish.id}')"` : ""} class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden lg:hover:shadow-lg lg:hover:scale-105 active:scale-[0.98] transition-all duration-300 relative flex flex-col cursor-grab active:cursor-grabbing">
                               ${!dish.isActive ? '<div class="absolute top-2 left-2 bg-slate-800 text-white text-xs font-bold px-2 py-1 rounded z-10 opacity-80">Đã ẩn</div>' : ""}
                               <div class="h-48 overflow-hidden bg-slate-100 relative">
                                   <img src="${dish.image}" alt="${dish.name}" class="w-full h-full object-cover ${!dish.isActive ? "grayscale" : ""}">
@@ -11919,15 +12159,318 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
                                       `
                                       }
                                   </div>
-                                  <div class="mt-4 grid grid-cols-3 gap-1">
-                                      <button onclick="toggleDishStatus(${dish.id})" class="py-1.5 border border-slate-200 rounded-lg text-[13px] font-medium ${dish.isActive ? "text-amber-600 hover:bg-amber-50" : "text-primary hover:bg-emerald-50"} transition-colors"><i class="fa-solid ${dish.isActive ? "fa-eye-slash" : "fa-eye"} mr-1"></i> ${dish.isActive ? "Ẩn" : "Hiện"}</button>
-                                      <button onclick="openModal('edit', ${dish.id})" class="py-1.5 border border-slate-200 rounded-lg text-[13px] font-medium text-slate-600 hover:bg-slate-50 transition-colors"><i class="fa-solid fa-pen-to-square mr-1"></i> Sửa</button>
-                                      <button onclick="deleteDish(${dish.id})" class="py-1.5 border border-red-200 rounded-lg text-[13px] font-medium text-red-600 hover:bg-red-50 transition-colors"><i class="fa-solid fa-trash mr-1"></i> Xóa</button>
+                                  ${
+                                    currentFilter === "weekly_special"
+                                      ? `
+                                  <div class="mt-3 pt-3 border-t border-slate-100 flex gap-2">
+                                      <button onclick="addFixedDishQuick('${dish.id}', 'lunch')" class="flex-1 py-1.5 px-2 bg-amber-50 hover:bg-amber-100 text-amber-800 text-xs font-bold rounded-lg transition-colors border border-amber-200 text-center cursor-pointer">
+                                          <i class="fa-solid fa-sun text-amber-500 mr-1"></i> + Bữa trưa
+                                      </button>
+                                      <button onclick="addFixedDishQuick('${dish.id}', 'dinner')" class="flex-1 py-1.5 px-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-800 text-xs font-bold rounded-lg transition-colors border border-indigo-200 text-center cursor-pointer">
+                                          <i class="fa-solid fa-moon text-indigo-500 mr-1"></i> + Bữa tối
+                                      </button>
                                   </div>
+                                      `
+                                      : ""
+                                  }
+                                  ${
+                                    typeof isAdminViewActive === "function" && isAdminViewActive() && typeof checkAdminSessionSilent === "function" && checkAdminSessionSilent()
+                                      ? `
+                                  <div class="mt-3 grid grid-cols-3 gap-1">
+                                      <button onclick="toggleDishStatus('${dish.id}')" class="py-1.5 border border-slate-200 rounded-lg text-[13px] font-medium ${dish.isActive ? "text-amber-600 hover:bg-amber-50" : "text-primary hover:bg-emerald-50"} transition-colors"><i class="fa-solid ${dish.isActive ? "fa-eye-slash" : "fa-eye"} mr-1"></i> ${dish.isActive ? "Ẩn" : "Hiện"}</button>
+                                      <button onclick="openModal('edit', '${dish.id}')" class="py-1.5 border border-slate-200 rounded-lg text-[13px] font-medium text-slate-600 hover:bg-slate-50 transition-colors"><i class="fa-solid fa-pen-to-square mr-1"></i> Sửa</button>
+                                      <button onclick="deleteDish('${dish.id}')" class="py-1.5 border border-red-200 rounded-lg text-[13px] font-medium text-red-600 hover:bg-red-50 transition-colors"><i class="fa-solid fa-trash mr-1"></i> Xóa</button>
+                                  </div>
+                                      `
+                                      : ""
+                                  }
                               </div>
                           </div>`,
           )
           .join("");
+
+        if (currentFilter === "weekly_special") {
+          container.innerHTML = renderWeeklyFixedDishesSection() + cardsHtml;
+        } else {
+          container.innerHTML = cardsHtml;
+        }
+      }
+
+      window.weeklyFixedDishes = JSON.parse(
+        localStorage.getItem("nutriadmin_weekly_fixed_dishes") ||
+        '{"enabled":true,"activeDays":["monday","tuesday","wednesday","thursday","friday"],"lunch":[],"dinner":[]}'
+      );
+      if (typeof window.weeklyFixedDishes.enabled === "undefined") window.weeklyFixedDishes.enabled = true;
+      if (!Array.isArray(window.weeklyFixedDishes.activeDays)) {
+        window.weeklyFixedDishes.activeDays = ["monday", "tuesday", "wednesday", "thursday", "friday"];
+      }
+      if (!Array.isArray(window.weeklyFixedDishes.lunch)) window.weeklyFixedDishes.lunch = [];
+      if (!Array.isArray(window.weeklyFixedDishes.dinner)) window.weeklyFixedDishes.dinner = [];
+
+      window.ensureCustomerWeeklyMenuDefaults = function (c) {
+        if (!c) return;
+        if (!c.weeklyMenu) c.weeklyMenu = {};
+
+        const allWeekDays = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
+        const isEnabled = window.weeklyFixedDishes && window.weeklyFixedDishes.enabled !== false;
+        const activeDays = (isEnabled && Array.isArray(window.weeklyFixedDishes.activeDays)) ? window.weeklyFixedDishes.activeDays : [];
+
+        // Lọc các món cố định hợp lệ (tồn tại trong mảng dishes)
+        const validLunchList = (window.weeklyFixedDishes.lunch || []).filter((id) =>
+          dishes.some((d) => String(d.id) === String(id) && d.isActive !== false)
+        );
+        const validDinnerList = (window.weeklyFixedDishes.dinner || []).filter((id) =>
+          dishes.some((d) => String(d.id) === String(id) && d.isActive !== false)
+        );
+
+        const fixedLunch = (isEnabled && validLunchList.length > 0) ? validLunchList[0] : null;
+        const fixedDinner = (isEnabled && validDinnerList.length > 0) ? validDinnerList[0] : null;
+
+        // Hàm kiểm tra ô món ăn đã được người dùng tự chọn món hợp lệ hay chưa
+        const hasValidCustomDish = (mealObj) => {
+          if (!mealObj || !mealObj.dishId || mealObj._isFixedDefault) return false;
+          return dishes.some((d) => String(d.id) === String(mealObj.dishId) && d.isActive !== false);
+        };
+
+        allWeekDays.forEach((dKey) => {
+          if (!c.weeklyMenu[dKey]) c.weeklyMenu[dKey] = {};
+
+          const isDayActive = activeDays.includes(dKey);
+
+          if (isDayActive) {
+            // Gán fixedLunch cho Bữa 1 (Bữa Trưa) nếu chưa có món chọn tay hợp lệ
+            if (fixedLunch) {
+              if (!hasValidCustomDish(c.weeklyMenu[dKey].meal1)) {
+                c.weeklyMenu[dKey].meal1 = {
+                  dishId: String(fixedLunch),
+                  size: c.size || "balance",
+                  _isFixedDefault: true
+                };
+              }
+            } else if (c.weeklyMenu[dKey].meal1 && c.weeklyMenu[dKey].meal1._isFixedDefault) {
+              delete c.weeklyMenu[dKey].meal1;
+            }
+
+            // Gán fixedDinner cho Bữa 2 (Bữa Tối) nếu chưa có món chọn tay hợp lệ
+            if (fixedDinner) {
+              if (!hasValidCustomDish(c.weeklyMenu[dKey].meal2)) {
+                c.weeklyMenu[dKey].meal2 = {
+                  dishId: String(fixedDinner),
+                  size: c.size || "balance",
+                  _isFixedDefault: true
+                };
+              }
+            } else if (c.weeklyMenu[dKey].meal2 && c.weeklyMenu[dKey].meal2._isFixedDefault) {
+              delete c.weeklyMenu[dKey].meal2;
+            }
+          } else {
+            // Ngày không được chọn: Gỡ bỏ món cố định tự động nếu có
+            if (c.weeklyMenu[dKey].meal1 && (c.weeklyMenu[dKey].meal1._isFixedDefault || (fixedLunch && c.weeklyMenu[dKey].meal1.dishId === String(fixedLunch)) || (fixedDinner && c.weeklyMenu[dKey].meal1.dishId === String(fixedDinner)))) {
+              delete c.weeklyMenu[dKey].meal1;
+            }
+            if (c.weeklyMenu[dKey].meal2 && (c.weeklyMenu[dKey].meal2._isFixedDefault || (fixedLunch && c.weeklyMenu[dKey].meal2.dishId === String(fixedLunch)) || (fixedDinner && c.weeklyMenu[dKey].meal2.dishId === String(fixedDinner)))) {
+              delete c.weeklyMenu[dKey].meal2;
+            }
+          }
+        });
+      };
+
+      function renderWeeklyFixedDishesSection() {
+        const isEnabled = window.weeklyFixedDishes.enabled !== false;
+        const activeDays = window.weeklyFixedDishes.activeDays || ["monday", "tuesday", "wednesday", "thursday", "friday"];
+
+        const dayButtons = [
+          { key: "monday", label: "Thứ 2" },
+          { key: "tuesday", label: "Thứ 3" },
+          { key: "wednesday", label: "Thứ 4" },
+          { key: "thursday", label: "Thứ 5" },
+          { key: "friday", label: "Thứ 6" },
+        ];
+
+        const dayButtonsHtml = dayButtons
+          .map((d) => {
+            const isSelected = activeDays.includes(d.key);
+            return `<button type="button" onclick="toggleWeeklyFixedDay('${d.key}')" class="px-2.5 py-1 text-xs font-bold rounded-lg border transition-all cursor-pointer ${isSelected ? "bg-emerald-600 text-white border-emerald-600 shadow-2xs" : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"}">${d.label}</button>`;
+          })
+          .join("");
+
+        const renderList = (slot) => {
+          const list = window.weeklyFixedDishes[slot] || [];
+          const validList = list.filter((id) => dishes.some((d) => String(d.id) === String(id)));
+          if (validList.length === 0) {
+            return `
+              <div class="h-full min-h-[90px] flex flex-col items-center justify-center text-slate-400 text-xs py-4 border border-dashed border-slate-300/80 rounded-xl bg-white/60">
+                <i class="fa-solid fa-cloud-arrow-down text-xl mb-1 opacity-40"></i>
+                Kéo thả món mới mỗi tuần vào đây
+              </div>`;
+          }
+          return validList
+            .map((id) => {
+              const dish = dishes.find((d) => String(d.id) === String(id));
+              if (!dish) return "";
+              return `
+                <div class="flex items-center justify-between p-2.5 bg-white rounded-xl border border-slate-200 shadow-2xs">
+                  <div class="flex items-center gap-2.5 overflow-hidden">
+                    <img src="${dish.image}" alt="${dish.name}" class="w-10 h-10 rounded-lg object-cover flex-shrink-0" />
+                    <div class="truncate">
+                      <p class="text-xs font-bold text-slate-800 truncate">${dish.name}</p>
+                      <p class="text-[11px] text-emerald-600 font-semibold">${formatCurrency(dish.sizes?.balance?.price || dish.price || 0)}đ</p>
+                    </div>
+                  </div>
+                  <button onclick="removeFixedDish('${dish.id}', '${slot}')" title="Bỏ ghim món" class="text-slate-400 hover:text-red-500 p-1.5 rounded-lg hover:bg-red-50 transition-colors cursor-pointer">
+                    <i class="fa-solid fa-xmark text-sm"></i>
+                  </button>
+                </div>`;
+            })
+            .join("");
+        };
+
+        const lunchCount = (window.weeklyFixedDishes.lunch || []).filter((id) => dishes.some((d) => String(d.id) === String(id))).length;
+        const dinnerCount = (window.weeklyFixedDishes.dinner || []).filter((id) => dishes.some((d) => String(d.id) === String(id))).length;
+
+        return `
+          <div class="col-span-full mb-6">
+            <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3 mb-4 bg-gradient-to-r from-emerald-50 to-teal-50 p-4 rounded-2xl border border-emerald-100/80 shadow-2xs">
+              <div>
+                <div class="flex items-center gap-3 mb-1 flex-wrap">
+                  <h3 class="font-bold text-slate-800 text-base flex items-center gap-2">
+                    <i class="fa-solid fa-thumbtack text-amber-500"></i> Món cố định tuần này
+                  </h3>
+                  <label class="relative inline-flex items-center cursor-pointer select-none">
+                    <input type="checkbox" onchange="toggleWeeklyFixedEnabled(this.checked)" class="sr-only peer" ${isEnabled ? "checked" : ""}>
+                    <div class="w-11 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
+                    <span class="ml-2 text-xs font-bold ${isEnabled ? "text-emerald-700" : "text-slate-400"}">${isEnabled ? "Đang BẬT món mặc định" : "TẮT món mặc định"}</span>
+                  </label>
+                </div>
+                <p class="text-xs text-slate-500">Khi bật, 2 món cố định (bữa trưa & bữa tối) sẽ trở thành món mặc định cho khách đăng ký gói vào các ngày được chọn.</p>
+              </div>
+
+              <div class="flex items-center gap-1.5 bg-white/90 p-1.5 rounded-xl border border-emerald-200/60 shadow-2xs flex-wrap">
+                <span class="text-xs font-bold text-slate-600 mr-1 flex items-center gap-1"><i class="fa-solid fa-calendar-days text-emerald-600"></i> Chọn ngày áp dụng:</span>
+                ${dayButtonsHtml}
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <!-- Ô Bữa Trưa -->
+              <div ondragover="handleDishDragOver(event)" ondrop="handleDishDrop(event, 'lunch')" class="bg-amber-50/60 border-2 border-dashed border-amber-300 hover:border-amber-400 rounded-2xl p-4 transition-all min-h-[170px] flex flex-col shadow-2xs">
+                <div class="flex justify-between items-center mb-3 pb-2 border-b border-amber-200/60">
+                  <span class="font-bold text-amber-900 flex items-center gap-2 text-sm">
+                    <i class="fa-solid fa-sun text-amber-500 text-base"></i> Bữa Trưa (Lunch)
+                  </span>
+                  <span class="text-[11px] font-bold bg-amber-200/70 text-amber-800 px-2.5 py-0.5 rounded-full">
+                    ${lunchCount} món
+                  </span>
+                </div>
+                <div class="space-y-2 flex-1">
+                  ${renderList('lunch')}
+                </div>
+              </div>
+
+              <!-- Ô Bữa Tối -->
+              <div ondragover="handleDishDragOver(event)" ondrop="handleDishDrop(event, 'dinner')" class="bg-indigo-50/60 border-2 border-dashed border-indigo-300 hover:border-indigo-400 rounded-2xl p-4 transition-all min-h-[170px] flex flex-col shadow-2xs">
+                <div class="flex justify-between items-center mb-3 pb-2 border-b border-indigo-200/60">
+                  <span class="font-bold text-indigo-900 flex items-center gap-2 text-sm">
+                    <i class="fa-solid fa-moon text-indigo-500 text-base"></i> Bữa Tối (Dinner)
+                  </span>
+                  <span class="text-[11px] font-bold bg-indigo-200/70 text-indigo-800 px-2.5 py-0.5 rounded-full">
+                    ${dinnerCount} món
+                  </span>
+                </div>
+                <div class="space-y-2 flex-1">
+                  ${renderList('dinner')}
+                </div>
+              </div>
+            </div>
+          </div>`;
+      }
+
+      window.toggleWeeklyFixedEnabled = function (val) {
+        window.weeklyFixedDishes.enabled = !!val;
+        saveWeeklyFixedDishesState();
+        showToast(
+          val ? "Đã BẬT món cố định làm món mặc định!" : "Đã TẮT món cố định mặc định!",
+          val ? "success" : "info"
+        );
+      };
+
+      window.toggleWeeklyFixedDay = function (dayKey) {
+        if (!Array.isArray(window.weeklyFixedDishes.activeDays)) {
+          window.weeklyFixedDishes.activeDays = ["monday", "tuesday", "wednesday", "thursday", "friday"];
+        }
+        const idx = window.weeklyFixedDishes.activeDays.indexOf(dayKey);
+        if (idx > -1) {
+          window.weeklyFixedDishes.activeDays.splice(idx, 1);
+        } else {
+          window.weeklyFixedDishes.activeDays.push(dayKey);
+        }
+        saveWeeklyFixedDishesState();
+      };
+
+      window.handleDishDragStart = function (e, dishId) {
+        e.dataTransfer.setData("text/plain", String(dishId));
+      };
+
+      window.handleDishDragOver = function (e) {
+        e.preventDefault();
+      };
+
+      window.handleDishDrop = function (e, slot) {
+        e.preventDefault();
+        const dishId = e.dataTransfer.getData("text/plain");
+        if (dishId) {
+          addFixedDishQuick(dishId, slot);
+        }
+      };
+
+      window.addFixedDishQuick = function (dishId, slot) {
+        if (!window.weeklyFixedDishes[slot]) window.weeklyFixedDishes[slot] = [];
+        const idStr = String(dishId);
+        if (!window.weeklyFixedDishes[slot].includes(idStr)) {
+          window.weeklyFixedDishes[slot].push(idStr);
+          saveWeeklyFixedDishesState();
+          showToast(`Đã ghim món vào ${slot === "lunch" ? "Bữa trưa" : "Bữa tối"} cố định!`, "success");
+        } else {
+          showToast("Món này đã có trong danh sách cố định!", "info");
+        }
+      };
+
+      window.removeFixedDish = function (dishId, slot) {
+        if (!window.weeklyFixedDishes[slot]) return;
+        const idStr = String(dishId);
+        window.weeklyFixedDishes[slot] = window.weeklyFixedDishes[slot].filter(
+          (id) => String(id) !== idStr,
+        );
+        saveWeeklyFixedDishesState();
+        showToast("Đã bỏ ghim món cố định!", "info");
+      };
+
+      function saveWeeklyFixedDishesState() {
+        localStorage.setItem(
+          "nutriadmin_weekly_fixed_dishes",
+          JSON.stringify(window.weeklyFixedDishes),
+        );
+
+        if (typeof purchasedCustomers !== "undefined" && Array.isArray(purchasedCustomers)) {
+          purchasedCustomers.forEach((c) => {
+            if (typeof ensureCustomerWeeklyMenuDefaults === "function") ensureCustomerWeeklyMenuDefaults(c);
+          });
+          localStorage.setItem("nutriadmin_purchased_customers", JSON.stringify(purchasedCustomers));
+        }
+        if (typeof potentialCustomers !== "undefined" && Array.isArray(potentialCustomers)) {
+          potentialCustomers.forEach((c) => {
+            if (typeof ensureCustomerWeeklyMenuDefaults === "function") ensureCustomerWeeklyMenuDefaults(c);
+          });
+          localStorage.setItem("nutriadmin_potential_customers", JSON.stringify(potentialCustomers));
+        }
+        if (typeof currentUser !== "undefined" && currentUser) {
+          if (typeof ensureCustomerWeeklyMenuDefaults === "function") ensureCustomerWeeklyMenuDefaults(currentUser);
+          localStorage.setItem("nutriadmin_current_user", JSON.stringify(currentUser));
+        }
+
+        if (typeof lastSyncedStateStr !== "undefined") lastSyncedStateStr = "";
+        if (typeof syncStateToServer === "function") syncStateToServer();
+        renderDishes();
       }
       function handleCategoryChange() {
         const category = document.getElementById("dish-category").value;
@@ -12022,6 +12565,7 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
       function closeModal() {
         document.getElementById("dish-modal").classList.add("hidden");
       }
+      window.closeModal = closeModal;
 
       function openModal(mode, idOrCategory = null) {
         const modal = document.getElementById("dish-modal");
@@ -12032,7 +12576,16 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
           document.getElementById("modal-title").innerText = "Chỉnh sửa món ăn";
           const applyToAll = document.getElementById("apply-to-all-methods");
           if (applyToAll) applyToAll.checked = false;
-          const dish = dishes.find((d) => d.id === idOrCategory);
+          let dish = dishes.find((d) => String(d.id) === String(idOrCategory));
+          if (!dish) {
+            try {
+              const local = JSON.parse(localStorage.getItem("nutriadmin_dishes") || "[]");
+              dish = local.find((d) => String(d.id) === String(idOrCategory));
+              if (dish && !dishes.some((d) => String(d.id) === String(idOrCategory))) {
+                dishes.unshift(dish);
+              }
+            } catch (e) {}
+          }
           if (dish) {
             document.getElementById("dish-id").value = dish.id;
             document.getElementById("dish-name").value = dish.name;
@@ -12157,6 +12710,7 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
         handleCategoryChange();
         modal.classList.remove("hidden");
       }
+      window.openModal = openModal;
 
       function closeMethodEditModal() {
         document.getElementById("method-edit-modal").classList.add("hidden");
@@ -12755,7 +13309,7 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
         if (category === "protein") {
           // Keep existing methods if it's editing an existing protein
           if (id) {
-            const existing = dishes.find((d) => d.id == id);
+            const existing = dishes.find((d) => String(d.id) === String(id));
             if (existing && existing.methods) {
               // Create a deep copy to avoid mutating the existing array reference if we just assign
               dishData.methods = JSON.parse(JSON.stringify(existing.methods));
@@ -12771,7 +13325,7 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
         }
 
         if (id) {
-          const index = dishes.findIndex((d) => d.id === parseInt(id));
+          const index = dishes.findIndex((d) => String(d.id) === String(id));
           if (index !== -1) {
             dishes[index] = { ...dishes[index], ...dishData };
             showToast("Cập nhật món thành công!");
@@ -12781,34 +13335,71 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
           dishes.unshift(dishData);
           showToast("Thêm nguyên liệu mới thành công!");
         }
-        window.recalculateCompleteDishes();
+        localStorage.setItem("nutriadmin_dishes", JSON.stringify(dishes));
+        if (typeof window.recalculateCompleteDishes === "function") {
+          try { window.recalculateCompleteDishes(); } catch (e) {}
+        }
         closeModal();
         renderDishes();
+        if (typeof syncStateToServer === "function") {
+          lastSyncedStateStr = "";
+          syncStateToServer();
+        }
       }
+      window.saveDish = saveDish;
 
       window.deleteDish = function (id) {
         if (confirm("Bạn có chắc chắn muốn xóa món/nguyên liệu này?")) {
-          const idx = dishes.findIndex((d) => d.id === id);
+          let idx = dishes.findIndex((d) => String(d.id) === String(id));
+          if (idx === -1) {
+            try {
+              const localDishes = JSON.parse(localStorage.getItem("nutriadmin_dishes") || "[]");
+              dishes = localDishes;
+              idx = dishes.findIndex((d) => String(d.id) === String(id));
+            } catch (e) {}
+          }
           if (idx !== -1) {
             dishes.splice(idx, 1);
+            localStorage.setItem("nutriadmin_dishes", JSON.stringify(dishes));
             if (typeof window.recalculateCompleteDishes === "function") {
-              window.recalculateCompleteDishes();
+              try { window.recalculateCompleteDishes(); } catch (e) {}
             }
             renderDishes();
-            if (typeof syncStateToServer === "function") syncStateToServer();
+            if (typeof syncStateToServer === "function") {
+              lastSyncedStateStr = "";
+              syncStateToServer();
+            }
             showToast("Đã xóa thành công!");
           }
         }
       };
 
       function toggleDishStatus(id) {
-        const dish = dishes.find((d) => d.id === id);
+        let dish = dishes.find((d) => String(d.id) === String(id));
+        if (!dish) {
+          try {
+            const local = JSON.parse(localStorage.getItem("nutriadmin_dishes") || "[]");
+            dish = local.find((d) => String(d.id) === String(id));
+            if (dish && !dishes.some((d) => String(d.id) === String(id))) {
+              dishes.unshift(dish);
+            }
+          } catch (e) {}
+        }
         if (dish) {
           dish.isActive = !dish.isActive;
+          localStorage.setItem("nutriadmin_dishes", JSON.stringify(dishes));
+          if (typeof window.recalculateCompleteDishes === "function") {
+            try { window.recalculateCompleteDishes(); } catch (e) {}
+          }
           renderDishes();
+          if (typeof syncStateToServer === "function") {
+            lastSyncedStateStr = "";
+            syncStateToServer();
+          }
           showToast(dish.isActive ? "Đã hiện món ăn" : "Đã ẩn món ăn", "info");
         }
       }
+      window.toggleDishStatus = toggleDishStatus;
 
       async function autoFillDishAI() {
         const nameInput = document.getElementById("dish-name").value;
@@ -12857,11 +13448,88 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
       let currentDietStep = 1;
 
       function updateDietProgress(step) {
-        document.getElementById("diet-progress-line").style.width =
-          step * 25 + "%";
-        document.getElementById("diet-step-badge").innerText =
-          "BƯỚC " + step + "/4";
+        const activeStep = step - 1; // zero-based index
+
+        const oldLine = document.getElementById("diet-progress-line");
+        if (oldLine) oldLine.style.width = step * 25 + "%";
+        const oldBadge = document.getElementById("diet-step-badge");
+        if (oldBadge) oldBadge.innerText = "BƯỚC " + step + "/4";
+
+        const container = document.getElementById("diet-steps-indicator");
+        if (!container) return;
+
+        const items = container.querySelectorAll(".diet-step-item");
+        const lines = container.querySelectorAll(".diet-step-line");
+
+        items.forEach((item, idx) => {
+          const iconEl = item.querySelector(".diet-step-icon");
+          const labelEl = item.querySelector(".diet-step-label");
+
+          if (idx < activeStep) {
+            // Completed state
+            item.removeAttribute("aria-current");
+            if (iconEl) {
+              iconEl.className = "diet-step-icon w-9 h-9 md:w-10 md:h-10 rounded-full flex items-center justify-center font-bold text-sm md:text-base transition-all duration-300 bg-emerald-600 text-white shadow-md shadow-emerald-500/20";
+              iconEl.innerHTML = '<i class="fa-solid fa-check text-xs md:text-sm"></i>';
+            }
+            if (labelEl) {
+              labelEl.className = "diet-step-label text-xs md:text-sm font-semibold text-slate-700 dark:text-slate-300 mt-2 text-center transition-colors duration-300";
+            }
+          } else if (idx === activeStep) {
+            // Current state
+            item.setAttribute("aria-current", "step");
+            if (iconEl) {
+              iconEl.className = "diet-step-icon w-9 h-9 md:w-10 md:h-10 rounded-full flex items-center justify-center font-bold text-sm md:text-base transition-all duration-300 bg-emerald-600 text-white shadow-md shadow-emerald-500/20 ring-4 ring-emerald-100 dark:ring-emerald-950/60 scale-110";
+              iconEl.innerHTML = (idx + 1).toString();
+            }
+            if (labelEl) {
+              labelEl.className = "diet-step-label text-xs md:text-sm font-bold text-emerald-600 dark:text-emerald-400 mt-2 text-center transition-colors duration-300";
+            }
+          } else {
+            // Upcoming state
+            item.removeAttribute("aria-current");
+            if (iconEl) {
+              iconEl.className = "diet-step-icon w-9 h-9 md:w-10 md:h-10 rounded-full flex items-center justify-center font-bold text-sm md:text-base transition-all duration-300 bg-slate-100 dark:bg-slate-800 border-2 border-slate-300 dark:border-slate-700 text-slate-400 dark:text-slate-500";
+              iconEl.innerHTML = (idx + 1).toString();
+            }
+            if (labelEl) {
+              labelEl.className = "diet-step-label text-xs md:text-sm font-medium text-slate-400 dark:text-slate-500 mt-2 text-center transition-colors duration-300";
+            }
+          }
+        });
+
+        lines.forEach((line, idx) => {
+          if (idx < activeStep) {
+            line.className = "diet-step-line flex-1 h-0.5 mx-1 md:mx-3 bg-emerald-600 transition-colors duration-300 self-center -mt-5";
+          } else {
+            line.className = "diet-step-line flex-1 h-0.5 mx-1 md:mx-3 bg-slate-200 dark:bg-slate-700 transition-colors duration-300 self-center -mt-5";
+          }
+        });
       }
+
+      function jumpToDietStep(targetStep) {
+        if (targetStep === currentDietStep) return;
+        if (targetStep < currentDietStep) {
+          document.getElementById(`diet-step-${currentDietStep}`).classList.add("hidden");
+          document.getElementById(`diet-step-${currentDietStep}`).classList.remove("block");
+          currentDietStep = targetStep;
+          document.getElementById(`diet-step-${currentDietStep}`).classList.remove("hidden");
+          document.getElementById(`diet-step-${currentDietStep}`).classList.add("block");
+          updateDietProgress(currentDietStep);
+        } else {
+          for (let s = 1; s < targetStep; s++) {
+            if (!validateDietStep(s)) return;
+          }
+          document.getElementById(`diet-step-${currentDietStep}`).classList.add("hidden");
+          document.getElementById(`diet-step-${currentDietStep}`).classList.remove("block");
+          currentDietStep = targetStep;
+          document.getElementById(`diet-step-${currentDietStep}`).classList.remove("hidden");
+          document.getElementById(`diet-step-${currentDietStep}`).classList.add("block");
+          updateDietProgress(currentDietStep);
+        }
+      }
+      window.jumpToDietStep = jumpToDietStep;
+      setTimeout(() => updateDietProgress(currentDietStep), 100);
 
       function validateDietStep(step) {
         if (step === 1) {
@@ -13439,11 +14107,24 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
               )
               .filter(Boolean),
           );
+        const fixedLunchIdsConsult = (window.weeklyFixedDishes && window.weeklyFixedDishes.lunch) || [];
+        const fixedDinnerIdsConsult = (window.weeklyFixedDishes && window.weeklyFixedDishes.dinner) || [];
         const activeDishes = dishes.filter(
           (d) =>
             d.isActive !== false &&
             !d.isCustom &&
             d.sizes &&
+            (
+              d.category === "complete" ||
+              d.category === "weekly_special" ||
+              d.isWeekly ||
+              fixedLunchIdsConsult.some((id) => String(id) === String(d.id)) ||
+              fixedDinnerIdsConsult.some((id) => String(id) === String(d.id))
+            ) &&
+            d.category !== "protein" &&
+            d.category !== "carbs" &&
+            d.category !== "veggies" &&
+            d.category !== "sauce" &&
             !hiddenKeywordsAI.some(
               (kw) =>
                 d.name.includes(kw) ||
@@ -14508,19 +15189,19 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
 
                           <input type="hidden" id="pkg-lucky-prize" value="${localStorage.getItem("nutriadmin_wheel_prize") || ""}">
 
-          <div class="mt-8 flex flex-col sm:flex-row justify-center items-center gap-4 w-full max-w-xl mx-auto relative z-20 pb-8">
-            <button type="button" onclick="window.openPlatformSelectorModal()" class="animate-attention-glow-shake relative group/order-btn overflow-hidden w-full sm:w-64 h-14 bg-gradient-to-r from-orange-500 to-amber-500 text-white font-black text-base md:text-lg rounded-full hover:scale-105 active:scale-95 transition-all duration-300 shadow-[0_0_20px_rgba(245,158,11,0.6)] hover:shadow-[0_0_40px_rgba(245,158,11,0.9)] border-2 border-amber-300 z-20 shrink-0 flex items-center justify-center cursor-pointer">
+          <div class="mt-8 flex flex-col md:flex-row justify-center items-center gap-6 w-full max-w-4xl mx-auto relative z-20 pb-8">
+            <button type="button" onclick="window.openOrderPlatformModal('landing')" class="animate-attention-glow-shake relative group/order-btn overflow-hidden w-full md:w-1/2 h-28 bg-gradient-to-r from-orange-500 to-amber-500 text-white font-black text-2xl md:text-3xl rounded-full hover:scale-105 active:scale-95 transition-all duration-300 shadow-[0_0_25px_rgba(245,158,11,0.7)] hover:shadow-[0_0_50px_rgba(245,158,11,0.95)] border-4 border-amber-300 z-20 shrink-0 flex items-center justify-center cursor-pointer">
               <span class="absolute inset-0 w-full h-full rounded-full opacity-30 bg-gradient-to-b from-transparent via-transparent to-black pointer-events-none"></span>
-              <span class="relative flex items-center justify-center gap-2">
-                <i class="fa-solid fa-gift text-amber-100 animate-bounce text-xl"></i>
+              <span class="relative flex items-center justify-center gap-4">
+                <i class="fa-solid fa-gift text-amber-100 animate-bounce text-4xl md:text-5xl"></i>
                 ĐĂNG KÝ GÓI
               </span>
             </button>
 
-            <button type="button" onclick="openPublicMenu()" class="relative group/menu-btn overflow-hidden w-full sm:w-64 h-14 bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-black text-base md:text-lg rounded-full hover:scale-105 active:scale-95 transition-all duration-300 shadow-[0_0_20px_rgba(16,185,129,0.5)] hover:shadow-[0_0_40px_rgba(16,185,129,0.8)] border-2 border-emerald-300 z-20 shrink-0 flex items-center justify-center cursor-pointer">
+            <button type="button" onclick="openPublicMenu()" class="relative group/menu-btn overflow-hidden w-full md:w-1/2 h-28 bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-black text-2xl md:text-3xl rounded-full hover:scale-105 active:scale-95 transition-all duration-300 shadow-[0_0_25px_rgba(16,185,129,0.6)] hover:shadow-[0_0_50px_rgba(16,185,129,0.9)] border-4 border-emerald-300 z-20 shrink-0 flex items-center justify-center cursor-pointer">
               <span class="absolute inset-0 w-full h-full rounded-full opacity-30 bg-gradient-to-b from-transparent via-transparent to-black pointer-events-none"></span>
-              <span class="relative flex items-center justify-center gap-2">
-                <i class="fa-solid fa-utensils text-emerald-100 text-xl"></i>
+              <span class="relative flex items-center justify-center gap-4 whitespace-nowrap">
+                <i class="fa-solid fa-utensils text-emerald-100 text-4xl md:text-5xl"></i>
                 XEM MENU ĐẦY ĐỦ
               </span>
             </button>
@@ -14528,10 +15209,10 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
                       </form>
 
                       <!-- CTA: Đặt món dùng thử & Tư vấn Zalo cân đối chiều ngang -->
-                      <div class="w-full max-w-4xl mx-auto bg-white p-6 md:p-8 rounded-3xl border border-slate-200 shadow-sm mt-10 mb-12 text-center animate-fade-in">
+                      <div class="w-full max-w-6xl mx-auto bg-white p-6 md:p-8 rounded-3xl border border-slate-200 shadow-sm mt-10 mb-12 text-center animate-fade-in">
                           <h4 class="text-xl md:text-2xl font-extrabold text-slate-900 mb-2">Chỉ muốn thử trước món ăn hôm nay?</h4>
                           <p class="text-sm md:text-base text-slate-500 mb-6 max-w-xl mx-auto">Trải nghiệm ngay hương vị thực đơn Nuri gợi ý. Giao hàng nóng hổi tận nơi trong 30 phút!</p>
-                          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full max-w-2xl mx-auto">
+                          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full max-w-4xl mx-auto">
                               ${
                                 showBanner
                                   ? `
@@ -14540,7 +15221,7 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
           </button>
           `
                                   : `
-          <button id="cta-order-now-btn" type="button" onclick="openOrderPlatformModal()" class="w-full bg-[#F97316] hover:bg-[#EA580C] text-white px-6 py-3.5 rounded-xl font-bold text-base md:text-lg transition-all shadow-md flex items-center justify-center gap-2 animate-glow-pulse cursor-pointer">
+          <button id="cta-order-now-btn" type="button" onclick="window.openPlatformSelectorModal()" class="w-full bg-[#F97316] hover:bg-[#EA580C] text-white px-6 py-3.5 rounded-xl font-bold text-base md:text-lg transition-all shadow-md flex items-center justify-center gap-2 animate-glow-pulse cursor-pointer">
               <i class="fa-solid fa-motorcycle"></i> Đặt món giao ngay
           </button>
           `
@@ -15119,9 +15800,9 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
                                 Đồng hành cùng sức khỏe Việt qua những bữa ăn ngon, tiện lợi và được tính toán dinh dưỡng cá nhân hóa.
                               </p>
                               <div class="flex gap-4">
-                                <a href="${parsedSettings.facebook || '#'}" target="_blank" class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-slate-400 hover:bg-emerald-500 hover:text-white transition-all"><i class="fa-brands fa-facebook-f"></i></a>
-                                <a href="#" class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-slate-400 hover:bg-emerald-500 hover:text-white transition-all"><i class="fa-brands fa-instagram"></i></a>
-                                <a href="#" class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-slate-400 hover:bg-emerald-500 hover:text-white transition-all"><i class="fa-brands fa-tiktok"></i></a>
+                                <a href="${formatSocialUrl(parsedSettings.facebook, 'facebook')}" target="_blank" class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-slate-400 hover:bg-emerald-500 hover:text-white transition-all"><i class="fa-brands fa-facebook-f"></i></a>
+                                <a href="${formatSocialUrl(parsedSettings.instagram, 'instagram')}" target="_blank" class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-slate-400 hover:bg-emerald-500 hover:text-white transition-all"><i class="fa-brands fa-instagram"></i></a>
+                                <a href="${formatSocialUrl(parsedSettings.tiktok, 'tiktok')}" target="_blank" class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-slate-400 hover:bg-emerald-500 hover:text-white transition-all"><i class="fa-brands fa-tiktok"></i></a>
                               </div>
                             </div>
                             
@@ -15971,7 +16652,7 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
             ? parseInt(settingsObj.freeshipThreshold)
             : 0;
 
-        let shippingFee = 15000;
+        let shippingFee = 20000;
         if (freeshipThreshold > 0 && subtotal >= freeshipThreshold) {
           shippingFee = 0;
         }
@@ -16312,7 +16993,7 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
           (sum, item) => sum + item?.price * item.qty,
           0,
         );
-        let shippingFee = 15000;
+        let shippingFee = 20000;
         if (freeshipThreshold > 0 && subtotal >= freeshipThreshold) {
           shippingFee = 0;
         }
@@ -16458,7 +17139,11 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
         if (typeof renderOrdersAdmin === "function") renderOrdersAdmin();
         if (typeof renderGrandOpeningCustomers === "function")
           renderGrandOpeningCustomers();
-        syncStateToServer();
+        localStorage.setItem("nutriadmin_orders", JSON.stringify(orders));
+        if (typeof syncStateToServer === "function") {
+          lastSyncedStateStr = "";
+          syncStateToServer();
+        }
         cart = [];
         document.getElementById("cust-name").value = "";
         document.getElementById("cust-phone").value = "";
@@ -18577,7 +19262,13 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
 
       function clearOrderFilters() {
         document.getElementById("filter-order-status").value = "all";
-        document.getElementById("filter-order-date").value = "";
+        const timeFilterEl = document.getElementById("filter-order-time");
+        if (timeFilterEl) timeFilterEl.value = "7days";
+        const dateInputEl = document.getElementById("filter-order-date");
+        if (dateInputEl) {
+          dateInputEl.value = "";
+          dateInputEl.classList.add("hidden");
+        }
         document.getElementById("filter-order-region").value = "";
         document.getElementById("filter-order-shipper").value = "all";
         document.getElementById("filter-order-sort").value = "newest";
@@ -18896,6 +19587,11 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
 
         closeInventoryModal();
         renderInventory();
+        localStorage.setItem("nutriadmin_inventory", JSON.stringify(inventory));
+        if (typeof syncStateToServer === "function") {
+          lastSyncedStateStr = "";
+          syncStateToServer();
+        }
       }
 
       function renderOrdersAdmin() {
@@ -18911,7 +19607,19 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
         const statusFilter = document.getElementById(
           "filter-order-status",
         ).value;
-        const dateFilter = document.getElementById("filter-order-date").value;
+        const timeFilterEl = document.getElementById("filter-order-time");
+        const timeFilter = timeFilterEl ? timeFilterEl.value : "7days";
+        const dateInputEl = document.getElementById("filter-order-date");
+
+        if (timeFilter === "custom") {
+          if (dateInputEl) dateInputEl.classList.remove("hidden");
+        } else {
+          if (dateInputEl) dateInputEl.classList.add("hidden");
+        }
+
+        const now = new Date();
+        const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+
         const regionFilter = document
           .getElementById("filter-order-region")
           .value.toLowerCase();
@@ -18922,14 +19630,39 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
         const filteredOrders = orders.filter((order) => {
           if (statusFilter !== "all" && order.status !== statusFilter)
             return false;
-          if (dateFilter) {
-            const d = new Date(order.timestamp);
-            if (
-              `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}` !==
-              dateFilter
-            )
-              return false;
+
+          if (timeFilter !== "all") {
+            const orderTime = new Date(order.timestamp).getTime();
+            if (isNaN(orderTime)) return false;
+
+            if (timeFilter === "today") {
+              if (orderTime < startOfToday) return false;
+            } else if (timeFilter === "7days") {
+              const cutoff = startOfToday - 6 * 24 * 60 * 60 * 1000;
+              if (orderTime < cutoff) return false;
+            } else if (timeFilter === "30days") {
+              const cutoff = startOfToday - 29 * 24 * 60 * 60 * 1000;
+              if (orderTime < cutoff) return false;
+            } else if (timeFilter === "this_month") {
+              const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
+              if (orderTime < startOfMonth) return false;
+            } else if (timeFilter === "last_month") {
+              const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1).getTime();
+              const endOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999).getTime();
+              if (orderTime < startOfLastMonth || orderTime > endOfLastMonth) return false;
+            } else if (timeFilter === "custom") {
+              const dateFilter = dateInputEl ? dateInputEl.value : "";
+              if (dateFilter) {
+                const d = new Date(order.timestamp);
+                if (
+                  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}` !==
+                  dateFilter
+                )
+                  return false;
+              }
+            }
           }
+
           if (
             regionFilter &&
             !order.address.toLowerCase().includes(regionFilter)
@@ -19348,6 +20081,16 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
           }
 
           if (s === "completed" && oldStatus !== "completed") {
+            // Tự động trừ 1 số ngày/bữa của gói khi đơn chuyển sang Đã giao (Hoàn thành)
+            const pCustomer =
+              purchasedCustomers.find((c) => (c.id && c.id == o.customerId) || c.phone === o.phone) ||
+              potentialCustomers.find((c) => (c.id && c.id == o.customerId) || c.phone === o.phone);
+            if (pCustomer) {
+              pCustomer.exportedMeals = (pCustomer.exportedMeals || 0) + 1;
+              localStorage.setItem("nutriadmin_purchased_customers", JSON.stringify(purchasedCustomers));
+              localStorage.setItem("nutriadmin_potential_customers", JSON.stringify(potentialCustomers));
+            }
+
             // Cộng điểm cho customer
             const customer =
               potentialCustomers.find((c) => c.phone === o.phone) ||
@@ -19366,6 +20109,15 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
                 );
               }
             }
+          } else if (oldStatus === "completed" && s !== "completed") {
+            const pCustomer =
+              purchasedCustomers.find((c) => (c.id && c.id == o.customerId) || c.phone === o.phone) ||
+              potentialCustomers.find((c) => (c.id && c.id == o.customerId) || c.phone === o.phone);
+            if (pCustomer && pCustomer.exportedMeals > 0) {
+              pCustomer.exportedMeals = pCustomer.exportedMeals - 1;
+              localStorage.setItem("nutriadmin_purchased_customers", JSON.stringify(purchasedCustomers));
+              localStorage.setItem("nutriadmin_potential_customers", JSON.stringify(potentialCustomers));
+            }
           }
 
           showToast("Cập nhật trạng thái OK");
@@ -19383,7 +20135,10 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
             }
           }
           localStorage.setItem("nutriadmin_orders", JSON.stringify(orders));
-          if (typeof syncStateToServer === "function") syncStateToServer();
+          if (typeof syncStateToServer === "function") {
+            lastSyncedStateStr = "";
+            syncStateToServer();
+          }
         }
       }
 
@@ -19425,11 +20180,28 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
           const orderId = cb.value;
           const o = orders.find((x) => x.id === orderId);
           if (o && o.status !== newStatus) {
+            const oldStatus = o.status;
             o.status = newStatus;
 
             // Deduct inventory when switching to delivering or completed
             if (newStatus === "delivering" || newStatus === "completed") {
               deductStockForOrder(o);
+            }
+
+            if (newStatus === "completed" && oldStatus !== "completed") {
+              const pCustomer =
+                purchasedCustomers.find((c) => (c.id && c.id == o.customerId) || c.phone === o.phone) ||
+                potentialCustomers.find((c) => (c.id && c.id == o.customerId) || c.phone === o.phone);
+              if (pCustomer) {
+                pCustomer.exportedMeals = (pCustomer.exportedMeals || 0) + 1;
+              }
+            } else if (oldStatus === "completed" && newStatus !== "completed") {
+              const pCustomer =
+                purchasedCustomers.find((c) => (c.id && c.id == o.customerId) || c.phone === o.phone) ||
+                potentialCustomers.find((c) => (c.id && c.id == o.customerId) || c.phone === o.phone);
+              if (pCustomer && pCustomer.exportedMeals > 0) {
+                pCustomer.exportedMeals = pCustomer.exportedMeals - 1;
+              }
             }
 
             updatedCount++;
@@ -19481,7 +20253,10 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
         if (o) {
           o.paymentStatus = s;
           localStorage.setItem("nutriadmin_orders", JSON.stringify(orders));
-          if (typeof syncStateToServer === "function") syncStateToServer();
+          if (typeof syncStateToServer === "function") {
+            lastSyncedStateStr = "";
+            syncStateToServer();
+          }
           showToast("Cập nhật thanh toán OK");
           renderOrdersAdmin();
         }
@@ -19492,7 +20267,10 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
         if (o) {
           o.shipperId = sId ? parseInt(sId) : null;
           localStorage.setItem("nutriadmin_orders", JSON.stringify(orders));
-          if (typeof syncStateToServer === "function") syncStateToServer();
+          if (typeof syncStateToServer === "function") {
+            lastSyncedStateStr = "";
+            syncStateToServer();
+          }
           showToast("Cập nhật phân công");
           renderOrdersAdmin();
           renderShippers();
@@ -20754,6 +21532,25 @@ Do not output markdown code blocks or extra text, just the raw JSON.`;
         const tbody = document.getElementById("purchased-table-body");
         if (!tbody) return;
 
+        const purStr = localStorage.getItem("nutriadmin_purchased_customers");
+        if (purStr) {
+          try {
+            purchasedCustomers = JSON.parse(purStr);
+          } catch (e) {}
+        }
+
+        if (typeof addAdminNotification === "function") {
+          purchasedCustomers.filter(c => c.renewalPending).forEach(c => {
+            addAdminNotification(
+              "order",
+              "Yêu cầu Gia hạn gói ăn",
+              `${c.name || "Khách hàng"} (${c.phone || ""}) đang chờ xác nhận gia hạn gói.`,
+              `renew-${c.id}`,
+              `if (typeof switchView === "function") switchView("khach-hang"); if (typeof switchCustomerTab === "function") switchCustomerTab("purchased"); if (typeof openApproveRenewalModal === "function") openApproveRenewalModal('${c.id}');`
+            );
+          });
+        }
+
         if (purchasedCustomers.length === 0) {
           tbody.innerHTML = `<tr><td colspan="5" class="px-6 py-8 text-center text-slate-500">Chưa có khách hàng mua gói.</td></tr>`;
           return;
@@ -20823,6 +21620,7 @@ Do not output markdown code blocks or extra text, just the raw JSON.`;
                           <td class="px-6 py-4 text-slate-600">${new Date(c.startDate).toLocaleDateString("vi-VN")}${c.endDate ? " - " + new Date(c.endDate).toLocaleDateString("vi-VN") : ""}</td>
                           <td class="px-6 py-4">${dStatus}</td>
                           <td class="px-6 py-4 text-right">
+                              ${c.renewalPending ? `<button onclick="openApproveRenewalModal('${c.id}')" class="text-xs bg-amber-500 hover:bg-amber-600 text-white font-bold px-3 py-1.5 rounded mr-2 inline-flex items-center gap-1 shadow-sm animate-pulse cursor-pointer" title="Duyệt yêu cầu gia hạn gói"><i class="fa-solid fa-bell"></i> Duyệt gia hạn</button>` : ""}
                               <button onclick="openCustomerLocationPinModal('${c.id}')" class="text-xs ${c.lat && c.lng ? 'bg-rose-100 text-rose-700 border border-rose-300 font-bold' : 'bg-rose-50 text-rose-600 border border-rose-200 hover:bg-rose-100'} px-3 py-1.5 rounded mr-2 inline-flex items-center gap-1" title="${c.lat && c.lng ? 'Đã ghim vị trí' : 'Chưa ghim vị trí'}"><i class="fa-solid fa-location-dot text-rose-500"></i> ${c.lat && c.lng ? 'Đã ghim' : 'Ghim vị trí'}</button>
                                <button onclick="openCustomerMenuModal(${c.id}, true)" class="text-xs bg-emerald-100 text-emerald-700 px-3 py-1.5 rounded mr-2"><i class="fa-solid fa-calendar-week"></i> Menu</button>
                               <button onclick="openPurchasedModal('edit', ${c.id})" class="text-blue-500 mr-2"><i class="fa-solid fa-pen"></i></button>
@@ -21136,7 +21934,10 @@ Do not output markdown code blocks or extra text, just the raw JSON.`;
         selDate.setHours(0,0,0,0);
         
         let count = 0;
+        let totalMealsDeducted = 0;
         let modified = false;
+        
+        const mealsDeductPerCustomer = meal === "both" ? 2 : 1;
         
         for (let i = 0; i < purchasedCustomers.length; i++) {
            let c = purchasedCustomers[i];
@@ -21149,8 +21950,10 @@ Do not output markdown code blocks or extra text, just the raw JSON.`;
               if (selDate >= sDate && selDate <= eDate) {
                  let rem = calculateRemainingMeals(c);
                  if (rem > 0) {
-                    c.exportedMeals = (c.exportedMeals || 0) + 1;
+                    let deduct = Math.min(rem, mealsDeductPerCustomer);
+                    c.exportedMeals = (c.exportedMeals || 0) + deduct;
                     count++;
+                    totalMealsDeducted += deduct;
                     modified = true;
                  }
               }
@@ -21172,7 +21975,8 @@ Do not output markdown code blocks or extra text, just the raw JSON.`;
               renderPurchasedCustomers();
            }
            
-           showToast(`Đã xuất bill cho ${count} khách hàng`, "success");
+           const mealLabel = meal === "both" ? "Cả ngày (Trưa + Tối)" : meal === "meal2" ? "Bữa Tối" : "Bữa Trưa";
+           showToast(`Đã xuất bill ${mealLabel} cho ${count} khách hàng (${totalMealsDeducted} bữa)`, "success");
         } else {
            showToast("Không có khách hàng nào hợp lệ để xuất bill trong ngày này", "error");
         }
@@ -21266,14 +22070,25 @@ function savePurchasedCustomer(e) {
         renderPurchasedCustomers();
         if (typeof renderCustomerProfile === "function")
           renderCustomerProfile();
-        if (typeof syncStateToServer === "function") syncStateToServer();
+        localStorage.setItem("nutriadmin_purchased_customers", JSON.stringify(purchasedCustomers));
+        localStorage.setItem("nutriadmin_potential_customers", JSON.stringify(potentialCustomers));
+        if (typeof syncStateToServer === "function") {
+          lastSyncedStateStr = "";
+          syncStateToServer();
+        }
         showToast("Lưu thông tin OK");
       }
 
       function deletePurchasedCustomer(id) {
         openConfirmModal("Xóa dữ liệu khách này?", () => {
           purchasedCustomers = purchasedCustomers.filter((c) => c.id !== id);
+          localStorage.setItem("nutriadmin_purchased_customers", JSON.stringify(purchasedCustomers));
           renderPurchasedCustomers();
+          if (typeof renderAccountsList === "function") renderAccountsList();
+          if (typeof syncStateToServer === "function") {
+            lastSyncedStateStr = "";
+            syncStateToServer();
+          }
           showToast("Đã xóa", "info");
         });
       }
@@ -21421,6 +22236,14 @@ function savePurchasedCustomer(e) {
 
         closeAccountModal();
         renderAccountsList();
+        if (typeof renderPotentialCustomers === "function") renderPotentialCustomers();
+        if (typeof renderPurchasedCustomers === "function") renderPurchasedCustomers();
+        localStorage.setItem("nutriadmin_potential_customers", JSON.stringify(potentialCustomers));
+        localStorage.setItem("nutriadmin_purchased_customers", JSON.stringify(purchasedCustomers));
+        if (typeof syncStateToServer === "function") {
+          lastSyncedStateStr = "";
+          syncStateToServer();
+        }
       }
 
       function deleteAccount(phone) {
@@ -21431,11 +22254,17 @@ function savePurchasedCustomer(e) {
           purchasedCustomers = purchasedCustomers.filter(
             (c) => c.phone !== phone,
           );
+          localStorage.setItem("nutriadmin_potential_customers", JSON.stringify(potentialCustomers));
+          localStorage.setItem("nutriadmin_purchased_customers", JSON.stringify(purchasedCustomers));
           renderAccountsList();
           if (typeof renderPotentialCustomers === "function")
             renderPotentialCustomers();
           if (typeof renderPurchasedCustomers === "function")
             renderPurchasedCustomers();
+          if (typeof syncStateToServer === "function") {
+            lastSyncedStateStr = "";
+            syncStateToServer();
+          }
           showToast("Đã xóa", "info");
         });
       }
@@ -21938,7 +22767,7 @@ function savePurchasedCustomer(e) {
       window.openDishPickerModal = function (dKey, mKey) {
         currentPickerDKey = dKey;
         currentPickerMKey = mKey;
-        currentCategoryFilter = "all";
+        currentCategoryFilter = "complete";
 
         // Find day and meal label
         const dayObj = weekDays.find((d) => d.key === dKey);
@@ -21985,17 +22814,10 @@ function savePurchasedCustomer(e) {
                 (x.ingredients && x.ingredients.includes(kw)),
             ),
         );
-        const categories = ["all", "complete"];
+        const categories = ["complete"];
         if (isWeeklySpecialEnabled) {
           categories.push("weekly_special");
         }
-        activeDishes.forEach((d) => {
-          if (d.category && !categories.includes(d.category)) {
-            if (d.category === "weekly_special" && !isWeeklySpecialEnabled)
-              return;
-            categories.push(d.category);
-          }
-        });
 
         const categoryMapping = {
           all: "Tất cả",
@@ -22068,17 +22890,10 @@ function savePurchasedCustomer(e) {
           const isWeeklySpecialEnabled =
             savedSettings.weeklySpecialFilterEnabled !== false;
 
-          const categories = ["all", "complete"];
+          const categories = ["complete"];
           if (isWeeklySpecialEnabled) {
             categories.push("weekly_special");
           }
-          activeDishes.forEach((d) => {
-            if (d.category && !categories.includes(d.category)) {
-              if (d.category === "weekly_special" && !isWeeklySpecialEnabled)
-                return;
-              categories.push(d.category);
-            }
-          });
 
           buttons.forEach((btn, index) => {
             const btnCat = categories[index];
@@ -22122,8 +22937,18 @@ function savePurchasedCustomer(e) {
             ),
         );
         const filteredDishes =
-          currentCategoryFilter === "all"
-            ? activeDishes
+          currentCategoryFilter === "complete"
+            ? activeDishes.filter(
+                (d) =>
+                  d.category === "complete" ||
+                  !d.category ||
+                  (d.sizes &&
+                    d.category !== "weekly_special" &&
+                    d.category !== "protein" &&
+                    d.category !== "carbs" &&
+                    d.category !== "veggies" &&
+                    d.category !== "sauce"),
+              )
             : activeDishes.filter((d) => d.category === currentCategoryFilter);
 
         // Get customer defaults
@@ -22788,22 +23613,28 @@ function savePurchasedCustomer(e) {
       };
 
       
-      function calculateRemainingMeals(c) {
-        if (!c.startDate || !c.endDate) return 0;
-        let start = new Date(c.startDate);
-        let end = new Date(c.endDate);
-        start.setHours(0,0,0,0);
-        end.setHours(0,0,0,0);
-        let totalMeals = 0;
-        let current = new Date(start);
-        while (current <= end) {
-          let day = current.getDay();
-          if (day !== 0 && day !== 6) {
-            totalMeals += 2;
-          }
-          current.setDate(current.getDate() + 1);
+      function getPackageTotalDays(pkgValue) {
+        if (!pkgValue) return 5;
+        const p = String(pkgValue).toLowerCase();
+        if (p.includes("trải nghiệm") || p === "target_5" || p === "5" || p === "target_7" || p === "7") {
+          return 5;
         }
-        return totalMeals - (c.exportedMeals || 0);
+        if (p.includes("duy trì") || p.includes("chuyển đổi") || p === "target_10" || p === "10" || p === "target_14" || p === "14") {
+          return 10;
+        }
+        if (p.includes("bứt phá") || p === "target_20" || p === "20" || p === "target_30" || p === "30") {
+          return 20;
+        }
+        const parsed = parseInt(p.replace(/\D/g, ''));
+        if (!isNaN(parsed) && parsed > 0) return parsed;
+        return 5;
+      }
+
+      function calculateRemainingMeals(c) {
+        if (!c) return 0;
+        const totalDays = getPackageTotalDays(c.package) + (c.bonusMeals || 0);
+        const exported = c.exportedMeals || 0;
+        return Math.max(0, totalDays - exported);
       }
 
 function openCustomerMenuModal(cId, isFromAdmin = false) {
@@ -22813,15 +23644,18 @@ function openCustomerMenuModal(cId, isFromAdmin = false) {
         if (!c) return;
 
         let remainingHtml = "";
-        if (c.package && c.startDate && c.endDate) {
+        if (c.package) {
            let remaining = calculateRemainingMeals(c);
-           remainingHtml = ` - Còn: <span class="text-emerald-600 font-bold">${remaining}</span> bữa`;
+           remainingHtml = ` - Còn: <span class="text-emerald-600 font-bold">${remaining}</span> ngày`;
         }
         document.getElementById("weekly-menu-subtitle").innerHTML =
           `Khách: ${c.name}${remainingHtml}`;
         document.getElementById("menu-customer-id").value = c.id;
 
         if (!c.weeklyMenu) c.weeklyMenu = {};
+        if (typeof ensureCustomerWeeklyMenuDefaults === "function") {
+          ensureCustomerWeeklyMenuDefaults(c);
+        }
         const aD = dishes.filter((x) => x.isActive);
 
         const daysMap = {
@@ -22839,6 +23673,7 @@ function openCustomerMenuModal(cId, isFromAdmin = false) {
 
         document.getElementById("weekly-menu-container").innerHTML =
           weekDays
+            .filter((d) => d.key !== "saturday" && d.key !== "sunday")
             .map((d) => {
               let isLocked = false;
               if (!isFromAdmin) {
@@ -22869,7 +23704,7 @@ function openCustomerMenuModal(cId, isFromAdmin = false) {
                                   <div class="flex justify-between items-center mb-1.5">
                                       <label class="text-xs font-bold text-slate-500 flex items-center gap-2">
                                         Bữa 1
-                                        <button onclick="${isLocked ? "showLockedPopup()" : `handleSelfMixClick(${c.id}, '${d.key}', 'meal1')`}" class="${isLocked ? "bg-slate-50 text-slate-400 border-slate-200" : "bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border-indigo-200"} inline-flex items-center gap-1 text-[9px] border font-bold px-1.5 py-0.5 rounded transition-colors shadow-sm">
+                                        <button onclick="${isLocked ? "showLockedPopup()" : `handleSelfMixClick(${c.id}, '${d.key}', 'meal1')`}" class="${isLocked ? "bg-slate-50 text-slate-400 border-slate-200" : "bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border-indigo-200"} inline-flex items-center gap-1.5 text-xs border font-bold px-3 py-1.5 rounded-lg transition-colors shadow-sm">
                                           ${isLocked ? '<i class="fa-solid fa-lock"></i>' : ""} Tự mix món
                                         </button>
                                       </label>
@@ -22889,7 +23724,7 @@ function openCustomerMenuModal(cId, isFromAdmin = false) {
                                   <div class="flex justify-between items-center mb-1.5">
                                       <label class="text-xs font-bold text-slate-500 flex items-center gap-2">
                                         Bữa 2
-                                        <button onclick="${isLocked ? "showLockedPopup()" : `handleSelfMixClick(${c.id}, '${d.key}', 'meal2')`}" class="${isLocked ? "bg-slate-50 text-slate-400 border-slate-200" : "bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border-indigo-200"} inline-flex items-center gap-1 text-[9px] border font-bold px-1.5 py-0.5 rounded transition-colors shadow-sm">
+                                        <button onclick="${isLocked ? "showLockedPopup()" : `handleSelfMixClick(${c.id}, '${d.key}', 'meal2')`}" class="${isLocked ? "bg-slate-50 text-slate-400 border-slate-200" : "bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border-indigo-200"} inline-flex items-center gap-1.5 text-xs border font-bold px-3 py-1.5 rounded-lg transition-colors shadow-sm">
                                           ${isLocked ? '<i class="fa-solid fa-lock"></i>' : ""} Tự mix món
                                         </button>
                                       </label>
@@ -22976,8 +23811,10 @@ function openCustomerMenuModal(cId, isFromAdmin = false) {
           }
         }
 
+        localStorage.setItem("nutriadmin_purchased_customers", JSON.stringify(purchasedCustomers));
+        localStorage.setItem("nutriadmin_potential_customers", JSON.stringify(potentialCustomers));
         if (typeof syncStateToServer === "function") {
-          lastStateStr = ""; // Force update
+          lastSyncedStateStr = ""; // Force update
           syncStateToServer();
         }
 
@@ -23062,7 +23899,11 @@ function openCustomerMenuModal(cId, isFromAdmin = false) {
         }
 
         orders.unshift(newOrder);
-        syncStateToServer();
+        localStorage.setItem("nutriadmin_orders", JSON.stringify(orders));
+        if (typeof syncStateToServer === "function") {
+          lastSyncedStateStr = "";
+          syncStateToServer();
+        }
 
         showToast(`Đã đẩy đơn sang Danh sách Đơn hàng!`);
         if (typeof renderOrdersAdmin === "function") renderOrdersAdmin();
@@ -23147,7 +23988,11 @@ function openCustomerMenuModal(cId, isFromAdmin = false) {
         }
 
         orders.unshift(newOrder);
-        syncStateToServer();
+        localStorage.setItem("nutriadmin_orders", JSON.stringify(orders));
+        if (typeof syncStateToServer === "function") {
+          lastSyncedStateStr = "";
+          syncStateToServer();
+        }
         showToast(`Đã đẩy đơn cả ngày sang Danh sách Đơn hàng!`);
         if (typeof renderOrdersAdmin === "function") renderOrdersAdmin();
         renderPurchasedCustomers();
@@ -23307,7 +24152,10 @@ function openCustomerMenuModal(cId, isFromAdmin = false) {
         c.lng = currentPinLng;
 
         localStorage.setItem("nutriadmin_purchased_customers", JSON.stringify(purchasedCustomers));
-        if (typeof syncStateToServer === "function") syncStateToServer();
+        if (typeof syncStateToServer === "function") {
+          lastSyncedStateStr = "";
+          syncStateToServer();
+        }
         renderPurchasedCustomers();
         closeCustomerPinModal();
         showToast(`Đã ghim vị trí cho khách hàng ${c.name}!`, "success");
@@ -24053,11 +24901,7 @@ function openCustomerMenuModal(cId, isFromAdmin = false) {
         const fullSystemInstruction =
           getChatSystemInstruction(storeBrandName) + dynamicKnowledgeBase;
 
-        const customKey =
-          localStorage.getItem("nutriadmin_custom_api_key") ||
-          window.NURI_GEMINI_API_KEY ||
-          "";
-        const url = `/api/gemini`;
+        const customKey = (window.getGeminiApiKey && window.getGeminiApiKey()) || localStorage.getItem("nutriadmin_custom_api_key") || window.NURI_GEMINI_API_KEY || window.DEFAULT_GEMINI_API_KEY || "";
         const payload = {
           contents: chatHistory,
           systemInstruction: { parts: [{ text: fullSystemInstruction }] },
@@ -24067,32 +24911,20 @@ function openCustomerMenuModal(cId, isFromAdmin = false) {
         const delays = [1000, 2000, 4000];
         for (let i = 0; i < delays.length; i++) {
           try {
-            const headers = { "Content-Type": "application/json" };
-            if (customKey) headers["x-custom-api-key"] = customKey;
-
             let response;
-            try {
-              response = await fetch(url, {
+            if (customKey && customKey.trim() !== "") {
+              // Direct fetch to Google Gemini API (works 100% on static hosts / GitHub Pages / Mobile)
+              const { url: dUrl, options: dOpts } = buildGeminiDirectFetch(customKey.trim(), payload);
+              response = await fetch(dUrl, dOpts);
+            } else {
+              // Secondary fallback to backend /api/gemini if server exists
+              response = await fetch("/api/gemini", {
                 method: "POST",
-                headers: headers,
+                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(payload),
               });
-            } catch (err) {
-              if (customKey) {
-                const { url: dUrl, options: dOpts } = buildGeminiDirectFetch(customKey, payload);
-                response = await fetch(dUrl, dOpts);
-              } else {
-                throw err;
-              }
             }
-            if (
-              (!response || !response.ok) &&
-              (response?.status === 404 || response?.status === 405) &&
-              customKey
-            ) {
-              const { url: dUrl, options: dOpts } = buildGeminiDirectFetch(customKey, payload);
-              response = await fetch(dUrl, dOpts);
-            }
+
             if (!response.ok)
               throw new Error(`HTTP error! status: ${response.status}`);
             const result = await response.json();
@@ -24449,6 +25281,7 @@ function openCustomerMenuModal(cId, isFromAdmin = false) {
 
         window.isFirebaseSyncInitialized = true;
         window.lastFirebaseConfigStr = configStr;
+        window.isInitialStateLoaded = true; // Fast-boot: Allow instant UI render from local cache (<0.2s)
 
         let isInitialSyncComplete = false;
 
@@ -24764,6 +25597,11 @@ function openCustomerMenuModal(cId, isFromAdmin = false) {
 
                 const positions = ["banner-top", "banner-bottom", "trust-top", "trust-bottom", "trust-center"];
                 positions.forEach((pos) => {
+                  const lastUp = window.lastUploadedBannerTime ? window.lastUploadedBannerTime[pos] : 0;
+                  if (lastUp && Date.now() - lastUp < 60000) {
+                    return; // Ưu tiên sequence mới vừa upload ở local trong 60 giây
+                  }
+
                   const frames = bannerData[pos];
                   if (!frames || !Array.isArray(frames) || frames.length === 0) return;
 
@@ -24835,6 +25673,9 @@ function openCustomerMenuModal(cId, isFromAdmin = false) {
               activeMascotId,
               pwaNotifications,
               pwaBadgeActive,
+              pwaCustomIcon: window.pwaCustomIcon || pwaCustomIcon || localStorage.getItem("nutriadmin_pwa_custom_icon") || "",
+              adminNotifications: getAdminNotifications(),
+              notificationsReadTimestamp: window.notificationsReadTimestamp || parseInt(localStorage.getItem("admin_notifications_read_time") || "0")
             };
 
             const firebaseState = { ...currentState };
@@ -25069,10 +25910,7 @@ function openCustomerMenuModal(cId, isFromAdmin = false) {
       Không cần ghi tiêu đề, trả lời trực tiếp bằng tiếng Việt, có thể dùng 1-2 emoji phù hợp.`;
 
         try {
-          const customKey =
-            localStorage.getItem("nutriadmin_custom_api_key") ||
-            window.NURI_GEMINI_API_KEY ||
-            "";
+          const customKey = window.getGeminiApiKey ? window.getGeminiApiKey() : (localStorage.getItem("nutriadmin_custom_api_key") || window.NURI_GEMINI_API_KEY);
           const response = await fetch(
             `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${customKey}`,
             {
@@ -25855,7 +26693,7 @@ const MascotDB = {
               const store = tx.objectStore(this.storeName);
               const req = store.put(frames, expressionId);
               req.onsuccess = () => {
-                if (typeof cloudDb !== "undefined" && cloudDb !== null) {
+                if (typeof cloudDb !== "undefined" && cloudDb !== null && !expressionId.startsWith("seq_trust") && !expressionId.startsWith("seq_banner")) {
                   cloudDb
                     .collection("nutriadmin_v1")
                     .doc("mascot_seq_" + expressionId)
@@ -27913,6 +28751,9 @@ const MascotDB = {
           pollStateFromServer();
         }, 5000);
 
+        const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+        const savedUser = localStorage.getItem("nutriadmin_current_user");
+
         if (mode === "admin") {
           if (checkAdminSessionSilent()) {
             const nav = document.querySelector("nav");
@@ -27924,7 +28765,13 @@ const MascotDB = {
             switchView("kitchen");
             openAdminLoginModal();
           }
-        } else if (mode === "landing") {
+        } else if (mode === "customer-profile" || mode === "profile" || mode === "customer-portal" || isStandalone) {
+          // Tự động chuyển tới Trang cá nhân khách hàng đối với App PWA hoặc khi URL chỉ định mode trang cá nhân
+          const nav = document.querySelector("nav");
+          if (nav) nav.classList.add("hidden");
+
+          switchView("customer-profile");
+        } else if (mode === "landing" || mode === "consulting") {
           const nav = document.querySelector("nav");
           if (nav) nav.classList.add("hidden");
 
@@ -29859,22 +30706,36 @@ function handlePwaIconUpload(event) {
   const file = event.target.files && event.target.files[0];
   if (!file) return;
 
-  if (file.size > 2 * 1024 * 1024) {
-    if (typeof showToast === "function") showToast("Vui lòng chọn file hình ảnh nhỏ hơn 2MB", "error");
+  if (file.size > 5 * 1024 * 1024) {
+    if (typeof showToast === "function") showToast("Vui lòng chọn file hình ảnh nhỏ hơn 5MB", "error");
     return;
   }
 
-  const reader = new FileReader();
-  reader.onload = function (e) {
-    const base64Icon = e.target.result;
-    pwaCustomIcon = base64Icon;
-    window.pwaCustomIcon = base64Icon;
+  const processPwaIcon = (imageFile, callback) => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement("canvas");
+      canvas.width = 192;
+      canvas.height = 192;
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(img, 0, 0, 192, 192);
+      callback(canvas.toDataURL("image/png", 0.85));
+    };
+    const reader = new FileReader();
+    reader.onload = (e) => { img.src = e.target.result; };
+    reader.readAsDataURL(imageFile);
+  };
+
+  processPwaIcon(file, (compressedBase64) => {
+    pwaCustomIcon = compressedBase64;
+    window.pwaCustomIcon = compressedBase64;
+    window.lastPwaIconUploadTime = Date.now();
     try {
-      localStorage.setItem("nutriadmin_pwa_custom_icon", base64Icon);
+      localStorage.setItem("nutriadmin_pwa_custom_icon", compressedBase64);
     } catch (err) {}
 
     if (typeof clientStateUpdates !== 'undefined') {
-      clientStateUpdates.pwaCustomIcon = base64Icon;
+      clientStateUpdates.pwaCustomIcon = compressedBase64;
       if (!clientStateUpdates.isOverwriteKeys) clientStateUpdates.isOverwriteKeys = [];
       if (!clientStateUpdates.isOverwriteKeys.includes("pwaCustomIcon")) {
         clientStateUpdates.isOverwriteKeys.push("pwaCustomIcon");
@@ -29882,9 +30743,15 @@ function handlePwaIconUpload(event) {
     }
 
     updatePwaIconUI();
+    if (typeof syncStateToServer === "function") syncStateToServer();
+
+    // Đồng bộ lên document riêng pwa_icon trên Firebase Cloud
+    if (typeof cloudDb !== "undefined" && cloudDb !== null) {
+      cloudDb.collection("nutriadmin_v1").doc("pwa_icon").set({ pwaCustomIcon: compressedBase64 }, { merge: true }).catch(() => {});
+    }
+
     if (typeof showToast === "function") showToast("Đã tải lên và cập nhật Biểu tượng PWA!", "success");
-  };
-  reader.readAsDataURL(file);
+  });
 }
 
 function resetPwaIconToDefault() {
@@ -29903,6 +30770,7 @@ function resetPwaIconToDefault() {
   }
 
   updatePwaIconUI();
+  if (typeof syncStateToServer === "function") syncStateToServer();
   if (typeof showToast === "function") showToast("Đã khôi phục biểu tượng PWA mặc định!", "info");
 }
 
@@ -29963,27 +30831,27 @@ function updatePwaIconUI() {
     const _favicon = document.querySelector('link[rel="icon"]');
     const _manifestLink = document.querySelector('link[rel="manifest"]');
 
-    if (iconSrc) {
-      if (_appleTouchIcon) _appleTouchIcon.href = iconSrc;
-      if (_favicon) {
-        _favicon.href = iconSrc;
-        _favicon.type = iconSrc.startsWith('data:image/svg') ? 'image/svg+xml' : iconSrc.startsWith('data:image/png') ? 'image/png' : 'image/jpeg';
-      }
-      if (_manifestLink) {
-        const _manifestObj = {
-          short_name: "Nuri",
-          name: "Nuri - Tư Vấn Dinh Dưỡng",
-          description: "Chuyên gia dinh dưỡng ảo & Thực đơn cá nhân hóa của bạn",
-          icons: [{ src: iconSrc, type: iconSrc.startsWith('data:image/svg') ? 'image/svg+xml' : 'image/png', sizes: "192x192 512x512", purpose: "any maskable" }],
-          start_url: "/?mode=landing",
-          background_color: "#f8fafc",
-          theme_color: "#10b981",
-          display: "standalone",
-          orientation: "portrait"
-        };
-        const _blob = new Blob([JSON.stringify(_manifestObj)], { type: "application/json" });
-        _manifestLink.href = URL.createObjectURL(_blob);
-      }
+    const effectiveIcon = iconSrc || "./images/A1.png";
+
+    if (_appleTouchIcon) _appleTouchIcon.href = effectiveIcon;
+    if (_favicon) {
+      _favicon.href = effectiveIcon;
+      _favicon.type = effectiveIcon.startsWith('data:image/svg') ? 'image/svg+xml' : effectiveIcon.startsWith('data:image/png') ? 'image/png' : 'image/jpeg';
+    }
+    if (_manifestLink) {
+      const _manifestObj = {
+        short_name: "Nuri",
+        name: "Nuri - Tư Vấn Dinh Dưỡng",
+        description: "Chuyên gia dinh dưỡng ảo & Thực đơn cá nhân hóa của bạn",
+        icons: [{ src: effectiveIcon, type: effectiveIcon.startsWith('data:image/svg') ? 'image/svg+xml' : 'image/png', sizes: "192x192 512x512", purpose: "any maskable" }],
+        start_url: "./?mode=customer-profile",
+        background_color: "#f8fafc",
+        theme_color: "#10b981",
+        display: "standalone",
+        orientation: "portrait"
+      };
+      const _blob = new Blob([JSON.stringify(_manifestObj)], { type: "application/json" });
+      _manifestLink.href = URL.createObjectURL(_blob);
     }
   } catch (e) {}
 }
@@ -29994,16 +30862,22 @@ function checkAndShowPwaInstallBanner() {
   if (isDismissed === "true") return;
 
   const urlParams = new URLSearchParams(window.location.search);
-  const currentMode = urlParams.get("mode") || "landing";
+  const currentMode = urlParams.get("mode");
 
-  // Check target customer pages
-  const isCustomerPage = ["landing", "nutri-landing", "survey", "customer-portal", "customer-app", "customer-login"].includes(currentMode) || currentMode === null;
+  const profileView = document.getElementById("view-customer-profile");
+  const portalView = document.getElementById("view-customer-portal");
+  const isProfileActive = (profileView && !profileView.classList.contains("hidden")) || 
+                          (portalView && !portalView.classList.contains("hidden")) ||
+                          currentMode === "customer-profile" || 
+                          currentMode === "customer-portal";
 
-  if (isMobileDevice && isCustomerPage) {
-    const banner = document.getElementById("pwa-install-banner");
-    if (banner) {
+  const banner = document.getElementById("pwa-install-banner");
+  if (banner) {
+    if (isMobileDevice && isProfileActive) {
       updatePwaIconUI();
       banner.classList.remove("hidden");
+    } else {
+      banner.classList.add("hidden");
     }
   }
 }
@@ -30018,20 +30892,20 @@ function closePwaInstallBanner() {
 
 async function triggerPwaInstall() {
   if (window.deferredPwaPrompt) {
-    window.deferredPwaPrompt.prompt();
-    const { outcome } = await window.deferredPwaPrompt.userChoice;
-    if (outcome === 'accepted') {
-      if (typeof showToast === "function") showToast("Cảm ơn bạn đã cài đặt ứng dụng Nuri!", "success");
-      closePwaInstallBanner();
+    try {
+      window.deferredPwaPrompt.prompt();
+      const { outcome } = await window.deferredPwaPrompt.userChoice;
+      if (outcome === 'accepted') {
+        if (typeof showToast === "function") showToast("Cảm ơn bạn đã cài đặt ứng dụng Nuri!", "success");
+        closePwaInstallBanner();
+      }
+      window.deferredPwaPrompt = null;
+    } catch (e) {
+      console.error("PWA Install error:", e);
     }
-    window.deferredPwaPrompt = null;
   } else {
-    // iOS Safari or browser without direct prompt support
-    const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
-    if (isIOS) {
-      alert("Để cài đặt Nuri trên iPhone/iPad:\n\n1. Chạm vào nút Chia sẻ (biểu tượng mũi tên đi lên ở góc màn hình)\n2. Cuộn xuống và chọn 'Thêm vào Màn hình chính' (Add to Home Screen)\n3. Nhấn 'Thêm'");
-    } else {
-      alert("Để cài đặt Nuri vào màn hình điện thoại:\n\n1. Bấm nút Menu (3 dấu chấm) trên trình duyệt\n2. Chọn 'Thêm vào màn hình chính' (Add to Home Screen) hoặc 'Cài đặt ứng dụng'.");
+    if (typeof showToast === "function") {
+      showToast("Đang kết nối trình cài đặt ứng dụng Nuri...", "info");
     }
   }
 }
@@ -30059,17 +30933,17 @@ function setPortalShowcaseStep(stepIdx) {
   for (let i = 0; i < 4; i++) {
     const btn = document.getElementById(`portal-step-btn-${i}`);
     if (btn) {
-      const numBadge = btn.querySelector('.w-9');
-      const titleSpan = btn.querySelector('.text-xs');
+      const numBadge = btn.querySelector('.w-11') || btn.querySelector('.w-9') || btn.querySelector('div');
+      const titleSpan = btn.querySelector('.text-\\[15\\.5px\\]') || btn.querySelector('.text-xs') || btn.querySelectorAll('span')[0];
 
       if (i === stepIdx) {
         btn.className = "portal-step-card cursor-pointer p-3 rounded-2xl bg-white/10 border border-emerald-500/60 shadow-lg shadow-emerald-500/10 transition-all flex flex-col items-center text-center group scale-105";
-        if (numBadge) numBadge.className = "w-9 h-9 rounded-xl bg-emerald-500 text-white flex items-center justify-center font-bold text-sm mb-2 shadow-md";
-        if (titleSpan) titleSpan.className = "text-xs font-bold text-emerald-300 leading-snug";
+        if (numBadge) numBadge.className = "w-11 h-11 rounded-xl bg-emerald-500 text-white flex items-center justify-center font-bold text-[18px] mb-2 shadow-md";
+        if (titleSpan) titleSpan.className = "text-[15.5px] font-bold text-emerald-300 leading-snug";
       } else {
         btn.className = "portal-step-card cursor-pointer p-3 rounded-2xl bg-white/5 hover:bg-white/15 border border-white/10 transition-all flex flex-col items-center text-center group";
-        if (numBadge) numBadge.className = "w-9 h-9 rounded-xl bg-slate-700 text-slate-300 flex items-center justify-center font-bold text-sm mb-2 group-hover:scale-110 transition-transform";
-        if (titleSpan) titleSpan.className = "text-xs font-bold text-slate-300 leading-snug";
+        if (numBadge) numBadge.className = "w-11 h-11 rounded-xl bg-slate-700 text-slate-300 flex items-center justify-center font-bold text-[18px] mb-2 group-hover:scale-110 transition-transform";
+        if (titleSpan) titleSpan.className = "text-[15.5px] font-bold text-slate-300 leading-snug";
       }
     }
   }
@@ -30088,6 +30962,93 @@ function setPortalShowcaseStep(stepIdx) {
     }
   }
 }
+
+function toggleCustomerPortalBanner() {
+  const collapsedBar = document.getElementById("customer-portal-banner-collapsed");
+  const expandedPanel = document.getElementById("customer-portal-banner-expanded");
+  if (collapsedBar && expandedPanel) {
+    collapsedBar.classList.toggle("hidden");
+    expandedPanel.classList.toggle("hidden");
+  }
+}
+window.toggleCustomerPortalBanner = toggleCustomerPortalBanner;
+
+let currentNutritionAdvisoryStep = 0;
+let isNutritionAdvisoryAutoPlay = true;
+let nutritionAdvisoryTimer = null;
+
+function toggleNutritionAdvisoryBanner() {
+  const collapsedBar = document.getElementById("nutrition-advisory-banner-collapsed");
+  const expandedPanel = document.getElementById("nutrition-advisory-banner-expanded");
+  if (collapsedBar && expandedPanel) {
+    collapsedBar.classList.toggle("hidden");
+    expandedPanel.classList.toggle("hidden");
+    if (!expandedPanel.classList.contains("hidden")) {
+      startNutritionAdvisoryAutoPlay();
+    }
+  }
+}
+window.toggleNutritionAdvisoryBanner = toggleNutritionAdvisoryBanner;
+
+function switchNutritionAdvisoryStep(index) {
+  currentNutritionAdvisoryStep = index;
+
+  document.querySelectorAll(".nutrition-step-card").forEach((card, idx) => {
+    const isCurrent = idx === index;
+    card.className = isCurrent
+      ? "nutrition-step-card cursor-pointer p-3 rounded-2xl bg-white/10 hover:bg-white/20 border border-teal-500/50 transition-all flex flex-col items-center text-center group shadow-md"
+      : "nutrition-step-card cursor-pointer p-3 rounded-2xl bg-white/5 hover:bg-white/15 border border-white/10 transition-all flex flex-col items-center text-center group";
+    
+    const badge = card.querySelector("div");
+    if (badge) {
+      badge.className = isCurrent
+        ? "w-11 h-11 rounded-xl bg-teal-500 text-slate-950 flex items-center justify-center font-black text-[18px] mb-2 group-hover:scale-110 transition-transform shadow-md"
+        : "w-11 h-11 rounded-xl bg-slate-800 text-slate-300 flex items-center justify-center font-black text-[18px] mb-2 group-hover:scale-110 transition-transform";
+    }
+
+    const titleSpan = card.querySelector("span:nth-of-type(1)");
+    if (titleSpan) {
+      titleSpan.className = isCurrent
+        ? "text-[14.5px] font-bold text-white leading-snug"
+        : "text-[14.5px] font-bold text-slate-300 leading-snug";
+    }
+  });
+
+  document.querySelectorAll(".nutrition-showcase-panel").forEach((panel, idx) => {
+    if (idx === index) {
+      panel.classList.remove("hidden");
+    } else {
+      panel.classList.add("hidden");
+    }
+  });
+}
+window.switchNutritionAdvisoryStep = switchNutritionAdvisoryStep;
+
+function startNutritionAdvisoryAutoPlay() {
+  if (nutritionAdvisoryTimer) clearInterval(nutritionAdvisoryTimer);
+  nutritionAdvisoryTimer = setInterval(() => {
+    if (!isNutritionAdvisoryAutoPlay) return;
+    currentNutritionAdvisoryStep = (currentNutritionAdvisoryStep + 1) % 4;
+    switchNutritionAdvisoryStep(currentNutritionAdvisoryStep);
+  }, 3500);
+}
+
+function toggleNutritionAdvisoryAutoPlay() {
+  isNutritionAdvisoryAutoPlay = !isNutritionAdvisoryAutoPlay;
+  const btn = document.getElementById("btn-nutrition-advisory-autoplay");
+  if (btn) {
+    if (isNutritionAdvisoryAutoPlay) {
+      btn.innerHTML = '<i class="fa-solid fa-pause"></i> Tự động chuyển bước';
+      btn.classList.remove("bg-rose-500/20", "text-rose-300", "border-rose-500/30");
+      btn.classList.add("bg-white/10", "text-slate-200", "border-white/10");
+    } else {
+      btn.innerHTML = '<i class="fa-solid fa-play"></i> Tự động chuyển bước (Đã dừng)';
+      btn.classList.remove("bg-white/10", "text-slate-200", "border-white/10");
+      btn.classList.add("bg-rose-500/20", "text-rose-300", "border-rose-500/30");
+    }
+  }
+}
+window.toggleNutritionAdvisoryAutoPlay = toggleNutritionAdvisoryAutoPlay;
 
 function startPortalShowcaseAutoPlay() {
   if (portalShowcaseTimer) clearInterval(portalShowcaseTimer);
@@ -30128,6 +31089,8 @@ document.addEventListener("DOMContentLoaded", () => {
   setTimeout(() => {
     setPortalShowcaseStep(0);
     startPortalShowcaseAutoPlay();
+    switchNutritionAdvisoryStep(0);
+    startNutritionAdvisoryAutoPlay();
   }, 1200);
 });
 
@@ -30172,8 +31135,20 @@ document.addEventListener("DOMContentLoaded", () => {
           return bannerTexts[id] || defaultVal;
         }
 
-        const bannerImgTop = settingsObj.bannerImgTop || "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=600&q=80";
-        const bannerImgBottom = settingsObj.bannerImgBottom || "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=600&q=80";
+        const bannerImages = settingsObj.bannerImages || {};
+        const bannerImgTop =
+          (bannerImages["banner-top"] && typeof bannerImages["banner-top"] === "string" && !bannerImages["banner-top"].startsWith("IDB:"))
+            ? bannerImages["banner-top"]
+            : settingsObj.bannerImgTop ||
+              bannerImages.top ||
+              "https://images.unsplash.com/photo-1543362906-acfc16c67564?q=80&w=600&auto=format&fit=crop";
+
+        const bannerImgBottom =
+          (bannerImages["banner-bottom"] && typeof bannerImages["banner-bottom"] === "string" && !bannerImages["banner-bottom"].startsWith("IDB:"))
+            ? bannerImages["banner-bottom"]
+            : settingsObj.bannerImgBottom ||
+              bannerImages.bottom ||
+              "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?q=80&w=600&auto=format&fit=crop";
 
         return `
           <div id="user-grand-opening-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 opacity-0 pointer-events-none transition-opacity duration-500" onclick="if(event.target === this) window.closeGrandOpeningPopup()">
@@ -30219,20 +31194,26 @@ document.addEventListener("DOMContentLoaded", () => {
                             <div class="flex items-center justify-start gap-2 md:gap-4">
                               <!-- Day -->
                               <div class="bg-[#1a3a2a] text-white rounded-2xl w-14 h-14 md:w-20 md:h-20 flex flex-col items-center justify-center shadow-md border border-[#2a4a3a] relative overflow-hidden group">
-                                <span id="user-banner-cd-day" class="text-xl md:text-3xl font-black text-white relative z-10">102</span>
+                                <span id="user-banner-cd-day" class="text-xl md:text-3xl font-black text-white relative z-10">00</span>
                                 <span class="text-[9px] md:text-xs font-bold mt-0.5 text-emerald-200 relative z-10">NGÀY</span>
                               </div>
                               <span class="text-xl md:text-3xl font-black text-[#1a3a2a] animate-pulse pb-2">:</span>
                               <!-- Hour -->
                               <div class="bg-[#1a3a2a] text-white rounded-2xl w-14 h-14 md:w-20 md:h-20 flex flex-col items-center justify-center shadow-md border border-[#2a4a3a] relative overflow-hidden group">
-                                <span id="user-banner-cd-hour" class="text-xl md:text-3xl font-black text-white relative z-10">07</span>
+                                <span id="user-banner-cd-hour" class="text-xl md:text-3xl font-black text-white relative z-10">00</span>
                                 <span class="text-[9px] md:text-xs font-bold mt-0.5 text-emerald-200 relative z-10">GIỜ</span>
                               </div>
                               <span class="text-xl md:text-3xl font-black text-[#1a3a2a] animate-pulse pb-2">:</span>
                               <!-- Minute -->
                               <div class="bg-[#1a3a2a] text-white rounded-2xl w-14 h-14 md:w-20 md:h-20 flex flex-col items-center justify-center shadow-md border border-[#2a4a3a] relative overflow-hidden group">
-                                <span id="user-banner-cd-minute" class="text-xl md:text-3xl font-black text-white relative z-10">13</span>
+                                <span id="user-banner-cd-minute" class="text-xl md:text-3xl font-black text-white relative z-10">00</span>
                                 <span class="text-[9px] md:text-xs font-bold mt-0.5 text-emerald-200 relative z-10">PHÚT</span>
+                              </div>
+                              <span class="text-xl md:text-3xl font-black text-[#1a3a2a] animate-pulse pb-2">:</span>
+                              <!-- Second -->
+                              <div class="bg-[#1a3a2a] text-white rounded-2xl w-14 h-14 md:w-20 md:h-20 flex flex-col items-center justify-center shadow-md border border-[#2a4a3a] relative overflow-hidden group">
+                                <span id="user-banner-cd-second" class="text-xl md:text-3xl font-black text-yellow-400 relative z-10">00</span>
+                                <span class="text-[9px] md:text-xs font-bold mt-0.5 text-yellow-200/80 relative z-10">GIÂY</span>
                               </div>
                             </div>
                           </div>
@@ -30292,6 +31273,49 @@ document.addEventListener("DOMContentLoaded", () => {
         const existing = document.getElementById("user-grand-opening-modal");
         if (existing) existing.remove();
         document.body.insertAdjacentHTML("beforeend", window.renderGrandOpeningModalHTML());
+        if (typeof window.loadBannerImagesFromStorage === "function") {
+          window.loadBannerImagesFromStorage();
+        }
+      };
+
+      window.playGrandOpeningChime = function() {
+        try {
+          if (typeof playNotificationSound === "function") {
+            playNotificationSound();
+          }
+        } catch(e) {}
+        try {
+          const AudioContext = window.AudioContext || window.webkitAudioContext;
+          if (AudioContext) {
+            const ctx = new AudioContext();
+            if (ctx.state === "suspended") {
+              ctx.resume();
+            }
+            const now = ctx.currentTime;
+            const osc1 = ctx.createOscillator();
+            const gain1 = ctx.createGain();
+            osc1.type = "sine";
+            osc1.frequency.setValueAtTime(523.25, now);
+            osc1.frequency.exponentialRampToValueAtTime(659.25, now + 0.15);
+            gain1.gain.setValueAtTime(0.35, now);
+            gain1.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+            osc1.connect(gain1);
+            gain1.connect(ctx.destination);
+            osc1.start(now);
+            osc1.stop(now + 0.5);
+
+            const osc2 = ctx.createOscillator();
+            const gain2 = ctx.createGain();
+            osc2.type = "sine";
+            osc2.frequency.setValueAtTime(783.99, now + 0.12);
+            gain2.gain.setValueAtTime(0.35, now + 0.12);
+            gain2.gain.exponentialRampToValueAtTime(0.01, now + 0.6);
+            osc2.connect(gain2);
+            gain2.connect(ctx.destination);
+            osc2.start(now + 0.12);
+            osc2.stop(now + 0.6);
+          }
+        } catch(e) {}
       };
 
       window.openGrandOpeningPopup = function () {
@@ -30310,12 +31334,10 @@ document.addEventListener("DOMContentLoaded", () => {
           modal.classList.remove("opacity-0", "pointer-events-none");
           content.classList.remove("scale-90", "translate-y-8");
 
-          // Play chime sound effect
-          try {
-            const audio = new Audio("https://assets.mixkit.co/active_storage/sfx/2018/2018-preview.mp3");
-            audio.volume = 0.6;
-            audio.play().catch((e) => console.log("Audio play prevented:", e));
-          } catch (e) {}
+          // Play chime sound effect with 0ms latency
+          if (typeof window.playGrandOpeningChime === "function") {
+            window.playGrandOpeningChime();
+          }
         }
       };
 
@@ -30325,42 +31347,43 @@ document.addEventListener("DOMContentLoaded", () => {
         const showBanner = settingsObj.bannerGrandOpeningEnabled !== false;
 
         if (!showBanner) return;
-        if (window.hasShownGrandOpeningPopupHomepage) return;
+        if (window.hasShownGrandOpeningPopupHomepage || window.hasShownGrandOpeningPopup) return;
 
-        const pkgSection = document.getElementById("section-dang-ki-goi");
-        if (!pkgSection) return;
+        const targetSection = document.getElementById("home-self-mix-banner") || document.getElementById("section-dang-ki-goi");
+        if (!targetSection) return;
 
         const observer = new IntersectionObserver(
           (entries) => {
             if (entries[0].isIntersecting) {
-              window.hasShownGrandOpeningPopupHomepage = true;
-              if (typeof window.ensureGrandOpeningModalInDOM === "function") {
-                window.ensureGrandOpeningModalInDOM();
-              }
-              setTimeout(() => {
+              if (!window.hasShownGrandOpeningPopupHomepage && !window.hasShownGrandOpeningPopup) {
+                window.hasShownGrandOpeningPopupHomepage = true;
+                window.hasShownGrandOpeningPopup = true;
+                if (typeof window.ensureGrandOpeningModalInDOM === "function") {
+                  window.ensureGrandOpeningModalInDOM();
+                }
                 if (typeof window.openGrandOpeningPopup === "function") {
                   window.openGrandOpeningPopup();
                 }
-              }, 1800);
+              }
               observer.disconnect();
             }
           },
-          { threshold: 0.15 }
+          { threshold: 0.2 }
         );
 
-        observer.observe(pkgSection);
+        observer.observe(targetSection);
       };
 
-      // Trigger observer on load and scroll
+      // Register observer on load & scroll
       if (document.readyState === "loading") {
         document.addEventListener("DOMContentLoaded", () => {
-          setTimeout(window.setupHomepageGrandOpeningObserver, 800);
+          setTimeout(window.setupHomepageGrandOpeningObserver, 300);
         });
       } else {
-        setTimeout(window.setupHomepageGrandOpeningObserver, 800);
+        setTimeout(window.setupHomepageGrandOpeningObserver, 300);
       }
       window.addEventListener("scroll", () => {
-        if (!window.hasShownGrandOpeningPopupHomepage) {
+        if (!window.hasShownGrandOpeningPopupHomepage && !window.hasShownGrandOpeningPopup) {
           window.setupHomepageGrandOpeningObserver();
         }
       }, { passive: true });
@@ -30550,6 +31573,36 @@ document.addEventListener("DOMContentLoaded", () => {
       // DAILY QUEST ACTIONS & SMOOTH SCROLLING
       // ==========================================
       window.triggerQuestShare = function () {
+        const user = getCurrentUser();
+        if (!user) return;
+        if (!hasActiveSubscription(user)) {
+          showToast("⚠️ Tài khoản cần có gói đăng ký còn hiệu lực để nhận điểm thưởng nhiệm vụ!", "warning");
+          return;
+        }
+
+        const nowTs = Date.now();
+        const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
+        let isDone = false;
+        if (user.lastShareRewardTime && (nowTs - user.lastShareRewardTime < SEVEN_DAYS_MS)) {
+          isDone = true;
+        } else {
+          const filtered = (user.shareHistory || []).filter((ts) => isSameCalendarWeek(ts, nowTs));
+          if (filtered.length > 0) isDone = true;
+        }
+
+        if (isDone) {
+          showToast("ℹ️ Bạn đã nhận điểm thưởng chia sẻ tuần này rồi.");
+          return;
+        }
+
+        user.lastShareRewardTime = nowTs;
+        user.points = (user.points || 0) + 20;
+        if (!user.shareHistory) user.shareHistory = [];
+        user.shareHistory.push(nowTs);
+        updateCurrentUser(user);
+        showToast("🎉 Bạn đã chia sẻ thành tích và nhận +20 điểm thưởng!");
+        updateProfileUI();
+
         const el = document.getElementById("profile-streak-container");
         if (el) {
           el.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -30559,6 +31612,27 @@ document.addEventListener("DOMContentLoaded", () => {
       };
 
       window.triggerQuestWeight = function () {
+        const user = getCurrentUser();
+        if (!user) return;
+        if (!hasActiveSubscription(user)) {
+          showToast("⚠️ Tài khoản cần có gói đăng ký còn hiệu lực để nhận điểm thưởng nhiệm vụ!", "warning");
+          return;
+        }
+
+        const nowTs = Date.now();
+        const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
+        let isDone = false;
+        if (user.lastBodyUpdateRewardTime && (nowTs - user.lastBodyUpdateRewardTime < SEVEN_DAYS_MS)) {
+          isDone = true;
+        } else if (user.lastBmiUpdateDate && isSameCalendarWeek(new Date(user.lastBmiUpdateDate).getTime(), nowTs)) {
+          isDone = true;
+        }
+
+        if (isDone) {
+          showToast("ℹ️ Bạn đã nhận điểm thưởng cập nhật cân nặng tuần này rồi.");
+          return;
+        }
+
         const el = document.getElementById("personal-analysis-btn");
         if (el) {
           el.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -30568,9 +31642,24 @@ document.addEventListener("DOMContentLoaded", () => {
       };
 
       window.triggerQuestCheckIn = function () {
-        if (typeof handleDailyCheckIn === "function") {
-          handleDailyCheckIn();
+        const user = getCurrentUser();
+        if (!user) return;
+        if (!hasActiveSubscription(user)) {
+          showToast("⚠️ Tài khoản cần có gói đăng ký còn hiệu lực để nhận điểm thưởng nhiệm vụ!", "warning");
+          return;
         }
+
+        const todayStr = new Date().toISOString().split("T")[0];
+        if (user.lastCheckInDate === todayStr) {
+          showToast("ℹ️ Bạn đã hoàn thành điểm danh hôm nay rồi.");
+          return;
+        }
+
+        user.lastCheckInDate = todayStr;
+        user.points = (user.points || 0) + 5;
+        updateCurrentUser(user);
+        showToast("🎉 Bạn đã điểm danh thành công và nhận +5 điểm thưởng!");
+        updateProfileUI();
       };
 
       // ==========================================
@@ -30859,6 +31948,719 @@ Không kèm bối cảnh hay markdown khác.`;
       };
 
       window.updateNutritionDashboard = updateNutritionDashboard;
+
+      // ==========================================
+      // SKELETON VS. SPINNER ACCESSIBILITY SYSTEM
+      // ==========================================
+      window.showGlobalSpinner = function (message = "Đang tải dữ liệu...") {
+        let el = document.getElementById("global-page-spinner");
+        if (!el) {
+          el = document.createElement("div");
+          el.id = "global-page-spinner";
+          el.className = "fixed inset-0 z-[120] hidden items-center justify-center bg-slate-900/40 backdrop-blur-xs transition-opacity";
+          el.setAttribute("role", "status");
+          el.setAttribute("aria-busy", "true");
+          el.innerHTML = `
+            <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-2xl flex flex-col items-center gap-3 border border-slate-100 dark:border-slate-700 min-w-[180px]">
+              <div class="spinner-status w-10 h-10 border-4 border-slate-200 border-t-emerald-600"></div>
+              <span class="text-xs font-bold text-slate-700 dark:text-slate-200" id="global-spinner-text">${message}</span>
+              <span class="sr-only">Vui lòng chờ trong giây lát</span>
+            </div>
+          `;
+          document.body.appendChild(el);
+        }
+        const textEl = document.getElementById("global-spinner-text");
+        if (textEl) textEl.innerText = message;
+        el.setAttribute("aria-busy", "true");
+        el.classList.remove("hidden");
+        el.classList.add("flex");
+      };
+
+      window.hideGlobalSpinner = function () {
+        const el = document.getElementById("global-page-spinner");
+        if (el) {
+          el.setAttribute("aria-busy", "false");
+          el.classList.add("hidden");
+          el.classList.remove("flex");
+        }
+      };
+
+      window.renderPackageGridSkeleton = function (containerEl, count = 6) {
+        if (typeof containerEl === "string") {
+          containerEl = document.getElementById(containerEl);
+        }
+        if (!containerEl) return;
+
+        containerEl.setAttribute("aria-busy", "true");
+        let html = "";
+        for (let i = 0; i < count; i++) {
+          html += `
+            <div class="bg-white dark:bg-slate-800 rounded-3xl p-5 border border-slate-100 dark:border-slate-700 shadow-sm flex flex-col justify-between h-full animate-pulse" aria-hidden="true">
+              <div>
+                <div class="skeleton-box w-full aspect-[16/9] rounded-2xl mb-4"></div>
+                <div class="flex items-center justify-between mb-2">
+                  <div class="skeleton-box h-4 w-20 rounded-full"></div>
+                  <div class="skeleton-box h-4 w-12 rounded-full"></div>
+                </div>
+                <div class="skeleton-box h-6 w-3/4 mb-3 rounded-lg"></div>
+                <div class="skeleton-box h-4 w-full mb-2 rounded"></div>
+                <div class="skeleton-box h-4 w-2/3 mb-4 rounded"></div>
+              </div>
+              <div class="pt-4 border-t border-slate-100 dark:border-slate-700/50 flex items-center justify-between">
+                <div>
+                  <div class="skeleton-box h-3 w-12 mb-1 rounded"></div>
+                  <div class="skeleton-box h-6 w-24 rounded-lg"></div>
+                </div>
+                <div class="skeleton-box h-10 w-28 rounded-xl"></div>
+              </div>
+            </div>
+          `;
+        }
+        containerEl.innerHTML = html;
+      };
+
+      window.renderSurveyResultSkeleton = function (containerEl) {
+        if (typeof containerEl === "string") {
+          containerEl = document.getElementById(containerEl);
+        }
+        if (!containerEl) return;
+
+        containerEl.setAttribute("aria-busy", "true");
+        containerEl.innerHTML = `
+          <div class="bg-white dark:bg-slate-800 rounded-3xl p-6 border border-slate-100 dark:border-slate-700 shadow-md space-y-6 animate-pulse" aria-hidden="true">
+            <div class="flex items-center gap-4">
+              <div class="skeleton-box w-16 h-16 rounded-2xl shrink-0"></div>
+              <div class="flex-1 space-y-2">
+                <div class="skeleton-box h-6 w-1/2 rounded-lg"></div>
+                <div class="skeleton-box h-4 w-3/4 rounded"></div>
+              </div>
+            </div>
+            <div class="grid grid-cols-4 gap-3 py-4 border-y border-slate-100 dark:border-slate-700">
+              <div class="skeleton-box h-12 rounded-xl"></div>
+              <div class="skeleton-box h-12 rounded-xl"></div>
+              <div class="skeleton-box h-12 rounded-xl"></div>
+              <div class="skeleton-box h-12 rounded-xl"></div>
+            </div>
+            <div class="space-y-3">
+              <div class="skeleton-box h-4 w-full rounded"></div>
+              <div class="skeleton-box h-4 w-5/6 rounded"></div>
+            </div>
+          </div>
+        `;
+      };
+
+      window.markLoadingComplete = function (containerEl) {
+        if (typeof containerEl === "string") {
+          containerEl = document.getElementById(containerEl);
+        }
+        if (containerEl) {
+          containerEl.setAttribute("aria-busy", "false");
+        }
+      };
+
+// ==========================================
+// TÍNH NĂNG GIA HẠN GÓI ĂN TRANG CÁ NHÂN
+// ==========================================
+
+window.openRenewSubscriptionModal = function() {
+  const modal = document.getElementById("modal-renew-subscription");
+  if (!modal) return;
+
+  const savedUserStr = localStorage.getItem("nutriadmin_current_user");
+  let user = null;
+  if (savedUserStr) {
+    try { user = JSON.parse(savedUserStr); } catch (e) {}
+  }
+  if (!user && window.currentUser) {
+    user = window.currentUser;
+  }
+
+  if (!user) {
+    if (typeof showToast === "function") showToast("Không tìm thấy thông tin tài khoản!", "error");
+    return;
+  }
+
+  const pkgName = user.package ? (typeof resolvePackageName === "function" ? resolvePackageName(user.package) : user.package) : "Gói ăn hiện tại";
+  const sizeName = user.size === "power" ? "Power (L)" : user.size === "balance" ? "Balance (M)" : "Lean (S)";
+  const descEl = document.getElementById("renew-current-pkg-desc");
+  if (descEl) {
+    descEl.innerHTML = `Gói <strong>${pkgName}</strong> • Size: <strong>${sizeName}</strong>`;
+  }
+
+  const optCurrent = document.getElementById("renew-opt-current");
+  if (optCurrent) optCurrent.checked = true;
+  if (typeof switchRenewOption === "function") switchRenewOption("current");
+  if (typeof showRenewSelectionStep === "function") showRenewSelectionStep();
+
+  modal.classList.remove("hidden");
+  modal.classList.add("flex");
+};
+
+window.closeRenewSubscriptionModal = function() {
+  const modal = document.getElementById("modal-renew-subscription");
+  if (modal) {
+    modal.classList.add("hidden");
+    modal.classList.remove("flex");
+  }
+};
+
+window.switchRenewOption = function(option) {
+  const customFields = document.getElementById("renew-custom-fields");
+  const currentLabel = document.getElementById("renew-opt-current-label");
+  const customLabel = document.getElementById("renew-opt-custom-label");
+
+  if (option === "current") {
+    if (customFields) customFields.classList.add("hidden");
+    if (currentLabel) {
+      currentLabel.className = "relative flex items-start p-6 rounded-2xl border-2 cursor-pointer transition-all border-indigo-600 bg-indigo-50/40";
+    }
+    if (customLabel) {
+      customLabel.className = "relative flex items-start p-6 rounded-2xl border-2 cursor-pointer transition-all border-slate-200 hover:border-slate-300";
+    }
+  } else {
+    if (customFields) customFields.classList.remove("hidden");
+    if (currentLabel) {
+      currentLabel.className = "relative flex items-start p-6 rounded-2xl border-2 cursor-pointer transition-all border-slate-200 hover:border-slate-300";
+    }
+    if (customLabel) {
+      customLabel.className = "relative flex items-start p-6 rounded-2xl border-2 cursor-pointer transition-all border-indigo-600 bg-indigo-50/40";
+    }
+  }
+};
+
+window.showRenewSelectionStep = function() {
+  const step1 = document.getElementById("renew-step-1");
+  const step2 = document.getElementById("renew-step-2");
+  const btnNext = document.getElementById("btn-renew-next");
+  const btnConfirm = document.getElementById("btn-renew-confirm");
+  const btnCancel = document.getElementById("btn-renew-cancel");
+  const btnBack = document.getElementById("btn-renew-back");
+  const subtitle = document.getElementById("renew-modal-subtitle");
+
+  if (step1) step1.classList.remove("hidden");
+  if (step2) step2.classList.add("hidden");
+  if (btnNext) btnNext.classList.remove("hidden");
+  if (btnConfirm) btnConfirm.classList.add("hidden");
+  if (btnCancel) btnCancel.classList.remove("hidden");
+  if (btnBack) btnBack.classList.add("hidden");
+  if (subtitle) subtitle.innerText = "Bước 1: Chọn gói gia hạn";
+};
+
+window.switchRenewPaymentTab = function(type) {
+  const tabBank = document.getElementById("tab-renew-bank");
+  const tabMomo = document.getElementById("tab-renew-momo");
+  const panelBank = document.getElementById("panel-renew-bank");
+  const panelMomo = document.getElementById("panel-renew-momo");
+
+  if (type === "bank") {
+    if (tabBank) tabBank.className = "flex-1 py-4 rounded-xl font-bold text-[24px] bg-blue-600 text-white transition-colors flex items-center justify-center gap-2 shadow-sm";
+    if (tabMomo) tabMomo.className = "flex-1 py-4 rounded-xl font-bold text-[24px] bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors flex items-center justify-center gap-2";
+    if (panelBank) panelBank.classList.remove("hidden");
+    if (panelMomo) panelMomo.classList.add("hidden");
+  } else {
+    if (tabBank) tabBank.className = "flex-1 py-4 rounded-xl font-bold text-[24px] bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors flex items-center justify-center gap-2";
+    if (tabMomo) tabMomo.className = "flex-1 py-4 rounded-xl font-bold text-[24px] bg-pink-600 text-white transition-colors flex items-center justify-center gap-2 shadow-sm";
+    if (panelBank) panelBank.classList.add("hidden");
+    if (panelMomo) panelMomo.classList.remove("hidden");
+  }
+};
+
+window.showRenewPaymentStep = function() {
+  const savedUserStr = localStorage.getItem("nutriadmin_current_user");
+  let user = null;
+  if (savedUserStr) {
+    try { user = JSON.parse(savedUserStr); } catch (e) {}
+  }
+  if (!user && window.currentUser) user = window.currentUser;
+
+  const isCurrent = document.getElementById("renew-opt-current")?.checked;
+  let selectedSummary = "";
+
+  if (isCurrent) {
+    const pkgName = user?.package ? (typeof resolvePackageName === "function" ? resolvePackageName(user.package) : user.package) : "Gói ăn hiện tại";
+    const sizeName = user?.size === "power" ? "Power (L)" : user?.size === "balance" ? "Balance (M)" : "Lean (S)";
+    selectedSummary = `Gói hiện tại: ${pkgName} (${sizeName})`;
+  } else {
+    const pkgName = document.getElementById("renew-pkg-name")?.value || "Gói ăn mới";
+    const meals = document.getElementById("renew-pkg-meals")?.value || "2";
+    const sizeVal = document.getElementById("renew-pkg-size")?.value || "balance";
+    const sizeName = sizeVal === "power" ? "Power (L)" : sizeVal === "balance" ? "Balance (M)" : "Lean (S)";
+    selectedSummary = `Gói mới: ${pkgName} • ${meals} bữa/ngày • Size: ${sizeName}`;
+  }
+
+  const summaryText = document.getElementById("renew-summary-text");
+  if (summaryText) summaryText.innerText = selectedSummary;
+
+  const settingsStr = localStorage.getItem("nutriadmin_settings");
+  let settings = {};
+  if (settingsStr) {
+    try { settings = JSON.parse(settingsStr); } catch (e) {}
+  }
+
+  const custName = user?.name || "Khach Hang";
+  const custPhone = user?.phone || "";
+  const transferContentStr = `${custName} - ${custPhone} Gia han goi an`;
+
+  const transferEl = document.getElementById("renew-transfer-content");
+  if (transferEl) transferEl.innerText = transferContentStr;
+
+  const bankImg = document.getElementById("renew-bank-qr-img");
+  const bankInfo = document.getElementById("renew-bank-info");
+  const isBankQrEmpty = !settings.paymentBankQr || settings.paymentBankQr.includes("placeholder.com") || settings.paymentBankQr.includes("via.placeholder.com");
+  if (bankImg) {
+    if (isBankQrEmpty) {
+      bankImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=` + encodeURIComponent(`Ngan hang: ${settings.paymentBankInfo || "Chuyen khoan"}\nNoi dung: ${transferContentStr}`);
+    } else {
+      bankImg.src = settings.paymentBankQr;
+    }
+  }
+  if (bankInfo) {
+    bankInfo.innerText = settings.paymentBankInfo ? `Chuyển khoản: ${settings.paymentBankInfo}` : "Quét mã Ngân hàng để thanh toán";
+  }
+
+  const momoImg = document.getElementById("renew-momo-qr-img");
+  const momoInfo = document.getElementById("renew-momo-info");
+  const isMomoQrEmpty = !settings.paymentMomoQr || settings.paymentMomoQr.includes("placeholder.com") || settings.paymentMomoQr.includes("via.placeholder.com");
+  if (momoImg) {
+    if (isMomoQrEmpty) {
+      momoImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=` + encodeURIComponent(`MoMo: ${settings.paymentMomoInfo || "Vi MoMo"}\nNoi dung: ${transferContentStr}`);
+    } else {
+      momoImg.src = settings.paymentMomoQr;
+    }
+  }
+  if (momoInfo) {
+    momoInfo.innerText = settings.paymentMomoInfo ? `Chuyển MoMo: ${settings.paymentMomoInfo}` : "Quét mã MoMo để thanh toán";
+  }
+
+  switchRenewPaymentTab("bank");
+
+  const step1 = document.getElementById("renew-step-1");
+  const step2 = document.getElementById("renew-step-2");
+  const btnNext = document.getElementById("btn-renew-next");
+  const btnConfirm = document.getElementById("btn-renew-confirm");
+  const btnCancel = document.getElementById("btn-renew-cancel");
+  const btnBack = document.getElementById("btn-renew-back");
+  const subtitle = document.getElementById("renew-modal-subtitle");
+
+  if (step1) step1.classList.add("hidden");
+  if (step2) step2.classList.remove("hidden");
+  if (btnNext) btnNext.classList.add("hidden");
+  if (btnConfirm) btnConfirm.classList.remove("hidden");
+  if (btnCancel) btnCancel.classList.add("hidden");
+  if (btnBack) btnBack.classList.remove("hidden");
+  if (subtitle) subtitle.innerText = "Bước 2: Thanh toán QR";
+};
+
+window.confirmRenewSubscription = function() {
+  const savedUserStr = localStorage.getItem("nutriadmin_current_user");
+  let user = null;
+  if (savedUserStr) {
+    try { user = JSON.parse(savedUserStr); } catch (e) {}
+  }
+  if (!user && window.currentUser) user = window.currentUser;
+
+  if (!user) {
+    if (typeof showToast === "function") showToast("Không tìm thấy thông tin tài khoản!", "error");
+    return;
+  }
+
+  const isCurrent = document.getElementById("renew-opt-current")?.checked;
+  let renewalDetails = {};
+
+  if (isCurrent) {
+    renewalDetails = {
+      type: "current",
+      package: user.package,
+      size: user.size,
+      requestedAt: new Date().toISOString()
+    };
+  } else {
+    renewalDetails = {
+      type: "custom",
+      packageName: document.getElementById("renew-pkg-name")?.value || "Gói mới",
+      meals: document.getElementById("renew-pkg-meals")?.value || "2",
+      size: document.getElementById("renew-pkg-size")?.value || "balance",
+      requestedAt: new Date().toISOString()
+    };
+  }
+
+  user.renewalPending = true;
+  user.renewalDetails = renewalDetails;
+  window.currentUser = user;
+  localStorage.setItem("nutriadmin_current_user", JSON.stringify(user));
+
+  const purStr = localStorage.getItem("nutriadmin_purchased_customers");
+  let customers = [];
+  if (purStr) {
+    try { customers = JSON.parse(purStr); } catch (e) {}
+  }
+  if ((!customers || customers.length === 0) && typeof purchasedCustomers !== "undefined" && Array.isArray(purchasedCustomers)) {
+    customers = [...purchasedCustomers];
+  }
+
+  let foundIndex = -1;
+  if (user) {
+    foundIndex = customers.findIndex(c => 
+      (c.id && user.id && String(c.id) === String(user.id)) ||
+      (c.phone && user.phone && String(c.phone).trim() === String(user.phone).trim()) ||
+      (c.name && user.name && String(c.name).trim().toLowerCase() === String(user.name).trim().toLowerCase())
+    );
+  }
+
+  if (foundIndex !== -1) {
+    customers[foundIndex].renewalPending = true;
+    customers[foundIndex].renewalDetails = renewalDetails;
+  } else {
+    const newCust = {
+      id: user.id || Date.now(),
+      name: user.name || "Khách hàng",
+      phone: user.phone || "",
+      package: user.package || "target_7",
+      size: user.size || "balance",
+      startDate: user.startDate || new Date().toISOString().split("T")[0],
+      endDate: user.endDate || new Date().toISOString().split("T")[0],
+      renewalPending: true,
+      renewalDetails: renewalDetails
+    };
+    customers.push(newCust);
+    foundIndex = customers.length - 1;
+  }
+
+  localStorage.setItem("nutriadmin_purchased_customers", JSON.stringify(customers));
+  if (typeof purchasedCustomers !== "undefined") {
+    purchasedCustomers = customers;
+  }
+
+  closeRenewSubscriptionModal();
+
+  // 1. Add notification to Admin header notification bell (persisted in localStorage)
+  const notifRefId = `renew-${user.id || Date.now()}`;
+  const onViewClickCode = `if (typeof switchView === "function") switchView("khach-hang"); if (typeof switchCustomerTab === "function") switchCustomerTab("purchased"); if (typeof openApproveRenewalModal === "function") openApproveRenewalModal('${user.id}');`;
+  if (typeof addAdminNotification === "function") {
+    addAdminNotification(
+      "order",
+      "Yêu cầu Gia hạn gói ăn",
+      `${user.name || "Khách hàng"} (${user.phone || ""}) vừa gửi yêu cầu gia hạn gói ăn.`,
+      notifRefId,
+      onViewClickCode
+    );
+  }
+
+  // 2. Trigger Realtime Notification for Admin if Admin view active
+  if (typeof triggerRealtimeNotification === "function") {
+    triggerRealtimeNotification(
+      "order",
+      "Yêu cầu Gia hạn gói ăn",
+      `${user.name || "Khách hàng"} (${user.phone || ""}) vừa gửi yêu cầu gia hạn gói ăn.`,
+      "Duyệt ngay",
+      () => {
+        if (typeof switchView === "function") switchView("khach-hang");
+        if (typeof switchCustomerTab === "function") switchCustomerTab("purchased");
+        if (typeof openApproveRenewalModal === "function") openApproveRenewalModal(user.id);
+      },
+      notifRefId
+    );
+  }
+
+  if (typeof showRenewThanksPopup === "function") {
+    showRenewThanksPopup();
+  } else if (typeof showToast === "function") {
+    showToast("Chờ Nuri xác nhận thanh toán và gia hạn gói bạn nhé!", "success");
+  }
+
+  if (typeof renderCustomerProfile === "function") {
+    renderCustomerProfile();
+  }
+};
+
+window.showRenewThanksPopup = function() {
+  const popup = document.getElementById("modal-renew-thanks-popup");
+  if (!popup) return;
+
+  const svgContainer = document.getElementById("renew-thanks-mascot-svg");
+  const img = document.getElementById("renew-thanks-mascot-img");
+  let frames = [];
+  if (
+    typeof mascotLoadedSequences !== "undefined" &&
+    mascotLoadedSequences["cam_on"] &&
+    mascotLoadedSequences["cam_on"].length > 0
+  ) {
+    frames = mascotLoadedSequences["cam_on"];
+  } else if (
+    typeof mascotLoadedSequences !== "undefined" &&
+    mascotLoadedSequences["vui_ve"] &&
+    mascotLoadedSequences["vui_ve"].length > 0
+  ) {
+    frames = mascotLoadedSequences["vui_ve"];
+  }
+
+  if (frames && frames.length > 0) {
+    if (svgContainer) svgContainer.classList.add("hidden");
+    if (img) {
+      img.classList.remove("hidden");
+      img.src = frames[0];
+    }
+  } else {
+    if (img) img.classList.add("hidden");
+    if (svgContainer) {
+      svgContainer.classList.remove("hidden");
+      let svgStr = typeof drawMascotSVG === "function" ? drawMascotSVG("cam_on", 0) : "";
+      if (svgStr) {
+        svgStr = svgStr.replace(
+          'class="w-40 h-40 filter drop-shadow-[0_0_20px_rgba(16,185,129,0.4)]"',
+          'class="w-full h-full drop-shadow-md"'
+        );
+        svgContainer.innerHTML = svgStr;
+      }
+    }
+  }
+
+  popup.classList.remove("hidden");
+  popup.classList.add("flex");
+
+  setTimeout(() => {
+    popup.classList.add("hidden");
+    popup.classList.remove("flex");
+  }, 2000);
+};
+
+
+// ==========================================
+// TÍNH NĂNG DUYỆT GIA HẠN GÓI (ADMIN)
+// ==========================================
+
+window.openApproveRenewalModal = function(identifier) {
+  const modal = document.getElementById("modal-approve-renewal");
+  if (!modal) return;
+
+  const purStr = localStorage.getItem("nutriadmin_purchased_customers");
+  let customers = [];
+  if (purStr) {
+    try { customers = JSON.parse(purStr); } catch (e) {}
+  }
+  if ((!customers || customers.length === 0) && typeof purchasedCustomers !== "undefined") {
+    customers = purchasedCustomers;
+  }
+
+  let cust = null;
+  if (identifier) {
+    cust = customers.find(c => 
+      String(c.id) === String(identifier) || 
+      (c.phone && String(c.phone).trim() === String(identifier).trim()) ||
+      (c.name && String(c.name).trim().toLowerCase() === String(identifier).trim().toLowerCase())
+    );
+  }
+  if (!cust) {
+    cust = customers.find(c => c.renewalPending === true);
+  }
+
+  if (!cust) {
+    if (typeof showToast === "function") showToast("Không tìm thấy dữ liệu khách hàng yêu cầu gia hạn!", "error");
+    return;
+  }
+
+  document.getElementById("approve-renewal-customer-id").value = cust.id;
+  document.getElementById("approve-cust-name").innerText = cust.name || "--";
+  document.getElementById("approve-cust-phone").innerText = cust.phone || "--";
+
+  const currPkgName = cust.package ? (typeof resolvePackageName === "function" ? resolvePackageName(cust.package) : cust.package) : "Gói ăn";
+  document.getElementById("approve-curr-pkg").innerText = currPkgName;
+
+  const startDateStr = cust.startDate ? new Date(cust.startDate).toLocaleDateString("vi-VN") : "";
+  const endDateStr = cust.endDate ? new Date(cust.endDate).toLocaleDateString("vi-VN") : "";
+  document.getElementById("approve-curr-dates").innerText = startDateStr && endDateStr ? `${startDateStr} - ${endDateStr}` : "";
+
+  const req = cust.renewalDetails || {};
+  const isCurrent = req.type === "current" || !req.type;
+
+  document.getElementById("approve-req-type").innerText = isCurrent ? "Gia hạn gói hiện tại" : "Đăng ký gói mới";
+  document.getElementById("approve-req-pkg-name").innerText = isCurrent ? currPkgName : (req.packageName || "--");
+
+  let reqDetailsText = "";
+  if (isCurrent) {
+    const sizeName = cust.size === "power" ? "Power (L)" : cust.size === "balance" ? "Balance (M)" : "Lean (S)";
+    reqDetailsText = `Size: ${sizeName}`;
+  } else {
+    const sizeName = req.size === "power" ? "Power (L)" : req.size === "balance" ? "Balance (M)" : "Lean (S)";
+    reqDetailsText = `${req.meals || "2"} bữa/ngày • Size: ${sizeName}`;
+  }
+  document.getElementById("approve-req-details").innerText = reqDetailsText;
+
+  const reqTime = req.requestedAt ? new Date(req.requestedAt).toLocaleString("vi-VN") : "Gần đây";
+  document.getElementById("approve-req-time").innerText = `Yêu cầu lúc: ${reqTime}`;
+
+  let today = new Date();
+  today.setHours(0,0,0,0);
+  let baseDate = new Date(today);
+  if (cust.endDate) {
+    const eDate = new Date(cust.endDate);
+    eDate.setHours(0,0,0,0);
+    if (eDate > baseDate) {
+      baseDate = new Date(eDate);
+    }
+  }
+
+  document.getElementById("approve-calc-start").innerText = baseDate.toLocaleDateString("vi-VN");
+
+  let weekdaysToAdd = 5;
+  const reqPkgStr = (isCurrent ? String(cust.package) : String(req.packageName)).toLowerCase();
+  if (reqPkgStr.includes("30") || reqPkgStr.includes("bứt phá") || reqPkgStr.includes("duy trì") || reqPkgStr.includes("20")) {
+    weekdaysToAdd = 22;
+  } else if (reqPkgStr.includes("10") || reqPkgStr.includes("14") || reqPkgStr.includes("2 tuần")) {
+    weekdaysToAdd = 10;
+  } else {
+    weekdaysToAdd = 5;
+  }
+
+  let projectedEnd = new Date(baseDate);
+  let addedDays = 0;
+  while (addedDays < weekdaysToAdd) {
+    projectedEnd.setDate(projectedEnd.getDate() + 1);
+    let day = projectedEnd.getDay();
+    if (day !== 0 && day !== 6) addedDays++;
+  }
+
+  document.getElementById("approve-calc-new-end").innerText = projectedEnd.toLocaleDateString("vi-VN");
+
+  modal.classList.remove("hidden");
+  modal.classList.add("flex");
+};
+
+window.closeApproveRenewalModal = function() {
+  const modal = document.getElementById("modal-approve-renewal");
+  if (modal) {
+    modal.classList.add("hidden");
+    modal.classList.remove("flex");
+  }
+};
+
+window.executeApproveRenewal = function() {
+  const customerId = document.getElementById("approve-renewal-customer-id")?.value;
+  if (!customerId) return;
+
+  const purStr = localStorage.getItem("nutriadmin_purchased_customers");
+  let customers = [];
+  if (purStr) {
+    try { customers = JSON.parse(purStr); } catch (e) {}
+  }
+
+  const custIndex = customers.findIndex(c => String(c.id) === String(customerId));
+  if (custIndex === -1) {
+    if (typeof showToast === "function") showToast("Không tìm thấy dữ liệu khách hàng!", "error");
+    return;
+  }
+
+  const cust = customers[custIndex];
+  const req = cust.renewalDetails || {};
+  const isCurrent = req.type === "current" || !req.type;
+
+  let today = new Date();
+  today.setHours(0,0,0,0);
+  let baseDate = new Date(today);
+  if (cust.endDate) {
+    const eDate = new Date(cust.endDate);
+    eDate.setHours(0,0,0,0);
+    if (eDate > baseDate) {
+      baseDate = new Date(eDate);
+    }
+  }
+
+  let weekdaysToAdd = 5;
+  let addedMeals = 5;
+  const reqPkgStr = (isCurrent ? String(cust.package) : String(req.packageName)).toLowerCase();
+  if (reqPkgStr.includes("30") || reqPkgStr.includes("bứt phá") || reqPkgStr.includes("duy trì") || reqPkgStr.includes("20")) {
+    weekdaysToAdd = 22; // 4 tuần / 1 tháng
+    addedMeals = 20;    // +20 bữa
+  } else if (reqPkgStr.includes("10") || reqPkgStr.includes("14") || reqPkgStr.includes("2 tuần")) {
+    weekdaysToAdd = 10; // 2 tuần
+    addedMeals = 10;    // +10 bữa
+  } else {
+    weekdaysToAdd = 5;  // 1 tuần
+    addedMeals = 5;     // +5 bữa
+  }
+
+  let newEnd = new Date(baseDate);
+  let addedDays = 0;
+  while (addedDays < weekdaysToAdd) {
+    newEnd.setDate(newEnd.getDate() + 1);
+    let day = newEnd.getDay();
+    if (day !== 0 && day !== 6) addedDays++;
+  }
+
+  if (!isCurrent) {
+    if (req.packageName) cust.package = req.packageName;
+    if (req.size) cust.size = req.size;
+  }
+
+  if (!cust.startDate || new Date(cust.startDate) > today) {
+    cust.startDate = today.toISOString().split("T")[0];
+  }
+  cust.endDate = newEnd.toISOString().split("T")[0];
+  cust.bonusMeals = (cust.bonusMeals || 0) + addedMeals;
+  cust.renewalPending = false;
+  cust.renewalDetails = null;
+
+  customers[custIndex] = cust;
+  localStorage.setItem("nutriadmin_purchased_customers", JSON.stringify(customers));
+  if (typeof purchasedCustomers !== "undefined") {
+    purchasedCustomers = customers;
+  }
+
+  const savedUserStr = localStorage.getItem("nutriadmin_current_user");
+  if (savedUserStr) {
+    try {
+      let user = JSON.parse(savedUserStr);
+      if (String(user.id) === String(cust.id) || (user.phone && user.phone === cust.phone)) {
+        user.package = cust.package;
+        user.size = cust.size;
+        user.startDate = cust.startDate;
+        user.endDate = cust.endDate;
+        user.bonusMeals = cust.bonusMeals;
+        user.renewalPending = false;
+        user.renewalDetails = null;
+        window.currentUser = user;
+        localStorage.setItem("nutriadmin_current_user", JSON.stringify(user));
+      }
+    } catch (e) {}
+  }
+
+  closeApproveRenewalModal();
+
+  if (typeof showToast === "function") {
+    showToast(`Đã gia hạn thành công cho khách hàng ${cust.name}! Hạn mới: ${newEnd.toLocaleDateString("vi-VN")}`, "success");
+  }
+
+  if (typeof renderPurchasedCustomers === "function") {
+    renderPurchasedCustomers();
+  }
+  if (typeof renderCustomerProfile === "function") {
+    renderCustomerProfile();
+  }
+  if (typeof syncStateToServer === "function") {
+    lastSyncedStateStr = "";
+    syncStateToServer();
+  }
+};
+
+window.openPackageInfoModal = function() {
+  const modal = document.getElementById("modal-package-info");
+  if (modal) {
+    modal.classList.remove("hidden");
+    modal.classList.add("flex");
+  }
+};
+
+window.closePackageInfoModal = function() {
+  const modal = document.getElementById("modal-package-info");
+  if (modal) {
+    modal.classList.add("hidden");
+    modal.classList.remove("flex");
+  }
+};
+
+
+
+
 
 
 

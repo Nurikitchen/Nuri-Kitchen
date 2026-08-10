@@ -29,13 +29,50 @@
     height: calc(112.5vw - 36px) !important;
     top: calc(50vh - 56.25vw + 18px) !important;
   }
+}
 
-  /* Prevent automatic mobile zoom on input focus */
+/* Tắt hoàn toàn hiệu ứng tự động phóng to (auto-zoom) khi focus ô nhập liệu trên di động */
+@media screen and (max-width: 1024px) {
   input,
   select,
-  textarea {
+  textarea,
+  input:focus,
+  select:focus,
+  textarea:focus {
     font-size: 16px !important;
     touch-action: manipulation;
   }
 }
+/* Skeleton vs. Spinner Accessibility & Geometry Preserving Loading Effects */
+@keyframes skeleton-shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
 
+.skeleton-box {
+  background: linear-gradient(90deg, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%);
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.5s infinite ease-in-out;
+  border-radius: 0.75rem;
+}
+
+.dark .skeleton-box {
+  background: linear-gradient(90deg, #334155 25%, #475569 50%, #334155 75%);
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.5s infinite ease-in-out;
+}
+
+.spinner-status {
+  display: inline-block;
+  border-radius: 9999px;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}

@@ -1,4 +1,38 @@
 <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <!-- Initial Page Skeleton & Spinner Loader (Visible on page boot, hidden after switchView) -->
+      <div id="page-initial-loader" class="space-y-6 py-6" role="status" aria-busy="true">
+        <div class="flex items-center justify-between">
+          <div class="space-y-2">
+            <div class="skeleton-box h-8 w-64 rounded-xl"></div>
+            <div class="skeleton-box h-4 w-96 rounded-lg"></div>
+          </div>
+          <div class="flex items-center gap-3 bg-white dark:bg-slate-800 px-4 py-2 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700">
+            <div class="spinner-status w-6 h-6 border-3 border-slate-200 border-t-emerald-600"></div>
+            <span class="text-xs font-bold text-slate-700 dark:text-slate-200">Đang nạp dữ liệu...</span>
+            <span class="sr-only">Vui lòng chờ trong giây lát</span>
+          </div>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div class="bg-white dark:bg-slate-800 rounded-3xl p-5 border border-slate-100 dark:border-slate-700 shadow-sm animate-pulse space-y-4">
+            <div class="skeleton-box w-full aspect-[16/9] rounded-2xl"></div>
+            <div class="skeleton-box h-5 w-3/4 rounded-lg"></div>
+            <div class="skeleton-box h-4 w-full rounded"></div>
+            <div class="skeleton-box h-10 w-full rounded-xl"></div>
+          </div>
+          <div class="bg-white dark:bg-slate-800 rounded-3xl p-5 border border-slate-100 dark:border-slate-700 shadow-sm animate-pulse space-y-4">
+            <div class="skeleton-box w-full aspect-[16/9] rounded-2xl"></div>
+            <div class="skeleton-box h-5 w-3/4 rounded-lg"></div>
+            <div class="skeleton-box h-4 w-full rounded"></div>
+            <div class="skeleton-box h-10 w-full rounded-xl"></div>
+          </div>
+          <div class="bg-white dark:bg-slate-800 rounded-3xl p-5 border border-slate-100 dark:border-slate-700 shadow-sm animate-pulse space-y-4">
+            <div class="skeleton-box w-full aspect-[16/9] rounded-2xl"></div>
+            <div class="skeleton-box h-5 w-3/4 rounded-lg"></div>
+            <div class="skeleton-box h-4 w-full rounded"></div>
+            <div class="skeleton-box h-10 w-full rounded-xl"></div>
+          </div>
+        </div>
+      </div>
       <!-- View: DASHBOARD (Thống kê) -->
       <div id="view-dashboard" class="hidden animate-fade-in pb-12">
         <!-- Goal Tracking Bar -->
@@ -255,22 +289,44 @@
               Quản lý QR Code, theo dõi chuyển đổi và Customer Acquisition.
             </p>
           </div>
-          <div class="flex bg-slate-100 p-1 rounded-lg overflow-x-auto hide-scrollbar">
-            <button id="mkt-tab-btn-overview" onclick="switchMarketingTab('overview')" class="px-4 py-2 text-[17.5px] leading-[25px] font-bold text-indigo-600 bg-white shadow-sm rounded-md whitespace-nowrap cursor-pointer">
-              Tổng quan &amp; Phân tích
-            </button>
-            <button id="mkt-tab-btn-history" onclick="switchMarketingTab('history')" class="px-4 py-2 text-[17.5px] leading-[25px] font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-200/50 rounded-md transition-colors whitespace-nowrap cursor-pointer">
-              Lịch sử Quét QR
-            </button>
-            <button onclick="openTrackingModal()" class="px-4 py-2 text-[17.5px] leading-[25px] font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-200/50 rounded-md transition-colors whitespace-nowrap cursor-pointer">
-              Chiến dịch QR
-            </button>
-            <button onclick="
-                switchView('customers');
-                switchCustomerTab('potential');
-              " class="px-4 py-2 text-[17.5px] leading-[25px] font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-200/50 rounded-md transition-colors whitespace-nowrap cursor-pointer">
-              Dữ liệu Leads
-            </button>
+          <div class="flex flex-wrap items-center gap-3">
+            <!-- Time Filter Select -->
+            <div class="flex items-center gap-2">
+              <select id="mkt-time-filter" onchange="handleMarketingTimeFilterChange(this.value)" class="bg-white border-2 border-emerald-500 text-slate-800 text-sm font-semibold rounded-lg px-3.5 py-2 focus:ring-2 focus:ring-emerald-500 focus:outline-none shadow-sm cursor-pointer">
+                <option value="7days" selected>7 ngày qua</option>
+                <option value="today">Hôm nay</option>
+                <option value="30days">30 ngày qua</option>
+                <option value="this_month">Tháng này</option>
+                <option value="last_month">Tháng trước</option>
+                <option value="custom">Tùy chỉnh</option>
+                <option value="all">Tất cả thời gian</option>
+              </select>
+
+              <!-- Custom Date Range Inputs -->
+              <div id="mkt-custom-date-range" class="hidden flex items-center gap-2 bg-white border border-slate-300 p-1.5 rounded-lg text-xs shadow-sm">
+                <input type="date" id="mkt-date-from" onchange="renderMarketingDashboard()" class="px-2 py-1 border border-slate-200 rounded text-slate-700 focus:outline-none focus:border-emerald-500">
+                <span class="text-slate-400 font-bold">-</span>
+                <input type="date" id="mkt-date-to" onchange="renderMarketingDashboard()" class="px-2 py-1 border border-slate-200 rounded text-slate-700 focus:outline-none focus:border-emerald-500">
+              </div>
+            </div>
+
+            <div class="flex bg-slate-100 p-1 rounded-lg overflow-x-auto hide-scrollbar">
+              <button id="mkt-tab-btn-overview" onclick="switchMarketingTab('overview')" class="px-4 py-2 text-[17.5px] leading-[25px] font-bold text-indigo-600 bg-white shadow-sm rounded-md whitespace-nowrap cursor-pointer">
+                Tổng quan &amp; Phân tích
+              </button>
+              <button id="mkt-tab-btn-history" onclick="switchMarketingTab('history')" class="px-4 py-2 text-[17.5px] leading-[25px] font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-200/50 rounded-md transition-colors whitespace-nowrap cursor-pointer">
+                Lịch sử Quét QR
+              </button>
+              <button onclick="openTrackingModal()" class="px-4 py-2 text-[17.5px] leading-[25px] font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-200/50 rounded-md transition-colors whitespace-nowrap cursor-pointer">
+                Chiến dịch QR
+              </button>
+              <button onclick="
+                  switchView('customers');
+                  switchCustomerTab('potential');
+                " class="px-4 py-2 text-[17.5px] leading-[25px] font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-200/50 rounded-md transition-colors whitespace-nowrap cursor-pointer">
+                Dữ liệu Leads
+              </button>
+            </div>
           </div>
         </div>
 
@@ -1161,6 +1217,24 @@
                         <input type="text" id="set-facebook" class="focus:ring-primary focus:border-primary block w-full pl-10 sm:text-[17.5px] leading-[25px] border-slate-300 rounded-lg py-2.5 border" placeholder="https://facebook.com/...">
                       </div>
                     </div>
+                    <div>
+                      <label class="block text-[17.5px] leading-[25px] font-medium text-slate-700">Trang Instagram</label>
+                      <div class="mt-1 relative rounded-md shadow-sm">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                          <i class="fa-brands fa-instagram text-slate-400"></i>
+                        </div>
+                        <input type="text" id="set-instagram" class="focus:ring-primary focus:border-primary block w-full pl-10 sm:text-[17.5px] leading-[25px] border-slate-300 rounded-lg py-2.5 border" placeholder="https://instagram.com/... hoặc @username">
+                      </div>
+                    </div>
+                    <div>
+                      <label class="block text-[17.5px] leading-[25px] font-medium text-slate-700">Kênh TikTok</label>
+                      <div class="mt-1 relative rounded-md shadow-sm">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                          <i class="fa-brands fa-tiktok text-slate-400"></i>
+                        </div>
+                        <input type="text" id="set-tiktok" class="focus:ring-primary focus:border-primary block w-full pl-10 sm:text-[17.5px] leading-[25px] border-slate-300 rounded-lg py-2.5 border" placeholder="https://tiktok.com/@... hoặc @username">
+                      </div>
+                    </div>
                   </div>
                 </div>
 
@@ -1646,7 +1720,7 @@
                 mãi giao hàng
               </h3>
               <p class="text-[17.5px] leading-[25px] text-indigo-700 mt-1">
-                Miễn phí giao hàng (mặc định 15.000đ) cho các đơn hàng đạt giá
+                Miễn phí giao hàng (mặc định 20.000đ) cho các đơn hàng đạt giá
                 trị tối thiểu.
               </p>
             </div>
@@ -2846,13 +2920,49 @@
               <!-- Form (Nằm Trên - Full Viền) -->
               <div id="analysis-form-col" class="w-full space-y-6">
                 <form id="diet-analysis-form" class="bg-white dark:bg-[#1e293b] rounded-3xl shadow-[0_4px_16px_rgba(15,23,42,0.05)] border border-slate-200 dark:border-slate-700/50 p-8 md:p-14 relative overflow-hidden" onsubmit="handleAnalysisSubmit(event)">
-                  <!-- Progress Line -->
-                  <div class="absolute top-0 left-0 h-1.5 bg-[#15803D] transition-all duration-500" id="diet-progress-line" style="width: 25%"></div>
+                  <!-- UI STEPS Indicator Component -->
+                  <ol id="diet-steps-indicator" class="flex items-center justify-between w-full mb-8 relative px-1 md:px-4 select-none" aria-label="Khảo sát dinh dưỡng">
+                    <!-- Step 1: Giới tính -->
+                    <li class="diet-step-item flex-1 flex flex-col items-center relative z-10 cursor-pointer" data-step-index="0" aria-current="step" onclick="jumpToDietStep(1)">
+                      <div class="diet-step-icon w-9 h-9 md:w-10 md:h-10 rounded-full flex items-center justify-center font-bold text-sm md:text-base transition-all duration-300 bg-emerald-600 text-white shadow-md shadow-emerald-500/20 ring-4 ring-emerald-100 dark:ring-emerald-950/60 scale-110">
+                        1
+                      </div>
+                      <span class="diet-step-label text-xs md:text-sm font-bold text-emerald-600 dark:text-emerald-400 mt-2 text-center transition-colors duration-300">Giới tính</span>
+                    </li>
 
-                  <!-- Step Badge -->
-                  <div id="diet-step-badge" class="inline-block bg-[#DCFCE7] text-[#15803D] font-bold text-[15px] leading-[20px] px-3 py-1.5 rounded-full mb-6">
-                    BƯỚC 1/4
-                  </div>
+                    <!-- StepConnector 1-2 -->
+                    <div class="diet-step-line flex-1 h-0.5 mx-1 md:mx-3 bg-slate-200 dark:bg-slate-700 transition-colors duration-300 self-center -mt-5"></div>
+
+                    <!-- Step 2: Mục tiêu -->
+                    <li class="diet-step-item flex-1 flex flex-col items-center relative z-10 cursor-pointer" data-step-index="1" onclick="jumpToDietStep(2)">
+                      <div class="diet-step-icon w-9 h-9 md:w-10 md:h-10 rounded-full flex items-center justify-center font-bold text-sm md:text-base transition-all duration-300 bg-slate-100 dark:bg-slate-800 border-2 border-slate-300 dark:border-slate-700 text-slate-400 dark:text-slate-500">
+                        2
+                      </div>
+                      <span class="diet-step-label text-xs md:text-sm font-medium text-slate-400 dark:text-slate-500 mt-2 text-center transition-colors duration-300">Mục tiêu</span>
+                    </li>
+
+                    <!-- StepConnector 2-3 -->
+                    <div class="diet-step-line flex-1 h-0.5 mx-1 md:mx-3 bg-slate-200 dark:bg-slate-700 transition-colors duration-300 self-center -mt-5"></div>
+
+                    <!-- Step 3: Chỉ số -->
+                    <li class="diet-step-item flex-1 flex flex-col items-center relative z-10 cursor-pointer" data-step-index="2" onclick="jumpToDietStep(3)">
+                      <div class="diet-step-icon w-9 h-9 md:w-10 md:h-10 rounded-full flex items-center justify-center font-bold text-sm md:text-base transition-all duration-300 bg-slate-100 dark:bg-slate-800 border-2 border-slate-300 dark:border-slate-700 text-slate-400 dark:text-slate-500">
+                        3
+                      </div>
+                      <span class="diet-step-label text-xs md:text-sm font-medium text-slate-400 dark:text-slate-500 mt-2 text-center transition-colors duration-300">Chỉ số</span>
+                    </li>
+
+                    <!-- StepConnector 3-4 -->
+                    <div class="diet-step-line flex-1 h-0.5 mx-1 md:mx-3 bg-slate-200 dark:bg-slate-700 transition-colors duration-300 self-center -mt-5"></div>
+
+                    <!-- Step 4: Vận động -->
+                    <li class="diet-step-item flex-1 flex flex-col items-center relative z-10 cursor-pointer" data-step-index="3" onclick="jumpToDietStep(4)">
+                      <div class="diet-step-icon w-9 h-9 md:w-10 md:h-10 rounded-full flex items-center justify-center font-bold text-sm md:text-base transition-all duration-300 bg-slate-100 dark:bg-slate-800 border-2 border-slate-300 dark:border-slate-700 text-slate-400 dark:text-slate-500">
+                        4
+                      </div>
+                      <span class="diet-step-label text-xs md:text-sm font-medium text-slate-400 dark:text-slate-500 mt-2 text-center transition-colors duration-300">Vận động</span>
+                    </li>
+                  </ol>
 
                   <!-- Step 1: Giới tính -->
                   <div id="diet-step-1" class="step-content animate-fade-in block">
@@ -2909,28 +3019,28 @@
 
                   <!-- Step 2: Mục tiêu -->
                   <div id="diet-step-2" class="step-content animate-fade-in hidden">
-                    <h2 class="text-[25px] leading-[35px] md:text-[30px] leading-[40px] font-bold text-slate-900 dark:text-white text-center mb-8 animate-slide-right-1">
+                    <h2 class="text-[25px] leading-[35px] md:text-[30px] leading-[40px] font-bold text-slate-900 dark:text-white text-center mb-10 animate-slide-right-1">
                       Mục tiêu của bạn là gì?
                     </h2>
-                    <div class="mb-6" id="diet-grid-2">
-                      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div class="mb-12" id="diet-grid-2">
+                      <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
                         <!-- Loss -->
                         <label class="diet-opt-label relative cursor-pointer group block transition-all duration-500" style="
                             order: 1;
                             view-transition-name: diet-opt-goal-loss;
                           ">
                           <input type="radio" name="goal" value="loss" class="peer sr-only" onchange="handleDietOptChange(this, 'goal')">
-                          <div class="diet-opt-inner flex items-center gap-4 p-5 bg-slate-50 dark:bg-slate-800/60 border-2 border-slate-200 dark:border-slate-700 rounded-2xl group-hover:bg-slate-100 dark:group-hover:bg-slate-700 peer-checked:border-[#10B981] peer-checked:bg-emerald-50 dark:peer-checked:bg-emerald-900/30 transition-all duration-500 relative overflow-hidden">
-                            <i class="fa-solid fa-fire absolute -right-2 -bottom-4 text-[5.625rem] text-orange-500/10 transform -rotate-12 transition-transform duration-500 group-hover:scale-110 peer-checked:text-emerald-500/20 z-0"></i>
+                          <div class="diet-opt-inner flex items-center gap-5 p-10 md:p-12 min-h-[160px] bg-slate-50 dark:bg-slate-800/60 border-2 border-slate-200 dark:border-slate-700 rounded-2xl group-hover:bg-slate-100 dark:group-hover:bg-slate-700 peer-checked:border-[#10B981] peer-checked:bg-emerald-50 dark:peer-checked:bg-emerald-900/30 transition-all duration-500 relative overflow-hidden">
+                            <i class="fa-solid fa-fire absolute -right-2 -bottom-4 text-[7rem] text-orange-500/10 transform -rotate-12 transition-transform duration-500 group-hover:scale-110 peer-checked:text-emerald-500/20 z-0"></i>
 
-                            <div class="w-12 h-12 rounded-full bg-orange-100 text-orange-500 flex items-center justify-center text-[30px] leading-[40px] shrink-0 shadow-sm peer-checked:bg-emerald-100 peer-checked:text-emerald-600 transition-colors relative z-10">
+                            <div class="w-16 h-16 rounded-full bg-orange-100 text-orange-500 flex items-center justify-center text-[36px] leading-[44px] shrink-0 shadow-sm peer-checked:bg-emerald-100 peer-checked:text-emerald-600 transition-colors relative z-10">
                               <i class="fa-solid fa-fire mt-0.5"></i>
                             </div>
                             <div class="relative z-10">
-                              <div class="font-bold text-slate-800 dark:text-slate-100 text-[20px] leading-[30px]">
+                              <div class="font-bold text-slate-800 dark:text-slate-100 text-[24px] leading-[34px]">
                                 Giảm cân, mỡ
                               </div>
-                              <div class="text-[15px] leading-[20px] text-slate-500 dark:text-slate-400 mt-0.5">
+                              <div class="text-[17.5px] leading-[24px] text-slate-500 dark:text-slate-400 mt-1">
                                 Thâm hụt Calo an toàn
                               </div>
                             </div>
@@ -2943,17 +3053,17 @@
                             view-transition-name: diet-opt-goal-gain;
                           ">
                           <input type="radio" name="goal" value="gain" class="peer sr-only" onchange="handleDietOptChange(this, 'goal')">
-                          <div class="diet-opt-inner flex items-center gap-4 p-5 bg-slate-50 dark:bg-slate-800/60 border-2 border-slate-200 dark:border-slate-700 rounded-2xl group-hover:bg-slate-100 dark:group-hover:bg-slate-700 peer-checked:border-[#10B981] peer-checked:bg-emerald-50 dark:peer-checked:bg-emerald-900/30 transition-all duration-500 relative overflow-hidden">
-                            <i class="fa-solid fa-bullseye absolute -right-2 -bottom-2 text-[5.625rem] text-blue-500/10 transform -rotate-12 transition-transform duration-500 group-hover:scale-110 peer-checked:text-emerald-500/20 z-0"></i>
+                          <div class="diet-opt-inner flex items-center gap-5 p-10 md:p-12 min-h-[160px] bg-slate-50 dark:bg-slate-800/60 border-2 border-slate-200 dark:border-slate-700 rounded-2xl group-hover:bg-slate-100 dark:group-hover:bg-slate-700 peer-checked:border-[#10B981] peer-checked:bg-emerald-50 dark:peer-checked:bg-emerald-900/30 transition-all duration-500 relative overflow-hidden">
+                            <i class="fa-solid fa-bullseye absolute -right-2 -bottom-2 text-[7rem] text-blue-500/10 transform -rotate-12 transition-transform duration-500 group-hover:scale-110 peer-checked:text-emerald-500/20 z-0"></i>
 
-                            <div class="w-12 h-12 rounded-full bg-blue-100 text-blue-500 flex items-center justify-center text-[30px] leading-[40px] shrink-0 shadow-sm peer-checked:bg-emerald-100 peer-checked:text-emerald-600 transition-colors relative z-10">
+                            <div class="w-16 h-16 rounded-full bg-blue-100 text-blue-500 flex items-center justify-center text-[36px] leading-[44px] shrink-0 shadow-sm peer-checked:bg-emerald-100 peer-checked:text-emerald-600 transition-colors relative z-10">
                               <i class="fa-solid fa-bullseye"></i>
                             </div>
                             <div class="relative z-10">
-                              <div class="font-bold text-slate-800 dark:text-slate-100 text-[20px] leading-[30px]">
+                              <div class="font-bold text-slate-800 dark:text-slate-100 text-[24px] leading-[34px]">
                                 Tăng cân
                               </div>
-                              <div class="text-[15px] leading-[20px] text-slate-500 dark:text-slate-400 mt-0.5">
+                              <div class="text-[17.5px] leading-[24px] text-slate-500 dark:text-slate-400 mt-1">
                                 Xây dựng cơ bắp, đầy đặn
                               </div>
                             </div>
@@ -2966,17 +3076,17 @@
                             view-transition-name: diet-opt-goal-recomp;
                           ">
                           <input type="radio" name="goal" value="recomp" class="peer sr-only" onchange="handleDietOptChange(this, 'goal')">
-                          <div class="diet-opt-inner flex items-center gap-4 p-5 bg-slate-50 dark:bg-slate-800/60 border-2 border-slate-200 dark:border-slate-700 rounded-2xl group-hover:bg-slate-100 dark:group-hover:bg-slate-700 peer-checked:border-[#10B981] peer-checked:bg-emerald-50 dark:peer-checked:bg-emerald-900/30 transition-all duration-500 relative overflow-hidden">
-                            <i class="fa-solid fa-dumbbell absolute -right-2 -bottom-2 text-[5rem] text-indigo-500/10 transform -rotate-12 transition-transform duration-500 group-hover:scale-110 peer-checked:text-emerald-500/20 z-0"></i>
+                          <div class="diet-opt-inner flex items-center gap-5 p-10 md:p-12 min-h-[160px] bg-slate-50 dark:bg-slate-800/60 border-2 border-slate-200 dark:border-slate-700 rounded-2xl group-hover:bg-slate-100 dark:group-hover:bg-slate-700 peer-checked:border-[#10B981] peer-checked:bg-emerald-50 dark:peer-checked:bg-emerald-900/30 transition-all duration-500 relative overflow-hidden">
+                            <i class="fa-solid fa-dumbbell absolute -right-2 -bottom-2 text-[6.5rem] text-indigo-500/10 transform -rotate-12 transition-transform duration-500 group-hover:scale-110 peer-checked:text-emerald-500/20 z-0"></i>
 
-                            <div class="w-12 h-12 rounded-full bg-indigo-100 text-indigo-500 flex items-center justify-center text-[25px] leading-[35px] shrink-0 shadow-sm peer-checked:bg-emerald-100 peer-checked:text-emerald-600 transition-colors relative z-10">
+                            <div class="w-16 h-16 rounded-full bg-indigo-100 text-indigo-500 flex items-center justify-center text-[30px] leading-[40px] shrink-0 shadow-sm peer-checked:bg-emerald-100 peer-checked:text-emerald-600 transition-colors relative z-10">
                               <i class="fa-solid fa-dumbbell"></i>
                             </div>
                             <div class="relative z-10">
-                              <div class="font-bold text-slate-800 dark:text-slate-100 text-[20px] leading-[30px]">
+                              <div class="font-bold text-slate-800 dark:text-slate-100 text-[24px] leading-[34px]">
                                 Tăng cơ giảm mỡ
                               </div>
-                              <div class="text-[15px] leading-[20px] text-slate-500 dark:text-slate-400 mt-0.5">
+                              <div class="text-[17.5px] leading-[24px] text-slate-500 dark:text-slate-400 mt-1">
                                 Body Recomposition
                               </div>
                             </div>
@@ -2989,17 +3099,17 @@
                             view-transition-name: diet-opt-goal-maintain;
                           ">
                           <input type="radio" name="goal" value="maintain" class="peer sr-only" onchange="handleDietOptChange(this, 'goal')">
-                          <div class="diet-opt-inner flex items-center gap-4 p-5 bg-slate-50 dark:bg-slate-800/60 border-2 border-slate-200 dark:border-slate-700 rounded-2xl group-hover:bg-slate-100 dark:group-hover:bg-slate-700 peer-checked:border-[#10B981] peer-checked:bg-emerald-50 dark:peer-checked:bg-emerald-900/30 transition-all duration-500 relative overflow-hidden">
-                            <i class="fa-solid fa-scale-balanced absolute -right-2 -bottom-2 text-[5rem] text-amber-500/10 transform -rotate-12 transition-transform duration-500 group-hover:scale-110 peer-checked:text-emerald-500/20 z-0"></i>
+                          <div class="diet-opt-inner flex items-center gap-5 p-10 md:p-12 min-h-[160px] bg-slate-50 dark:bg-slate-800/60 border-2 border-slate-200 dark:border-slate-700 rounded-2xl group-hover:bg-slate-100 dark:group-hover:bg-slate-700 peer-checked:border-[#10B981] peer-checked:bg-emerald-50 dark:peer-checked:bg-emerald-900/30 transition-all duration-500 relative overflow-hidden">
+                            <i class="fa-solid fa-scale-balanced absolute -right-2 -bottom-2 text-[6.5rem] text-amber-500/10 transform -rotate-12 transition-transform duration-500 group-hover:scale-110 peer-checked:text-emerald-500/20 z-0"></i>
 
-                            <div class="w-12 h-12 rounded-full bg-amber-100 text-amber-500 flex items-center justify-center text-[25px] leading-[35px] shrink-0 shadow-sm peer-checked:bg-emerald-100 peer-checked:text-emerald-600 transition-colors relative z-10">
+                            <div class="w-16 h-16 rounded-full bg-amber-100 text-amber-500 flex items-center justify-center text-[30px] leading-[40px] shrink-0 shadow-sm peer-checked:bg-emerald-100 peer-checked:text-emerald-600 transition-colors relative z-10">
                               <i class="fa-solid fa-scale-balanced"></i>
                             </div>
                             <div class="relative z-10">
-                              <div class="font-bold text-slate-800 dark:text-slate-100 text-[20px] leading-[30px]">
+                              <div class="font-bold text-slate-800 dark:text-slate-100 text-[24px] leading-[34px]">
                                 Duy trì vóc dáng
                               </div>
-                              <div class="text-[15px] leading-[20px] text-slate-500 dark:text-slate-400 mt-0.5">
+                              <div class="text-[17.5px] leading-[24px] text-slate-500 dark:text-slate-400 mt-1">
                                 Ăn sạch, sống khỏe
                               </div>
                             </div>
@@ -3007,7 +3117,7 @@
                         </label>
                       </div>
                     </div>
-                    <div class="flex gap-3 mt-8 animate-slide-right-6">
+                    <div class="flex gap-3 mt-12 animate-slide-right-6">
                       <button type="button" onclick="prevDietStep(2)" class="w-16 bg-slate-50 dark:bg-slate-800 lg:hover:bg-slate-200 dark:lg:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl font-bold transition-all lg:hover:scale-105 active:scale-[0.98] flex items-center justify-center text-[22.5px] leading-[35px]">
                         <i class="fa-solid fa-arrow-left"></i>
                       </button>
@@ -3019,33 +3129,33 @@
 
                   <!-- Step 3: Chỉ số -->
                   <div id="diet-step-3" class="step-content animate-fade-in hidden">
-                    <h2 class="text-[25px] leading-[35px] md:text-[30px] leading-[40px] font-bold text-slate-900 dark:text-white text-center mb-8 animate-slide-right-1">
+                    <h2 class="text-[25px] leading-[35px] md:text-[30px] leading-[40px] font-bold text-slate-900 dark:text-white text-center mb-10 animate-slide-right-1">
                       Chỉ số cơ thể hiện tại
                     </h2>
-                    <div class="space-y-4 mb-6">
+                    <div class="space-y-8 mb-12">
                       <div class="animate-slide-right-2">
-                        <label class="block text-[17.5px] leading-[25px] font-bold text-slate-700 dark:text-slate-300 mb-1.5">Tuổi</label>
+                        <label class="block text-[20px] leading-[28px] font-bold text-slate-700 dark:text-slate-300 mb-3">Tuổi</label>
                         <div class="relative">
-                          <input type="number" id="calc-age" min="10" max="100" class="w-full rounded-xl border-2 border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 dark:text-white py-3.5 px-4 focus:bg-white dark:focus:bg-slate-800 focus:border-[#10B981] focus:ring-0 outline-none transition-all font-medium">
+                          <input type="number" id="calc-age" min="10" max="100" class="w-full rounded-xl border-2 border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 dark:text-white py-7 px-6 focus:bg-white dark:focus:bg-slate-800 focus:border-[#10B981] focus:ring-0 outline-none transition-all font-medium text-[20px]">
                         </div>
                       </div>
-                      <div class="grid grid-cols-2 gap-4 animate-slide-right-3">
+                      <div class="grid grid-cols-2 gap-6 animate-slide-right-3">
                         <div>
-                          <label class="block text-[17.5px] leading-[25px] font-bold text-slate-700 dark:text-slate-300 mb-1.5">Cân nặng</label>
+                          <label class="block text-[20px] leading-[28px] font-bold text-slate-700 dark:text-slate-300 mb-3">Cân nặng</label>
                           <div class="relative">
-                            <input type="number" id="calc-weight" min="30" max="200" step="0.1" class="w-full rounded-xl border-2 border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 dark:text-white py-3.5 px-4 pr-10 focus:bg-white dark:focus:bg-slate-800 focus:border-[#10B981] focus:ring-0 outline-none transition-all font-medium"><span class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold">kg</span>
+                            <input type="number" id="calc-weight" min="30" max="200" step="0.1" class="w-full rounded-xl border-2 border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 dark:text-white py-7 px-6 pr-12 focus:bg-white dark:focus:bg-slate-800 focus:border-[#10B981] focus:ring-0 outline-none transition-all font-medium text-[20px]"><span class="absolute right-5 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-[18px]">kg</span>
                           </div>
                         </div>
                         <div>
-                          <label class="block text-[17.5px] leading-[25px] font-bold text-slate-700 dark:text-slate-300 mb-1.5">Chiều cao</label>
+                          <label class="block text-[20px] leading-[28px] font-bold text-slate-700 dark:text-slate-300 mb-3">Chiều cao</label>
                           <div class="relative">
-                            <input type="number" id="calc-height" min="100" max="250" class="w-full rounded-xl border-2 border-slate-100 bg-slate-50 py-3.5 px-4 pr-12 focus:bg-white focus:border-[#10B981] focus:ring-0 outline-none transition-all font-medium"><span class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold">cm</span>
+                            <input type="number" id="calc-height" min="100" max="250" class="w-full rounded-xl border-2 border-slate-100 bg-slate-50 py-7 px-6 pr-14 focus:bg-white focus:border-[#10B981] focus:ring-0 outline-none transition-all font-medium text-[20px]"><span class="absolute right-5 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-[18px]">cm</span>
                           </div>
                         </div>
                       </div>
                     </div>
-                    <div class="flex gap-3 mt-8 animate-slide-right-4">
-                      <button type="button" onclick="prevDietStep(3)" class="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-6 py-4 rounded-xl font-bold transition-all lg:hover:bg-slate-200 dark:lg:hover:bg-slate-700 lg:hover:scale-105 active:scale-[0.98] w-1/3 text-center">
+                    <div class="flex gap-3 mt-12 animate-slide-right-4">
+                      <button type="button" onclick="prevDietStep(3)" class="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-6 py-4 rounded-xl font-bold transition-all lg:hover:bg-slate-200 dark:lg:hover:bg-slate-700 lg:hover:scale-105 active:scale-[0.98] w-1/3 text-center text-[22.5px]">
                         <i class="fa-solid fa-arrow-left"></i>
                       </button>
                       <button type="button" onclick="nextDietStep(3)" class="flex-1 bg-[#111827] dark:bg-emerald-600 lg:hover:bg-slate-800 dark:lg:hover:bg-emerald-500 text-white px-6 py-4 rounded-xl font-bold text-[22.5px] leading-[35px] transition-all lg:hover:shadow-lg lg:hover:-translate-y-1 active:scale-[0.98] flex items-center justify-center gap-2">
@@ -3056,21 +3166,21 @@
 
                   <!-- Step 4: Vận động -->
                   <div id="diet-step-4" class="step-content animate-fade-in hidden">
-                    <h2 class="text-[25px] leading-[35px] md:text-[30px] leading-[40px] font-bold text-slate-900 dark:text-white text-center mb-6 animate-slide-right-1">
+                    <h2 class="text-[25px] leading-[35px] md:text-[30px] leading-[40px] font-bold text-slate-900 dark:text-white text-center mb-8 animate-slide-right-1">
                       Mức độ vận động hàng ngày
                     </h2>
 
-                    <div class="mb-6" id="diet-grid-4">
-                      <div class="space-y-3 flex flex-col gap-3">
+                    <div class="mb-12" id="diet-grid-4">
+                      <div class="space-y-6 flex flex-col gap-6">
                         <!-- Act 1 -->
                         <label class="diet-opt-label relative cursor-pointer group block transition-all duration-500" style="order: 1; view-transition-name: diet-opt-act-1">
                           <input type="radio" name="activity" value="1.2" class="peer sr-only" onchange="handleDietOptChange(this, 'activity')">
-                          <div class="diet-opt-inner flex items-center gap-4 p-4 bg-slate-50 dark:bg-slate-800/60 border-2 border-slate-200 dark:border-slate-700 rounded-2xl peer-checked:border-[#10B981] peer-checked:bg-emerald-50 dark:peer-checked:bg-emerald-900/30 transition-all group-hover:bg-slate-100 dark:group-hover:bg-slate-700 duration-500 relative overflow-hidden">
-                            <i class="fa-solid fa-laptop absolute -right-2 -bottom-4 text-[5.625rem] text-slate-500/10 transform -rotate-12 transition-transform duration-500 group-hover:scale-110 peer-checked:text-emerald-500/20 z-0"></i>
-                            <div class="w-10 h-10 rounded-full bg-slate-200 text-slate-600 flex items-center justify-center shadow-sm shrink-0 peer-checked:bg-emerald-100 peer-checked:text-emerald-600 transition-colors relative z-10">
-                              <i class="fa-solid fa-laptop text-[17.5px] leading-[25px]"></i>
+                          <div class="diet-opt-inner flex items-center gap-5 p-8 md:p-10 min-h-[140px] bg-slate-50 dark:bg-slate-800/60 border-2 border-slate-200 dark:border-slate-700 rounded-2xl peer-checked:border-[#10B981] peer-checked:bg-emerald-50 dark:peer-checked:bg-emerald-900/30 transition-all group-hover:bg-slate-100 dark:group-hover:bg-slate-700 duration-500 relative overflow-hidden">
+                            <i class="fa-solid fa-laptop absolute -right-2 -bottom-4 text-[7rem] text-slate-500/10 transform -rotate-12 transition-transform duration-500 group-hover:scale-110 peer-checked:text-emerald-500/20 z-0"></i>
+                            <div class="w-14 h-14 rounded-full bg-slate-200 text-slate-600 flex items-center justify-center shadow-sm shrink-0 peer-checked:bg-emerald-100 peer-checked:text-emerald-600 transition-colors relative z-10">
+                              <i class="fa-solid fa-laptop text-[22px] leading-[30px]"></i>
                             </div>
-                            <div class="text-[17.5px] leading-[25px] font-bold text-slate-700 dark:text-slate-200 peer-checked:text-emerald-700 dark:peer-checked:text-emerald-400 relative z-10">
+                            <div class="text-[20px] leading-[30px] font-bold text-slate-700 dark:text-slate-200 peer-checked:text-emerald-700 dark:peer-checked:text-emerald-400 relative z-10">
                               Ít vận động (Văn phòng)
                             </div>
                           </div>
@@ -3079,12 +3189,12 @@
                         <!-- Act 2 -->
                         <label class="diet-opt-label relative cursor-pointer group block transition-all duration-500" style="order: 2; view-transition-name: diet-opt-act-2">
                           <input type="radio" name="activity" value="1.375" class="peer sr-only" onchange="handleDietOptChange(this, 'activity')">
-                          <div class="diet-opt-inner flex items-center gap-4 p-4 bg-slate-50 dark:bg-slate-800/60 border-2 border-slate-200 dark:border-slate-700 rounded-2xl peer-checked:border-[#10B981] peer-checked:bg-emerald-50 dark:peer-checked:bg-emerald-900/30 transition-all group-hover:bg-slate-100 dark:group-hover:bg-slate-700 duration-500 relative overflow-hidden">
-                            <i class="fa-solid fa-person-walking absolute -right-2 -bottom-2 text-[5rem] text-sky-500/10 transform -rotate-12 transition-transform duration-500 group-hover:scale-110 peer-checked:text-emerald-500/20 z-0"></i>
-                            <div class="w-10 h-10 rounded-full bg-sky-100 text-sky-600 flex items-center justify-center shadow-sm shrink-0 peer-checked:bg-emerald-100 peer-checked:text-emerald-600 transition-colors relative z-10">
-                              <i class="fa-solid fa-person-walking text-[22.5px] leading-[35px] mt-0.5"></i>
+                          <div class="diet-opt-inner flex items-center gap-5 p-8 md:p-10 min-h-[140px] bg-slate-50 dark:bg-slate-800/60 border-2 border-slate-200 dark:border-slate-700 rounded-2xl peer-checked:border-[#10B981] peer-checked:bg-emerald-50 dark:peer-checked:bg-emerald-900/30 transition-all group-hover:bg-slate-100 dark:group-hover:bg-slate-700 duration-500 relative overflow-hidden">
+                            <i class="fa-solid fa-person-walking absolute -right-2 -bottom-2 text-[6.5rem] text-sky-500/10 transform -rotate-12 transition-transform duration-500 group-hover:scale-110 peer-checked:text-emerald-500/20 z-0"></i>
+                            <div class="w-14 h-14 rounded-full bg-sky-100 text-sky-600 flex items-center justify-center shadow-sm shrink-0 peer-checked:bg-emerald-100 peer-checked:text-emerald-600 transition-colors relative z-10">
+                              <i class="fa-solid fa-person-walking text-[26px] leading-[36px] mt-0.5"></i>
                             </div>
-                            <div class="text-[17.5px] leading-[25px] font-bold text-slate-700 dark:text-slate-200 peer-checked:text-emerald-700 dark:peer-checked:text-emerald-400 relative z-10">
+                            <div class="text-[20px] leading-[30px] font-bold text-slate-700 dark:text-slate-200 peer-checked:text-emerald-700 dark:peer-checked:text-emerald-400 relative z-10">
                               Vận động nhẹ (1-3 ngày/tuần)
                             </div>
                           </div>
@@ -3093,12 +3203,12 @@
                         <!-- Act 3 -->
                         <label class="diet-opt-label relative cursor-pointer group block transition-all duration-500" style="order: 3; view-transition-name: diet-opt-act-3">
                           <input type="radio" name="activity" value="1.55" class="peer sr-only" onchange="handleDietOptChange(this, 'activity')">
-                          <div class="diet-opt-inner flex items-center gap-4 p-4 bg-slate-50 dark:bg-slate-800/60 border-2 border-slate-200 dark:border-slate-700 rounded-2xl peer-checked:border-[#10B981] peer-checked:bg-emerald-50 dark:peer-checked:bg-emerald-900/30 transition-all group-hover:bg-slate-100 dark:group-hover:bg-slate-700 duration-500 relative overflow-hidden">
-                            <i class="fa-solid fa-person-running absolute -right-2 -bottom-2 text-[5rem] text-orange-500/10 transform -rotate-12 transition-transform duration-500 group-hover:scale-110 peer-checked:text-emerald-500/20 z-0"></i>
-                            <div class="w-10 h-10 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center shadow-sm shrink-0 peer-checked:bg-emerald-100 peer-checked:text-emerald-600 transition-colors relative z-10">
-                              <i class="fa-solid fa-person-running text-[22.5px] leading-[35px] mt-0.5"></i>
+                          <div class="diet-opt-inner flex items-center gap-5 p-8 md:p-10 min-h-[140px] bg-slate-50 dark:bg-slate-800/60 border-2 border-slate-200 dark:border-slate-700 rounded-2xl peer-checked:border-[#10B981] peer-checked:bg-emerald-50 dark:peer-checked:bg-emerald-900/30 transition-all group-hover:bg-slate-100 dark:group-hover:bg-slate-700 duration-500 relative overflow-hidden">
+                            <i class="fa-solid fa-person-running absolute -right-2 -bottom-2 text-[6.5rem] text-orange-500/10 transform -rotate-12 transition-transform duration-500 group-hover:scale-110 peer-checked:text-emerald-500/20 z-0"></i>
+                            <div class="w-14 h-14 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center shadow-sm shrink-0 peer-checked:bg-emerald-100 peer-checked:text-emerald-600 transition-colors relative z-10">
+                              <i class="fa-solid fa-person-running text-[26px] leading-[36px] mt-0.5"></i>
                             </div>
-                            <div class="text-[17.5px] leading-[25px] font-bold text-slate-700 dark:text-slate-200 peer-checked:text-emerald-700 dark:peer-checked:text-emerald-400 relative z-10">
+                            <div class="text-[20px] leading-[30px] font-bold text-slate-700 dark:text-slate-200 peer-checked:text-emerald-700 dark:peer-checked:text-emerald-400 relative z-10">
                               Vận động vừa (3-5 ngày/tuần)
                             </div>
                           </div>
@@ -3107,12 +3217,12 @@
                         <!-- Act 4 -->
                         <label class="diet-opt-label relative cursor-pointer group block transition-all duration-500" style="order: 4; view-transition-name: diet-opt-act-4">
                           <input type="radio" name="activity" value="1.725" class="peer sr-only" onchange="handleDietOptChange(this, 'activity')">
-                          <div class="diet-opt-inner flex items-center gap-4 p-4 bg-slate-50 dark:bg-slate-800/60 border-2 border-slate-200 dark:border-slate-700 rounded-2xl peer-checked:border-[#10B981] peer-checked:bg-emerald-50 dark:peer-checked:bg-emerald-900/30 transition-all group-hover:bg-slate-100 dark:group-hover:bg-slate-700 duration-500 relative overflow-hidden">
-                            <i class="fa-solid fa-dumbbell absolute -right-2 -bottom-2 text-[5rem] text-red-500/10 transform -rotate-12 transition-transform duration-500 group-hover:scale-110 peer-checked:text-emerald-500/20 z-0"></i>
-                            <div class="w-10 h-10 rounded-full bg-red-100 text-red-600 flex items-center justify-center shadow-sm shrink-0 peer-checked:bg-emerald-100 peer-checked:text-emerald-600 transition-colors relative z-10">
-                              <i class="fa-solid fa-dumbbell text-[17.5px] leading-[25px]"></i>
+                          <div class="diet-opt-inner flex items-center gap-5 p-8 md:p-10 min-h-[140px] bg-slate-50 dark:bg-slate-800/60 border-2 border-slate-200 dark:border-slate-700 rounded-2xl peer-checked:border-[#10B981] peer-checked:bg-emerald-50 dark:peer-checked:bg-emerald-900/30 transition-all group-hover:bg-slate-100 dark:group-hover:bg-slate-700 duration-500 relative overflow-hidden">
+                            <i class="fa-solid fa-dumbbell absolute -right-2 -bottom-2 text-[6.5rem] text-red-500/10 transform -rotate-12 transition-transform duration-500 group-hover:scale-110 peer-checked:text-emerald-500/20 z-0"></i>
+                            <div class="w-14 h-14 rounded-full bg-red-100 text-red-600 flex items-center justify-center shadow-sm shrink-0 peer-checked:bg-emerald-100 peer-checked:text-emerald-600 transition-colors relative z-10">
+                              <i class="fa-solid fa-dumbbell text-[22px] leading-[30px]"></i>
                             </div>
-                            <div class="text-[17.5px] leading-[25px] font-bold text-slate-700 dark:text-slate-200 peer-checked:text-emerald-700 dark:peer-checked:text-emerald-400 relative z-10">
+                            <div class="text-[20px] leading-[30px] font-bold text-slate-700 dark:text-slate-200 peer-checked:text-emerald-700 dark:peer-checked:text-emerald-400 relative z-10">
                               Vận động nhiều (6-7 ngày)
                             </div>
                           </div>
@@ -3120,9 +3230,9 @@
                       </div>
                     </div>
 
-                    <div class="grid grid-cols-2 gap-4 mb-6 pt-4 border-t border-slate-100 animate-slide-right-6">
+                    <div class="grid grid-cols-2 gap-6 mb-12 pt-8 border-t border-slate-100 animate-slide-right-6">
                       <div>
-                        <label class="block text-[18px] font-bold text-slate-500 mb-1 uppercase tracking-wide">Cân nặng mục tiêu</label>
+                        <label class="block text-[18px] font-bold text-slate-500 mb-2 uppercase tracking-wide">Cân nặng mục tiêu</label>
                         <div class="relative">
                           <input type="number" id="calc-target-weight" oninput="
                               if (
@@ -3130,13 +3240,13 @@
                                   .checked
                               )
                                 toggleMedicalTime();
-                            " min="30" max="200" step="0.1" class="w-full rounded-xl border-2 border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 dark:text-white py-2.5 px-3 focus:bg-white dark:focus:bg-slate-800 focus:border-[#10B981] focus:ring-0 outline-none transition-all font-medium text-[17.5px] leading-[25px]" placeholder="Không bắt buộc"><span class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-[15px] leading-[20px] font-bold">kg</span>
+                            " min="30" max="200" step="0.1" class="w-full rounded-xl border-2 border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 dark:text-white py-5 px-4 focus:bg-white dark:focus:bg-slate-800 focus:border-[#10B981] focus:ring-0 outline-none transition-all font-medium text-[20px] leading-[28px]" placeholder="Không bắt buộc"><span class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 text-[16px] leading-[22px] font-bold">kg</span>
                         </div>
                       </div>
                       <div>
-                        <label class="block text-[18px] font-bold text-slate-500 mb-1 uppercase tracking-wide">Thời gian mong muốn</label>
+                        <label class="block text-[18px] font-bold text-slate-500 mb-2 uppercase tracking-wide">Thời gian mong muốn</label>
                         <div class="relative">
-                          <input type="number" id="calc-duration" min="1" max="100" class="w-full rounded-xl border-2 border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 dark:text-white py-2.5 px-3 focus:bg-white dark:focus:bg-slate-800 focus:border-[#10B981] focus:ring-0 outline-none transition-all font-medium text-[17.5px] leading-[25px] disabled:opacity-50 disabled:cursor-not-allowed" placeholder="Không bắt buộc"><span class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-[15px] leading-[20px] font-bold">tuần</span>
+                          <input type="number" id="calc-duration" min="1" max="100" class="w-full rounded-xl border-2 border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 dark:text-white py-5 px-4 focus:bg-white dark:focus:bg-slate-800 focus:border-[#10B981] focus:ring-0 outline-none transition-all font-medium text-[20px] leading-[28px] disabled:opacity-50 disabled:cursor-not-allowed" placeholder="Không bắt buộc"><span class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 text-[16px] leading-[22px] font-bold">tuần</span>
                         </div>
                       </div>
 
@@ -3152,7 +3262,7 @@
                       </div>
                     </div>
 
-                    <div class="flex gap-3 mt-6 animate-slide-right-6">
+                    <div class="flex gap-3 mt-12 animate-slide-right-6">
                       <button type="button" onclick="prevDietStep(4)" class="w-16 bg-slate-50 dark:bg-slate-800 lg:hover:bg-slate-200 dark:lg:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl font-bold transition-all lg:hover:scale-105 active:scale-[0.98] flex items-center justify-center text-[22.5px] leading-[35px]">
                         <i class="fa-solid fa-arrow-left"></i>
                       </button>
@@ -3574,6 +3684,347 @@
                 <p class="text-[17.5px] leading-[25px] text-slate-500 dark:text-slate-400">Tận hưởng bữa ăn ngon lành chuẩn vị</p>
               </div>
             </div>
+
+            <!-- Ô chữ nhật ngang (Thu gọn) Banner Giới thiệu Trang Tư Vấn Dinh Dưỡng & Hoạt ảnh động -->
+            <div id="nutrition-advisory-banner-collapsed" onclick="toggleNutritionAdvisoryBanner()" class="mt-12 w-full bg-gradient-to-r from-teal-900 via-emerald-950 to-teal-900 rounded-[32px] p-5 md:p-6 text-white shadow-2xl border-2 border-teal-500/60 hover:border-teal-400 relative overflow-hidden cursor-pointer transition-all duration-300 transform hover:scale-[1.01] group animate-pulse-subtle">
+              <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/food.png')] opacity-15 pointer-events-none"></div>
+              <div class="absolute -top-16 -right-16 w-64 h-64 bg-teal-400/25 rounded-full blur-2xl pointer-events-none group-hover:bg-teal-400/35 transition-all"></div>
+              <div class="absolute -bottom-16 -left-16 w-64 h-64 bg-emerald-400/25 rounded-full blur-2xl pointer-events-none"></div>
+
+              <div class="flex flex-col md:flex-row items-center justify-between gap-4 relative z-10">
+                <div class="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+                  <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-teal-500/25 border border-teal-400/50 text-teal-300 text-xs font-bold shrink-0">
+                    <i class="fa-solid fa-user-doctor text-teal-300 animate-bounce"></i> ĐỘC QUYỀN TƯ VẤN DINH DƯỠNG
+                  </div>
+                  <div>
+                    <h3 class="text-lg md:text-2xl font-extrabold text-white tracking-tight">Trang Tư Vấn Dinh Dưỡng Cá Nhân Hóa 360°</h3>
+                    <p class="text-slate-300 text-xs md:text-sm truncate max-w-xl">4 Bước đơn giản: Điền chỉ số cơ thể → Nhận phân tích chuyên gia → Menu gợi ý → Gói ăn cá nhân hóa.</p>
+                  </div>
+                </div>
+
+                <div class="flex items-center gap-3 shrink-0">
+                  <div class="px-5 py-3 rounded-2xl bg-gradient-to-r from-teal-500 to-emerald-500 text-white font-bold text-sm md:text-base shadow-lg shadow-teal-500/30 group-hover:shadow-teal-500/50 transition-all flex items-center gap-2.5 relative">
+                    <span>Khám phá ngay</span>
+                    <i class="fa-solid fa-chevron-down animate-bounce text-xs"></i>
+                    <span class="absolute -top-1 -right-1 flex h-3 w-3">
+                      <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-teal-300 opacity-75"></span>
+                      <span class="relative inline-flex rounded-full h-3 w-3 bg-teal-400"></span>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Bảng Mô tả Đầy Đủ Cách Hoạt Động Trang Tư Vấn Dinh Dưỡng (Giao diện 2 Cột - Mở rộng) -->
+            <div id="nutrition-advisory-banner-expanded" class="mt-12 w-full bg-gradient-to-br from-teal-950 via-slate-900 to-emerald-950 rounded-[32px] p-6 md:p-8 lg:p-10 text-white shadow-2xl border-2 border-teal-500/40 relative overflow-hidden hidden transition-all duration-500">
+              <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/food.png')] opacity-15 pointer-events-none"></div>
+              <div class="absolute -top-24 -right-24 w-96 h-96 bg-teal-400/20 rounded-full blur-3xl pointer-events-none"></div>
+              <div class="absolute -bottom-24 -left-24 w-96 h-96 bg-emerald-400/20 rounded-full blur-3xl pointer-events-none"></div>
+
+              <div class="flex flex-col lg:flex-row items-stretch gap-8 lg:gap-10 relative z-10">
+                
+                <!-- Cột Trái: Sơ đồ 4 Bước & Mô tả Tính Năng -->
+                <div class="w-full lg:w-7/12 flex flex-col justify-between">
+                  <div>
+                    <div class="flex items-center justify-between gap-4 mb-4">
+                      <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-teal-500/20 border border-teal-400/40 text-teal-300 text-xs md:text-sm font-bold uppercase tracking-wider">
+                        <i class="fa-solid fa-calculator"></i> TRANG TƯ VẤN DINH DƯỠNG THÔNG MINH
+                      </div>
+                      <button onclick="toggleNutritionAdvisoryBanner()" type="button" class="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-white/10 hover:bg-white/20 text-teal-200 hover:text-white text-xs md:text-sm font-bold border border-white/15 transition-all cursor-pointer">
+                        <i class="fa-solid fa-chevron-up"></i> Thu gọn bảng
+                      </button>
+                    </div>
+
+                    <h3 class="text-2xl md:text-3xl lg:text-4xl font-extrabold text-white leading-tight tracking-tight mb-3">
+                      Cách Hoạt Động Trang Tư Vấn Dinh Dưỡng Cá Nhân Hóa 360°
+                    </h3>
+                    <p class="text-slate-300 text-[16px] md:text-[18px] leading-relaxed mb-6">
+                      Hệ thống phân tích thông minh chuẩn y khoa giúp bạn thấu hiểu cơ thể, nhận chỉ số BMR/TDEE chính xác và lên thực đơn cá nhân hóa trúng mục tiêu.
+                    </p>
+                  </div>
+
+                  <!-- Sơ đồ quy trình 4 bước tương tác (Process Step Cards) -->
+                  <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+                    <!-- Step 1 -->
+                    <div onclick="switchNutritionAdvisoryStep(0)" id="nutrition-step-btn-0" class="nutrition-step-card cursor-pointer p-3 rounded-2xl bg-white/10 hover:bg-white/20 border border-teal-500/50 transition-all flex flex-col items-center text-center group shadow-md">
+                      <div class="w-11 h-11 rounded-xl bg-teal-500 text-slate-950 flex items-center justify-center font-black text-[18px] mb-2 group-hover:scale-110 transition-transform shadow-md">
+                        1
+                      </div>
+                      <span class="text-[14.5px] font-bold text-white leading-snug">Điền thông tin</span>
+                      <span class="text-[12px] text-teal-200 mt-1">Chỉ số & Vận động</span>
+                    </div>
+
+                    <!-- Step 2 -->
+                    <div onclick="switchNutritionAdvisoryStep(1)" id="nutrition-step-btn-1" class="nutrition-step-card cursor-pointer p-3 rounded-2xl bg-white/5 hover:bg-white/15 border border-white/10 transition-all flex flex-col items-center text-center group">
+                      <div class="w-11 h-11 rounded-xl bg-slate-800 text-slate-300 flex items-center justify-center font-black text-[18px] mb-2 group-hover:scale-110 transition-transform">
+                        2
+                      </div>
+                      <span class="text-[14.5px] font-bold text-slate-300 leading-snug">Chỉ số & Lời khuyên</span>
+                      <span class="text-[12px] text-slate-400 mt-1">BMR, TDEE & Y khoa</span>
+                    </div>
+
+                    <!-- Step 3 -->
+                    <div onclick="switchNutritionAdvisoryStep(2)" id="nutrition-step-btn-2" class="nutrition-step-card cursor-pointer p-3 rounded-2xl bg-white/5 hover:bg-white/15 border border-white/10 transition-all flex flex-col items-center text-center group">
+                      <div class="w-11 h-11 rounded-xl bg-slate-800 text-slate-300 flex items-center justify-center font-black text-[18px] mb-2 group-hover:scale-110 transition-transform">
+                        3
+                      </div>
+                      <span class="text-[14.5px] font-bold text-slate-300 leading-snug">Menu gợi ý</span>
+                      <span class="text-[12px] text-slate-400 mt-1">Chuẩn Calo & Macro</span>
+                    </div>
+
+                    <!-- Step 4 -->
+                    <div onclick="switchNutritionAdvisoryStep(3)" id="nutrition-step-btn-3" class="nutrition-step-card cursor-pointer p-3 rounded-2xl bg-white/5 hover:bg-white/15 border border-white/10 transition-all flex flex-col items-center text-center group">
+                      <div class="w-11 h-11 rounded-xl bg-slate-800 text-slate-300 flex items-center justify-center font-black text-[18px] mb-2 group-hover:scale-110 transition-transform">
+                        4
+                      </div>
+                      <span class="text-[14.5px] font-bold text-slate-300 leading-snug">Gói ăn & Mục tiêu</span>
+                      <span class="text-[12px] text-slate-400 mt-1">Cam kết kết quả</span>
+                    </div>
+                  </div>
+
+                  <!-- Cụm Nút Hành Động -->
+                  <div class="flex flex-col sm:flex-row items-center gap-3 pt-4 border-t border-teal-800/40">
+                    <button onclick="window.openNutritionAdvisoryModal ? window.openNutritionAdvisoryModal() : null" type="button" class="w-full sm:w-auto px-6 py-3.5 rounded-2xl bg-gradient-to-r from-teal-400 to-emerald-400 hover:from-teal-300 hover:to-emerald-300 text-slate-950 font-extrabold text-sm md:text-base transition-all shadow-lg shadow-teal-500/30 flex items-center justify-center gap-2.5 cursor-pointer group">
+                      <i class="fa-solid fa-calculator text-slate-950 group-hover:rotate-12 transition-transform"></i>
+                      <span>Trải nghiệm Trang tư vấn ngay</span>
+                    </button>
+                    <button id="btn-nutrition-advisory-autoplay" onclick="toggleNutritionAdvisoryAutoPlay()" type="button" class="w-full sm:w-auto px-4 py-3.5 bg-white/10 hover:bg-white/20 text-slate-200 font-semibold rounded-2xl text-xs md:text-sm transition-all flex items-center justify-center gap-2 border border-white/10 cursor-pointer">
+                      <i class="fa-solid fa-pause"></i> Tự động chuyển bước
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Cột Phải: Màn hình Mô phỏng Bài Kiểm Tra Thực Tế (Bản sao 1:1 Trang Tư Vấn Dinh Dưỡng) -->
+                <div class="w-full lg:w-5/12 flex flex-col justify-center">
+                  <div class="bg-white dark:bg-slate-900 text-slate-800 dark:text-white rounded-[28px] p-5 md:p-6 shadow-2xl border-4 border-teal-500/40 relative overflow-hidden transition-all duration-300 min-h-[480px] flex flex-col justify-between">
+                    
+                    <!-- App Status Bar Header -->
+                    <div class="flex items-center justify-between pb-3 mb-4 border-b border-slate-200 dark:border-slate-800 shrink-0">
+                      <div class="flex items-center gap-2">
+                        <div class="flex items-center gap-1.5">
+                          <span class="w-3 h-3 rounded-full bg-rose-500 inline-block"></span>
+                          <span class="w-3 h-3 rounded-full bg-amber-500 inline-block"></span>
+                          <span class="w-3 h-3 rounded-full bg-emerald-500 inline-block"></span>
+                        </div>
+                        <span class="text-xs font-bold text-slate-500 dark:text-slate-400 ml-2">Nuri Advisory Engine v2.0</span>
+                      </div>
+                      <span class="text-[10px] font-extrabold px-2.5 py-1 rounded-full bg-teal-100 dark:bg-teal-900/50 text-teal-700 dark:text-teal-300 uppercase tracking-wider flex items-center gap-1">
+                        <i class="fa-solid fa-circle text-[8px] text-emerald-500 animate-ping"></i> Màn Hình Bài Kiểm Tra Thật
+                      </span>
+                    </div>
+
+                    <!-- Panel 0: Step 1 Mockup (Nhập thông tin người dùng) -->
+                    <div id="nutrition-showcase-panel-0" class="nutrition-showcase-panel space-y-4">
+                      <div class="bg-slate-50 dark:bg-slate-800/80 rounded-2xl p-4 border border-slate-200 dark:border-slate-700">
+                        <div class="flex items-center gap-3 mb-3 pb-3 border-b border-slate-200 dark:border-slate-700">
+                          <div class="w-10 h-10 rounded-full bg-teal-500 text-slate-950 flex items-center justify-center font-bold text-sm">A</div>
+                          <div>
+                            <div class="font-extrabold text-sm text-slate-900 dark:text-white">Nguyễn Văn A (28 tuổi)</div>
+                            <div class="text-xs text-slate-500 dark:text-slate-400">Kiểm tra tư vấn dinh dưỡng ngày hôm nay</div>
+                          </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2.5 text-xs">
+                          <div class="p-2.5 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700">
+                            <span class="text-slate-400 block text-[10px]">Chiều cao:</span>
+                            <strong class="text-slate-900 dark:text-white font-black text-sm">165 cm</strong>
+                          </div>
+                          <div class="p-2.5 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700">
+                            <span class="text-slate-400 block text-[10px]">Cân nặng hiện tại:</span>
+                            <strong class="text-rose-500 font-black text-sm">60 kg</strong>
+                          </div>
+                          <div class="p-2.5 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700">
+                            <span class="text-slate-400 block text-[10px]">Mục tiêu cân nặng:</span>
+                            <strong class="text-emerald-500 font-black text-sm">53 kg</strong>
+                          </div>
+                          <div class="p-2.5 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700">
+                            <span class="text-slate-400 block text-[10px]">Cường độ vận động:</span>
+                            <strong class="text-teal-600 dark:text-teal-400 font-bold text-xs">Tập nhẹ (2-3 buổi)</strong>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="p-3 bg-teal-50 dark:bg-teal-950/40 rounded-xl border border-teal-200 dark:border-teal-800/40 text-center">
+                        <span class="text-xs font-bold text-teal-800 dark:text-teal-300">Đang khởi tạo thuật toán phân tích y khoa BMR / TDEE...</span>
+                      </div>
+                    </div>
+
+                    <!-- Panel 1: Step 2 Mockup (BẢN SAO 1:1 MÀN HÌNH TRANG TƯ VẤN THỰC TẾ TRONG ẢNH CỦA BẠN) -->
+                    <div id="nutrition-showcase-panel-1" class="nutrition-showcase-panel space-y-3 hidden">
+                      
+                      <!-- Header Thẻ Kết Quả Phân Tích (Y hình chụp) -->
+                      <div class="bg-emerald-800 text-white p-4 md:p-5 rounded-2xl text-center relative shadow-lg">
+                        <span class="bg-emerald-700/90 text-emerald-200 text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider inline-flex items-center gap-1 mb-2">
+                          <i class="fa-solid fa-bullseye"></i> Mục Tiêu Phân Tích
+                        </span>
+                        
+                        <h4 class="text-2xl md:text-3xl font-black text-white tracking-tight my-1">
+                          Từ 60kg <i class="fa-solid fa-arrow-right text-emerald-300 text-lg mx-1"></i> 53kg
+                        </h4>
+                        <p class="text-xs text-emerald-200 mb-3">Lộ trình dự kiến: <strong class="text-white font-bold">14 tuần</strong></p>
+                        
+                        <!-- Năng lượng đề xuất central box -->
+                        <div class="bg-emerald-950/70 border border-emerald-500/40 rounded-xl p-3 max-w-xs mx-auto shadow-inner">
+                          <span class="text-[10px] uppercase tracking-wider text-emerald-300 font-bold block">NĂNG LƯỢNG ĐỀ XUẤT</span>
+                          <span class="text-3xl font-black text-emerald-400 my-0.5 block tracking-tight">1450</span>
+                          <span class="text-[10px] text-emerald-200">/ ngày (đã tối ưu macro)</span>
+                        </div>
+                      </div>
+
+                      <!-- Accordion Chỉ số y khoa -->
+                      <div class="bg-slate-100 dark:bg-slate-800 p-2.5 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 flex items-center justify-between">
+                        <span class="flex items-center gap-1.5 text-xs">
+                          <i class="fa-solid fa-stethoscope text-emerald-600 dark:text-emerald-400"></i> Xem chi tiết chỉ số y khoa (TDEE, BMI, BMR)
+                        </span>
+                        <i class="fa-solid fa-chevron-down text-slate-400"></i>
+                      </div>
+
+                      <!-- Phân Bổ Dinh Dưỡng Mục Tiêu (Macros) -->
+                      <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-3.5 shadow-sm">
+                        <h5 class="font-extrabold text-xs text-slate-800 dark:text-white mb-3">Phân Bổ Dinh Dưỡng Mục Tiêu (Macros)</h5>
+                        
+                        <div class="flex items-center gap-4">
+                          <!-- Donut Chart Ring -->
+                          <div class="relative w-24 h-24 shrink-0 flex items-center justify-center">
+                            <svg class="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+                              <path class="text-rose-500" stroke-dasharray="40, 100" stroke-width="4.5" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"></path>
+                              <path class="text-amber-500" stroke-dasharray="40, 100" stroke-dashoffset="-40" stroke-width="4.5" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"></path>
+                              <path class="text-sky-500" stroke-dasharray="20, 100" stroke-dashoffset="-80" stroke-width="4.5" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"></path>
+                            </svg>
+                            <div class="absolute inset-0 flex flex-col items-center justify-center text-center p-1">
+                              <span class="text-[8px] text-slate-400 uppercase font-bold leading-none">Mục tiêu</span>
+                              <span class="text-xs font-black text-slate-900 dark:text-white leading-tight">1450</span>
+                              <span class="text-[7px] text-slate-500 leading-none">KCAL/NGÀY</span>
+                            </div>
+                          </div>
+
+                          <!-- Macro Rows -->
+                          <div class="flex-1 space-y-2 text-xs">
+                            <div class="flex items-center justify-between p-2 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-100 dark:border-slate-700">
+                              <div class="flex items-center gap-2">
+                                <i class="fa-solid fa-bolt text-rose-500 text-xs"></i>
+                                <div>
+                                  <div class="font-extrabold text-slate-800 dark:text-white text-[11px]">PROTEIN</div>
+                                  <div class="text-[9px] text-slate-400">Xây dựng cơ</div>
+                                </div>
+                              </div>
+                              <span class="font-black text-rose-500 text-xs">115g</span>
+                            </div>
+
+                            <div class="flex items-center justify-between p-2 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-100 dark:border-slate-700">
+                              <div class="flex items-center gap-2">
+                                <i class="fa-solid fa-wheat-awn text-amber-500 text-xs"></i>
+                                <div>
+                                  <div class="font-extrabold text-slate-800 dark:text-white text-[11px]">CARB</div>
+                                  <div class="text-[9px] text-slate-400">Năng lượng</div>
+                                </div>
+                              </div>
+                              <span class="font-black text-amber-500 text-xs">145g</span>
+                            </div>
+
+                            <div class="flex items-center justify-between p-2 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-100 dark:border-slate-700">
+                              <div class="flex items-center gap-2">
+                                <i class="fa-solid fa-droplet text-sky-500 text-xs"></i>
+                                <div>
+                                  <div class="font-extrabold text-slate-800 dark:text-white text-[11px]">FAT</div>
+                                  <div class="text-[9px] text-slate-400">Nội tiết tố</div>
+                                </div>
+                              </div>
+                              <span class="font-black text-sky-500 text-xs">45g</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <!-- Lời Khuyên Từ Chuyên Gia (Y hình chụp) -->
+                      <div class="bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/40 rounded-xl p-3 flex items-start gap-2.5">
+                        <div class="w-8 h-8 rounded-full bg-emerald-500 text-slate-950 flex items-center justify-center shrink-0 font-bold text-xs">
+                          <i class="fa-solid fa-user-doctor"></i>
+                        </div>
+                        <div>
+                          <strong class="text-xs text-emerald-900 dark:text-emerald-300 block mb-0.5 font-black">Lời Khuyên Từ Chuyên Gia Nuri:</strong>
+                          <p class="text-[11px] text-slate-700 dark:text-slate-300 leading-snug">
+                            Bạn cần duy trì thâm hụt calo và ưu tiên đạm, chất xơ để giảm mỡ an toàn, không bị mất cơ bắp. Lộ trình cam kết: Giảm 7kg trong 14 tuần!
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Panel 2: Step 3 Mockup (Menu món ăn gợi ý) -->
+                    <div id="nutrition-showcase-panel-2" class="nutrition-showcase-panel space-y-3 hidden">
+                      <div class="flex items-center justify-between mb-2">
+                        <h5 class="font-extrabold text-xs text-slate-800 dark:text-white flex items-center gap-1.5">
+                          <i class="fa-solid fa-utensils text-amber-500"></i> Menu Gợi Ý Cho 1,450 Kcal/Ngày
+                        </h5>
+                        <span class="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold">Chuẩn Xác 100%</span>
+                      </div>
+                      
+                      <div class="space-y-2 text-xs">
+                        <div class="p-3 bg-slate-50 dark:bg-slate-800/80 rounded-xl border border-slate-200 dark:border-slate-700 flex items-center justify-between">
+                          <div>
+                            <div class="font-bold text-slate-900 dark:text-white">Bữa Sáng: Salad Ức gà áp chảo sốt mè</div>
+                            <div class="text-[10px] text-slate-400">38g Protein • 30g Carb • 10g Fat</div>
+                          </div>
+                          <span class="font-black text-emerald-500">380 Kcal</span>
+                        </div>
+
+                        <div class="p-3 bg-slate-50 dark:bg-slate-800/80 rounded-xl border border-slate-200 dark:border-slate-700 flex items-center justify-between">
+                          <div>
+                            <div class="font-bold text-slate-900 dark:text-white">Bữa Trưa: Cơm gạo lứt Bò nướng ngũ sắc</div>
+                            <div class="text-[10px] text-slate-400">45g Protein • 65g Carb • 18g Fat</div>
+                          </div>
+                          <span class="font-black text-emerald-500">550 Kcal</span>
+                        </div>
+
+                        <div class="p-3 bg-slate-50 dark:bg-slate-800/80 rounded-xl border border-slate-200 dark:border-slate-700 flex items-center justify-between">
+                          <div>
+                            <div class="font-bold text-slate-900 dark:text-white">Bữa Tối: Cá hồi nướng măng tây & bơ</div>
+                            <div class="text-[10px] text-slate-400">32g Protein • 50g Carb • 17g Fat</div>
+                          </div>
+                          <span class="font-black text-emerald-500">520 Kcal</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Panel 3: Step 4 Mockup (Gói ăn cá nhân hóa & Cam kết mục tiêu cao) -->
+                    <div id="nutrition-showcase-panel-3" class="nutrition-showcase-panel space-y-3 hidden">
+                      <div class="bg-gradient-to-r from-teal-600 to-emerald-600 text-white p-4 rounded-2xl text-center shadow-md">
+                        <span class="bg-white/20 text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider inline-block mb-1">Gói Ăn Khuyên Dùng</span>
+                        <h4 class="text-xl font-black text-white">Gói Giảm Mỡ 14 Tuần (Siêu Tốc)</h4>
+                        <p class="text-xs text-teal-100 mt-1">Cam kết mục tiêu đo lường được bằng số liệu thật</p>
+                      </div>
+
+                      <div class="grid grid-cols-2 gap-2.5 text-xs">
+                        <div class="p-3 bg-emerald-50 dark:bg-emerald-950/40 rounded-xl border border-emerald-200 dark:border-emerald-800/40 text-center">
+                          <span class="text-slate-500 dark:text-slate-400 block text-[10px]">Giảm Cân Nặng:</span>
+                          <strong class="text-emerald-600 dark:text-emerald-400 font-black text-lg">-7.0 kg</strong>
+                        </div>
+                        <div class="p-3 bg-teal-50 dark:bg-teal-950/40 rounded-xl border border-teal-200 dark:border-teal-800/40 text-center">
+                          <span class="text-slate-500 dark:text-slate-400 block text-[10px]">Giảm Vòng Eo:</span>
+                          <strong class="text-teal-600 dark:text-teal-400 font-black text-lg">-5.5 cm</strong>
+                        </div>
+                      </div>
+
+                      <div class="p-3 bg-slate-50 dark:bg-slate-800/80 rounded-xl border border-slate-200 dark:border-slate-700 text-xs">
+                        <div class="flex items-center justify-between font-bold text-slate-800 dark:text-slate-200 mb-1">
+                          <span>Tỉ lệ hoàn thành mục tiêu:</span>
+                          <span class="text-emerald-500">100% Cam kết</span>
+                        </div>
+                        <div class="w-full bg-slate-200 dark:bg-slate-700 h-2 rounded-full overflow-hidden">
+                          <div class="bg-emerald-500 h-full w-full rounded-full"></div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Footer Note inside Mockup -->
+                    <div class="pt-3 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 shrink-0">
+                      <span><i class="fa-solid fa-shield-halved text-emerald-500 mr-1"></i> Nuri Certified AI</span>
+                      <span class="text-teal-600 dark:text-teal-400 font-bold">Chính xác 1:1</span>
+                    </div>
+
+                  </div>
+                </div>
+
+              </div>
+            </div>
           </div>
 
         <!-- Wave Divider -->
@@ -3805,22 +4256,36 @@
           
           <div id="landing-selfmix-dish-container" class="mt-8 hidden flex justify-center w-full max-w-4xl mx-auto"></div>
           
-          <div class="mt-12 flex flex-col md:flex-row justify-center items-center gap-6 w-full">
-            <button onclick="window.openOrderPlatformModal('landing')" class="animate-attention-glow-shake relative group/order-btn overflow-hidden w-full md:w-auto bg-gradient-to-r from-orange-500 to-amber-500 text-white font-black text-[30px] leading-[40px] py-6 px-12 rounded-full hover:scale-105 active:scale-95 transition-all duration-300 shadow-[0_0_20px_rgba(245,158,11,0.6)] hover:shadow-[0_0_40px_rgba(245,158,11,0.9)] border-4 border-amber-300 z-20 flex-1 max-w-sm">
+          <div class="mt-12 flex flex-col md:flex-row justify-center items-center gap-8 w-full max-w-5xl mx-auto">
+            <button onclick="window.openOrderPlatformModal('landing')" class="animate-attention-glow-shake relative group/order-btn overflow-hidden w-full md:w-1/2 h-28 bg-gradient-to-r from-orange-500 to-amber-500 text-white font-black text-2xl md:text-3xl rounded-full hover:scale-105 active:scale-95 transition-all duration-300 shadow-[0_0_25px_rgba(245,158,11,0.7)] hover:shadow-[0_0_50px_rgba(245,158,11,0.95)] border-4 border-amber-300 z-20 shrink-0 flex items-center justify-center cursor-pointer">
               <span class="absolute inset-0 w-full h-full rounded-full opacity-30 bg-gradient-to-b from-transparent via-transparent to-black pointer-events-none"></span>
               <span class="relative flex items-center justify-center gap-4">
-                <i class="fa-solid fa-gift text-amber-100 animate-bounce text-[37.5px] leading-[45px]"></i>
+                <i class="fa-solid fa-gift text-amber-100 animate-bounce text-4xl md:text-5xl"></i>
                 ĐĂNG KÝ GÓI
               </span>
             </button>
 
-            <button onclick="openPublicMenu()" class="relative group/menu-btn overflow-hidden w-full md:w-auto bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-black text-[30px] leading-[40px] py-6 px-12 rounded-full hover:scale-105 active:scale-95 transition-all duration-300 shadow-[0_0_20px_rgba(16,185,129,0.5)] hover:shadow-[0_0_40px_rgba(16,185,129,0.8)] border-4 border-emerald-300 z-20 flex-1 max-w-sm">
+            <button type="button" onclick="openPublicMenu()" class="relative group/menu-btn overflow-hidden w-full md:w-1/2 h-28 bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-black text-2xl md:text-3xl rounded-full hover:scale-105 active:scale-95 transition-all duration-300 shadow-[0_0_25px_rgba(16,185,129,0.6)] hover:shadow-[0_0_50px_rgba(16,185,129,0.9)] border-4 border-emerald-300 z-20 shrink-0 flex items-center justify-center cursor-pointer">
               <span class="absolute inset-0 w-full h-full rounded-full opacity-30 bg-gradient-to-b from-transparent via-transparent to-black pointer-events-none"></span>
               <span class="relative flex items-center justify-center gap-4 whitespace-nowrap">
-                <i class="fa-solid fa-utensils text-emerald-100 text-[37.5px] leading-[45px]"></i>
+                <i class="fa-solid fa-utensils text-emerald-100 text-4xl md:text-5xl"></i>
                 XEM MENU ĐẦY ĐỦ
               </span>
             </button>
+          </div>
+
+          <!-- CTA: Đặt món dùng thử & Tư vấn Zalo trên Trang chủ -->
+          <div class="w-full max-w-6xl mx-auto bg-white dark:bg-slate-800 p-6 md:p-8 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm mt-10 mb-12 text-center animate-fade-in px-4">
+              <h4 class="text-xl md:text-2xl font-extrabold text-slate-900 dark:text-white mb-2">Chỉ muốn thử trước món ăn hôm nay?</h4>
+              <p class="text-sm md:text-base text-slate-500 dark:text-slate-400 mb-6 max-w-xl mx-auto">Trải nghiệm ngay hương vị thực đơn Nuri gợi ý. Giao hàng nóng hổi tận nơi trong 30 phút!</p>
+              <div class="flex flex-col sm:flex-row justify-center items-center gap-4 w-full max-w-2xl mx-auto">
+                  <button type="button" id="btn-register-single-meal" onclick="window.openPlatformSelectorModal()" class="w-full sm:w-1/2 bg-[#F97316] hover:bg-[#EA580C] text-white px-6 py-3.5 rounded-xl font-bold text-base md:text-lg transition-all shadow-md flex items-center justify-center gap-2 animate-glow-pulse cursor-pointer">
+                      <i class="fa-solid fa-utensils"></i> Đăng ký đặt 1 bữa
+                  </button>
+                  <a href="https://zalo.me/0906246413" target="_blank" class="w-full sm:w-1/2 bg-[#0068FF] hover:bg-[#0054cc] text-white px-6 py-3.5 rounded-xl font-bold text-base md:text-lg transition-all shadow-md flex items-center justify-center gap-2 transform hover:-translate-y-0.5 active:scale-95 animate-glow-pulse-blue cursor-pointer">
+                      <i class="fa-solid fa-comment-dots"></i> Nhắn tin Zalo nhận ưu đãi
+                  </a>
+              </div>
           </div>
         </div>
 
@@ -3892,8 +4357,45 @@
               </div>
             </div>
 
-            <!-- Ô chữ nhật ngang: Giới thiệu tính năng Trang cá nhân khách hàng & Hoạt ảnh động -->
-            <div id="customer-portal-features-banner" class="mt-12 w-full bg-gradient-to-br from-emerald-900 via-teal-950 to-emerald-900 rounded-[32px] p-6 md:p-10 text-white shadow-2xl border border-emerald-700/50 relative overflow-hidden">
+            <!-- Ô chữ nhật ngang (Thu gọn) Banner Giới thiệu tính năng Trang cá nhân khách hàng & Hoạt ảnh động -->
+            <div id="customer-portal-banner-collapsed" onclick="toggleCustomerPortalBanner()" class="mt-12 w-full bg-gradient-to-r from-emerald-900 via-teal-950 to-emerald-900 rounded-[32px] p-5 md:p-6 text-white shadow-2xl border-2 border-emerald-500/60 hover:border-emerald-400 relative overflow-hidden cursor-pointer transition-all duration-300 transform hover:scale-[1.01] group animate-pulse-subtle">
+              <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/food.png')] opacity-15 pointer-events-none"></div>
+              <div class="absolute -top-16 -right-16 w-64 h-64 bg-emerald-400/25 rounded-full blur-2xl pointer-events-none group-hover:bg-emerald-400/35 transition-all"></div>
+              <div class="absolute -bottom-16 -left-16 w-64 h-64 bg-teal-400/25 rounded-full blur-2xl pointer-events-none"></div>
+
+              <div class="flex flex-col md:flex-row items-center justify-between gap-4 relative z-10">
+                <!-- Nội dung thông tin mô tả ngắn -->
+                <div class="flex flex-col sm:flex-row items-start sm:items-center gap-3 md:gap-5 flex-1 min-w-0">
+                  <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-500/25 border border-emerald-400/50 text-emerald-300 text-xs md:text-sm font-bold uppercase tracking-wider shrink-0 shadow-sm">
+                    <i class="fa-solid fa-mobile-screen-button text-emerald-300 animate-bounce"></i> Độc Quyền Trên App
+                  </div>
+                  <div class="min-w-0">
+                    <h3 class="text-lg sm:text-xl md:text-2xl font-extrabold text-white tracking-tight flex items-center gap-2">
+                      Quản lý Gói Ăn & Dinh Dưỡng Thông Minh 360°
+                    </h3>
+                    <p class="text-slate-300 text-xs md:text-sm font-medium truncate mt-0.5">
+                      Xem thực đơn, linh hoạt đổi món theo khẩu vị, theo dõi Calo/Macro chuẩn xác & nhận thông báo realtime.
+                    </p>
+                  </div>
+                </div>
+
+                <!-- Lời kêu gọi nhấn vào & Hoạt ảnh kích thích -->
+                <div class="flex items-center gap-3 shrink-0 w-full md:w-auto justify-end">
+                  <div class="px-5 py-3 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-white font-bold text-sm md:text-base shadow-lg shadow-emerald-500/30 transition-all flex items-center gap-2 group-hover:scale-105 relative">
+                    <span class="relative z-10 flex items-center gap-2">
+                      Khám phá ngay <i class="fa-solid fa-chevron-down text-emerald-100 group-hover:translate-y-1 transition-transform animate-bounce"></i>
+                    </span>
+                    <span class="absolute -top-1 -right-1 flex h-3 w-3">
+                      <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-300 opacity-75"></span>
+                      <span class="relative inline-flex rounded-full h-3 w-3 bg-emerald-400"></span>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Bảng Mô tả App Đầy Đủ (Mở Rộng) -->
+            <div id="customer-portal-banner-expanded" class="mt-12 w-full bg-gradient-to-br from-emerald-900 via-teal-950 to-emerald-900 rounded-[32px] p-6 md:p-10 text-white shadow-2xl border border-emerald-700/50 relative overflow-hidden hidden transition-all duration-500 animate-fade-in">
               <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/food.png')] opacity-15 pointer-events-none"></div>
               <div class="absolute -top-24 -right-24 w-96 h-96 bg-emerald-400/20 rounded-full blur-3xl pointer-events-none"></div>
               <div class="absolute -bottom-24 -left-24 w-96 h-96 bg-teal-400/20 rounded-full blur-3xl pointer-events-none"></div>
@@ -3903,13 +4405,19 @@
                 <!-- Cột Trái: Sơ đồ quy trình & Mô tả tính năng -->
                 <div class="w-full lg:w-7/12 flex flex-col justify-between">
                   <div>
-                    <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 text-xs md:text-sm font-bold uppercase tracking-wider mb-4">
-                      <i class="fa-solid fa-mobile-screen-button"></i> Độc Quyền Trên App / Trang Cá Nhân
+                    <div class="flex items-center justify-between gap-4 mb-4">
+                      <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 text-xs md:text-sm font-bold uppercase tracking-wider">
+                        <i class="fa-solid fa-mobile-screen-button"></i> Độc Quyền Trên App / Trang Cá Nhân
+                      </div>
+                      <button onclick="toggleCustomerPortalBanner()" class="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-white/10 hover:bg-white/20 text-emerald-200 hover:text-white text-xs md:text-sm font-bold border border-white/15 transition-all cursor-pointer">
+                        <i class="fa-solid fa-chevron-up"></i> Thu gọn bảng
+                      </button>
                     </div>
+
                     <h3 class="text-2xl md:text-3xl lg:text-4xl font-extrabold text-white leading-tight tracking-tight mb-3">
                       Quản lý Gói Ăn & Dinh Dưỡng Thông Minh 360°
                     </h3>
-                    <p class="text-slate-300 text-sm md:text-base leading-relaxed mb-6">
+                    <p class="text-slate-300 text-[18px] md:text-[21px] leading-relaxed mb-6">
                       Trang cá nhân giúp bạn chủ động hoàn toàn lộ trình ăn uống: Xem thực đơn, linh hoạt đổi món theo khẩu vị, theo dõi Calo/Macro chuẩn xác và nhận thông báo giao hàng realtime.
                     </p>
                   </div>
@@ -3918,47 +4426,47 @@
                   <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
                     <!-- Step 1 -->
                     <div onclick="setPortalShowcaseStep(0)" id="portal-step-btn-0" class="portal-step-card cursor-pointer p-3 rounded-2xl bg-white/10 hover:bg-white/20 border border-emerald-500/50 transition-all flex flex-col items-center text-center group">
-                      <div class="w-9 h-9 rounded-xl bg-emerald-500 text-white flex items-center justify-center font-bold text-sm mb-2 group-hover:scale-110 transition-transform shadow-md">
+                      <div class="w-11 h-11 rounded-xl bg-emerald-500 text-white flex items-center justify-center font-bold text-[18px] mb-2 group-hover:scale-110 transition-transform shadow-md">
                         1
                       </div>
-                      <span class="text-xs font-bold text-white leading-snug">Dinh dưỡng hôm nay</span>
-                      <span class="text-[10px] text-slate-300 mt-1">Tính toán & Nhập bữa</span>
+                      <span class="text-[15.5px] font-bold text-white leading-snug">Dinh dưỡng hôm nay</span>
+                      <span class="text-[13px] text-slate-300 mt-1">Tính toán & Nhập bữa</span>
                     </div>
 
                     <!-- Step 2 -->
                     <div onclick="setPortalShowcaseStep(1)" id="portal-step-btn-1" class="portal-step-card cursor-pointer p-3 rounded-2xl bg-white/5 hover:bg-white/15 border border-white/10 transition-all flex flex-col items-center text-center group">
-                      <div class="w-9 h-9 rounded-xl bg-slate-700 text-slate-300 flex items-center justify-center font-bold text-sm mb-2 group-hover:scale-110 transition-transform">
+                      <div class="w-11 h-11 rounded-xl bg-slate-700 text-slate-300 flex items-center justify-center font-bold text-[18px] mb-2 group-hover:scale-110 transition-transform">
                         2
                       </div>
-                      <span class="text-xs font-bold text-slate-300 leading-snug">Lịch & Đổi món</span>
-                      <span class="text-[10px] text-slate-400 mt-1">Linh hoạt khẩu vị</span>
+                      <span class="text-[15.5px] font-bold text-slate-300 leading-snug">Lịch & Đổi món</span>
+                      <span class="text-[13px] text-slate-400 mt-1">Linh hoạt khẩu vị</span>
                     </div>
 
                     <!-- Step 3 -->
                     <div onclick="setPortalShowcaseStep(2)" id="portal-step-btn-2" class="portal-step-card cursor-pointer p-3 rounded-2xl bg-white/5 hover:bg-white/15 border border-white/10 transition-all flex flex-col items-center text-center group">
-                      <div class="w-9 h-9 rounded-xl bg-slate-700 text-slate-300 flex items-center justify-center font-bold text-sm mb-2 group-hover:scale-110 transition-transform">
+                      <div class="w-11 h-11 rounded-xl bg-slate-700 text-slate-300 flex items-center justify-center font-bold text-[18px] mb-2 group-hover:scale-110 transition-transform">
                         3
                       </div>
-                      <span class="text-xs font-bold text-slate-300 leading-snug">Theo dõi Calo</span>
-                      <span class="text-[10px] text-slate-400 mt-1">Biểu đồ dinh dưỡng</span>
+                      <span class="text-[15.5px] font-bold text-slate-300 leading-snug">Theo dõi Calo</span>
+                      <span class="text-[13px] text-slate-400 mt-1">Biểu đồ dinh dưỡng</span>
                     </div>
 
                     <!-- Step 4 -->
                     <div onclick="setPortalShowcaseStep(3)" id="portal-step-btn-3" class="portal-step-card cursor-pointer p-3 rounded-2xl bg-white/5 hover:bg-white/15 border border-white/10 transition-all flex flex-col items-center text-center group">
-                      <div class="w-9 h-9 rounded-xl bg-slate-700 text-slate-300 flex items-center justify-center font-bold text-sm mb-2 group-hover:scale-110 transition-transform">
+                      <div class="w-11 h-11 rounded-xl bg-slate-700 text-slate-300 flex items-center justify-center font-bold text-[18px] mb-2 group-hover:scale-110 transition-transform">
                         4
                       </div>
-                      <span class="text-xs font-bold text-slate-300 leading-snug">Giao hàng & Tích điểm</span>
-                      <span class="text-[10px] text-slate-400 mt-1">Realtime Shipper</span>
+                      <span class="text-[15.5px] font-bold text-slate-300 leading-snug">Giao hàng & Tích điểm</span>
+                      <span class="text-[13px] text-slate-400 mt-1">Realtime Shipper</span>
                     </div>
                   </div>
 
                   <!-- CTA Button & Controls -->
                   <div class="flex flex-wrap items-center gap-4">
-                    <button onclick="openCustomerPortalDemo()" class="px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-bold rounded-2xl text-sm md:text-base shadow-lg shadow-emerald-500/25 transition-all flex items-center gap-2 cursor-pointer">
+                    <button onclick="openCustomerPortalDemo()" class="px-7 py-3.5 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-bold rounded-2xl text-[18px] md:text-[21px] shadow-lg shadow-emerald-500/25 transition-all flex items-center gap-2 cursor-pointer">
                       <i class="fa-solid fa-circle-play"></i> Trải nghiệm Trang cá nhân ngay
                     </button>
-                    <button onclick="togglePortalShowcaseAutoPlay()" id="btn-portal-showcase-autoplay" class="px-4 py-3 bg-white/10 hover:bg-white/20 text-slate-200 font-semibold rounded-2xl text-xs md:text-sm transition-all flex items-center gap-2 border border-white/10 cursor-pointer">
+                    <button onclick="togglePortalShowcaseAutoPlay()" id="btn-portal-showcase-autoplay" class="px-5 py-3.5 bg-white/10 hover:bg-white/20 text-slate-200 font-semibold rounded-2xl text-[15.5px] md:text-[18px] transition-all flex items-center gap-2 border border-white/10 cursor-pointer">
                       <i class="fa-solid fa-pause"></i> Tự động phát hoạt ảnh
                     </button>
                   </div>
@@ -4024,11 +4532,6 @@
                               <div class="relative w-12 h-12 mb-1">
                                 <svg class="w-12 h-12 transform -rotate-90">
                                   <circle cx="24" cy="24" r="20" stroke="currentColor" stroke-width="4" fill="transparent" class="text-slate-100"></circle>
-                                  <circle cx="24" cy="24" r="20" stroke="currentColor" stroke-width="4" fill="transparent" stroke-dasharray="125.6" stroke-dashoffset="26" class="text-amber-500"></circle>
-                                </svg>
-                                <div class="absolute inset-0 flex items-center justify-center">
-                                  <span class="text-xs font-bold text-amber-500">78%</span>
-                                </div>
                               </div>
                               <span class="text-[10px] text-slate-500 font-medium">Calo 🔥</span>
                               <b class="text-xs text-slate-800 font-bold">1,450<span class="text-[9px] text-slate-400 font-normal">/1850</span></b>
@@ -5022,9 +5525,9 @@
                   Đồng hành cùng sức khỏe Việt qua những bữa ăn ngon, tiện lợi và được tính toán dinh dưỡng cá nhân hóa.
                 </p>
                 <div class="flex gap-4">
-                  <a href="#" class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-slate-400 hover:bg-emerald-500 hover:text-white transition-all"><i class="fa-brands fa-facebook-f"></i></a>
-                  <a href="#" class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-slate-400 hover:bg-emerald-500 hover:text-white transition-all"><i class="fa-brands fa-instagram"></i></a>
-                  <a href="#" class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-slate-400 hover:bg-emerald-500 hover:text-white transition-all"><i class="fa-brands fa-tiktok"></i></a>
+                  <a id="footer-social-facebook" href="#" target="_blank" class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-slate-400 hover:bg-emerald-500 hover:text-white transition-all"><i class="fa-brands fa-facebook-f"></i></a>
+                  <a id="footer-social-instagram" href="#" target="_blank" class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-slate-400 hover:bg-emerald-500 hover:text-white transition-all"><i class="fa-brands fa-instagram"></i></a>
+                  <a id="footer-social-tiktok" href="#" target="_blank" class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-slate-400 hover:bg-emerald-500 hover:text-white transition-all"><i class="fa-brands fa-tiktok"></i></a>
                 </div>
               </div>
               
@@ -5065,7 +5568,7 @@
       </div>
 
       <!-- View: ORDER FORM -->
-      <div id="view-order-form" class="hidden animate-fade-in pb-12 bg-slate-50 dark:bg-slate-900">
+      <div id="view-order-form" class="hidden animate-fade-in pb-12 bg-slate-50 dark:bg-slate-900 -mx-4 sm:-mx-6 lg:-mx-8 px-0">
         <div id="order-form-content-wrapper" class="w-full transition-all duration-300 relative">
           <!-- Toggle View Mode -->
           <div class="absolute top-2 right-2 z-[100] hidden md:flex justify-end pointer-events-none" id="order-form-view-toggle">
@@ -5078,8 +5581,8 @@
               </button>
             </div>
           </div>
-          <div class="sim-scrollable w-full overflow-x-clip px-4 md:px-0">
-            <div class="mb-6 mt-2">
+          <div class="sim-scrollable w-full overflow-x-clip px-0">
+            <div class="mb-6 mt-2 px-4 md:px-6">
               <button onclick="switchView('consulting')" class="text-slate-500 hover:text-slate-800 text-[17.5px] leading-[25px] font-medium mb-4 inline-flex items-center transition-colors">
                 <i class="fa-solid fa-arrow-left mr-2"></i> Quay lại Tư vấn
               </button>
@@ -5092,7 +5595,7 @@
             </div>
 
             <!-- Sticky Nutrition Summary -->
-            <div id="sticky-nutrition-summary" class="sticky top-0 lg:top-20 z-[90] mb-6 rounded-2xl shadow-md shadow-emerald-900/10 border border-[#043F2E] p-4 flex items-center gap-6 md:gap-12 transition-all relative bg-[#043F2E]">
+            <div id="sticky-nutrition-summary" class="sticky top-0 lg:top-20 z-[90] mb-6 rounded-none md:rounded-2xl shadow-md shadow-emerald-900/10 border-y md:border border-[#043F2E] p-4 flex items-center gap-6 md:gap-12 transition-all relative bg-[#043F2E] w-full">
               <!-- Background pattern -->
               <div class="absolute inset-0 overflow-hidden rounded-2xl pointer-events-none">
                 <div class="absolute inset-0 bg-[radial-gradient(circle_at_70%_50%,_var(--tw-gradient-stops))] from-emerald-600/20 via-transparent to-transparent opacity-80 pointer-events-none"></div>
@@ -5163,9 +5666,10 @@
               </div>
             </div>
 
-            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
-              <div class="lg:col-span-7">
-                <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
+            <div class="flex flex-col gap-8 w-full">
+              <!-- Bảng Menu nằm ở TRÊN -->
+              <div class="w-full">
+                <div class="bg-white rounded-none md:rounded-2xl shadow-sm border-y md:border border-slate-100 p-4 md:p-6 w-full">
                   <h2 class="text-[22.5px] leading-[35px] font-bold text-slate-800 mb-4 flex items-center gap-2">
                     <i class="fa-solid fa-utensils text-primary"></i> Menu
                   </h2>
@@ -5175,8 +5679,9 @@
                 </div>
               </div>
 
-              <div class="lg:col-span-5">
-                <form id="submit-order-form" class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden sticky top-24">
+              <!-- Bảng Giỏ Hàng nằm ở DƯỚI -->
+              <div class="w-full">
+                <form id="submit-order-form" class="bg-white rounded-none md:rounded-2xl shadow-sm border-y md:border border-slate-100 overflow-hidden w-full">
                   <div class="p-6 border-b border-slate-100 bg-slate-50/50">
                     <h2 class="text-[22.5px] leading-[35px] font-bold text-slate-800 mb-4 flex items-center justify-between">
                       <span><i class="fa-solid fa-basket-shopping text-orange-500 mr-2"></i>
@@ -6038,8 +6543,17 @@
               </select>
             </div>
             <div class="flex-1 min-w-[150px]">
-              <label class="block text-[15px] leading-[20px] font-medium text-slate-500 mb-1">Thời gian (Ngày)</label>
-              <input type="date" id="filter-order-date" onchange="renderOrdersAdmin()" class="w-full rounded-lg border border-slate-300 py-2 px-3 text-[17.5px] leading-[25px] focus:border-primary focus:ring-1 focus:ring-primary">
+              <label class="block text-[15px] leading-[20px] font-medium text-slate-500 mb-1">Thời gian</label>
+              <select id="filter-order-time" onchange="renderOrdersAdmin()" class="w-full rounded-lg border border-slate-300 py-2 px-3 text-[17.5px] leading-[25px] focus:border-primary focus:ring-1 focus:ring-primary bg-white">
+                <option value="7days">7 ngày qua</option>
+                <option value="today">Hôm nay</option>
+                <option value="30days">30 ngày qua</option>
+                <option value="this_month">Tháng này</option>
+                <option value="last_month">Tháng trước</option>
+                <option value="custom">Tùy chỉnh</option>
+                <option value="all">Tất cả thời gian</option>
+              </select>
+              <input type="date" id="filter-order-date" onchange="renderOrdersAdmin()" class="hidden w-full rounded-lg border border-slate-300 py-2 px-3 text-[17.5px] leading-[25px] focus:border-primary focus:ring-1 focus:ring-primary mt-1">
             </div>
             <div class="flex-1 min-w-[150px]">
               <label class="block text-[15px] leading-[20px] font-medium text-slate-500 mb-1">Khu vực / Phường xã</label>
@@ -6392,37 +6906,37 @@
 
 
 <!-- Banner Thông Báo Cài Đặt PWA trên Di Động -->
-<div id="pwa-install-banner" class="fixed bottom-4 left-4 right-4 md:left-auto md:right-4 md:max-w-md z-[999] hidden animate-slide-up">
-  <div class="bg-white/95 dark:bg-slate-900/95 backdrop-blur-md rounded-2xl p-4 shadow-2xl border border-emerald-100 dark:border-emerald-900/50 flex flex-col gap-3 relative overflow-hidden">
-    <div class="absolute -right-6 -top-6 w-24 h-24 bg-emerald-500/10 rounded-full blur-xl pointer-events-none"></div>
+<div id="pwa-install-banner" class="fixed bottom-0 left-0 right-0 w-full p-3 sm:p-6 z-[999] hidden animate-slide-up">
+  <div class="bg-white/95 dark:bg-slate-900/95 backdrop-blur-md rounded-3xl p-6 sm:p-8 min-h-[250px] sm:min-h-[270px] shadow-2xl border border-emerald-100 dark:border-emerald-900/50 flex flex-col justify-between gap-5 relative overflow-hidden">
+    <div class="absolute -right-6 -top-6 w-32 h-32 bg-emerald-500/10 rounded-full blur-xl pointer-events-none"></div>
     
-    <div class="flex items-start gap-3">
+    <div class="flex items-start gap-4">
       <!-- PWA Icon -->
-      <div class="relative w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center text-white shadow-md border border-white/20 overflow-hidden shrink-0">
+      <div class="relative w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center text-white shadow-md border border-white/20 overflow-hidden shrink-0">
         <img id="pwa-banner-icon-img" class="absolute inset-0 w-full h-full object-cover hidden" alt="Nuri PWA Icon">
-        <svg id="pwa-banner-icon-svg" class="w-6 h-6 z-10" viewBox="0 0 512 512" fill="#ffffff">
+        <svg id="pwa-banner-icon-svg" class="w-7 h-7 z-10" viewBox="0 0 512 512" fill="#ffffff">
           <path d="M140 300 C140 180, 240 140, 280 0 C280 120, 180 160, 140 300 Z" opacity="0.9"></path>
           <path d="M140 300 C140 180, 40 140, 0 0 C0 120, 100 160, 140 300 Z" opacity="0.9"></path>
         </svg>
       </div>
 
       <div class="flex-1 min-w-0 pr-6">
-        <h4 class="font-bold text-slate-900 dark:text-white text-base leading-tight">Cài đặt Ứng dụng Nuri</h4>
-        <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
+        <h4 class="font-bold text-slate-900 dark:text-white text-lg sm:text-xl leading-tight">Cài đặt Ứng dụng Nuri</h4>
+        <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-2 leading-relaxed">
           Thêm Nuri vào màn hình điện thoại giống như app đã cài đặt để nhận tư vấn nhanh nhất!
         </p>
       </div>
 
-      <button type="button" onclick="closePwaInstallBanner()" class="absolute top-3 right-3 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 rounded-full transition-colors">
-        <i class="fa-solid fa-xmark text-base"></i>
+      <button type="button" onclick="closePwaInstallBanner()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1.5 rounded-full transition-colors">
+        <i class="fa-solid fa-xmark text-lg"></i>
       </button>
     </div>
 
-    <div class="flex items-center gap-2 pt-1">
-      <button type="button" onclick="triggerPwaInstall()" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm py-2.5 px-4 rounded-xl shadow-md transition-all text-center flex items-center justify-center gap-2 cursor-pointer">
+    <div class="flex items-center gap-3 pt-3">
+      <button type="button" onclick="triggerPwaInstall()" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-base py-3 px-5 rounded-2xl shadow-md transition-all text-center flex items-center justify-center gap-2 cursor-pointer">
         <i class="fa-solid fa-download"></i> Cài đặt ngay
       </button>
-      <button type="button" onclick="closePwaInstallBanner()" class="bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-semibold text-sm py-2.5 px-4 rounded-xl transition-colors cursor-pointer">
+      <button type="button" onclick="closePwaInstallBanner()" class="bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-semibold text-base py-3 px-5 rounded-2xl transition-colors cursor-pointer">
         Để sau
       </button>
     </div>

@@ -304,57 +304,57 @@
     </div>
 
     <!-- Modal: Role Select (Chọn Vai Trò Đăng Nhập) -->
-    <div id="role-select-modal" class="fixed inset-0 z-[9999] hidden items-center justify-center bg-slate-950/60 backdrop-blur-md p-4 transition-all duration-300 animate-fade-in">
-      <div class="bg-white dark:bg-slate-900 w-full max-w-md rounded-[2rem] shadow-2xl border border-slate-100 dark:border-slate-800/80 overflow-hidden flex flex-col transform scale-100 transition-all duration-300 relative">
+    <div id="role-select-modal" class="fixed inset-0 z-[9999] hidden items-center justify-center bg-slate-950/60 backdrop-blur-md p-4 sm:p-6 transition-all duration-300 animate-fade-in">
+      <div class="bg-white dark:bg-slate-900 w-full max-w-3xl rounded-[3rem] shadow-2xl border border-slate-100 dark:border-slate-800/80 overflow-hidden flex flex-col transform scale-100 transition-all duration-300 relative">
         <!-- Modal Header -->
-        <div class="p-6 bg-gradient-to-br from-emerald-600 via-emerald-600 to-teal-700 text-white relative overflow-hidden">
-          <div class="absolute -right-10 -top-10 w-32 h-32 bg-white/10 rounded-full blur-2xl pointer-events-none"></div>
-          <button onclick="closeRoleSelectModal()" class="absolute top-5 right-5 text-emerald-100 hover:text-white bg-white/10 hover:bg-white/20 w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200">
-            <i class="fa-solid fa-times text-[17.5px] leading-[25px]"></i>
+        <div class="p-8 sm:p-10 bg-gradient-to-br from-emerald-600 via-emerald-600 to-teal-700 text-white relative overflow-hidden">
+          <div class="absolute -right-10 -top-10 w-48 h-48 bg-white/10 rounded-full blur-3xl pointer-events-none"></div>
+          <button onclick="closeRoleSelectModal()" class="absolute top-7 right-7 text-emerald-100 hover:text-white bg-white/10 hover:bg-white/20 w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-200 cursor-pointer">
+            <i class="fa-solid fa-times text-[28px] leading-[35px]"></i>
           </button>
-          <div class="flex items-center gap-2 mb-2">
-            <div class="w-8 h-8 bg-white/20 backdrop-blur-md rounded-xl flex items-center justify-center text-white shadow-inner">
-              <i class="fa-solid fa-cookie-bite text-[17.5px] leading-[25px]"></i>
+          <div class="flex items-center gap-3 mb-3">
+            <div class="w-12 h-12 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center text-white shadow-inner">
+              <i class="fa-solid fa-cookie-bite text-[26px] leading-[35px]"></i>
             </div>
-            <span class="text-[15px] uppercase tracking-widest font-black text-emerald-200">Nuri Kitchen</span>
+            <span class="text-[22px] uppercase tracking-widest font-black text-emerald-200">Nuri Kitchen</span>
           </div>
-          <h3 class="text-[25px] leading-[35px] font-extrabold tracking-tight mb-1">
+          <h3 class="text-[36px] sm:text-[42px] leading-[46px] sm:leading-[52px] font-extrabold tracking-tight mb-2">
             Chọn cổng đăng nhập
           </h3>
-          <p class="text-[15px] leading-[20px] text-emerald-100/90 font-medium">
+          <p class="text-[20px] sm:text-[22px] leading-[28px] sm:leading-[30px] text-emerald-100/90 font-medium">
             Vui lòng chọn vai trò để tiếp tục
           </p>
         </div>
 
         <!-- Options Body -->
-        <div class="p-6 space-y-4">
+        <div class="p-8 sm:p-10 space-y-6">
           <!-- Option: Admin (Quản trị) -->
-          <button type="button" onclick="selectRoleChoice('admin')" class="w-full text-left p-4 rounded-2xl border-2 border-slate-100 dark:border-slate-800 hover:border-emerald-500 dark:hover:border-emerald-500 bg-slate-50/50 dark:bg-slate-800/50 hover:bg-emerald-50/50 dark:hover:bg-emerald-950/30 transition-all duration-200 flex items-center gap-4 group cursor-pointer">
-            <div class="w-12 h-12 rounded-2xl bg-emerald-500 text-white flex items-center justify-center text-[25px] leading-[35px] shadow-md group-hover:scale-110 transition-transform">
+          <button type="button" onclick="selectRoleChoice('admin')" class="w-full text-left p-6 sm:p-7 rounded-3xl border-2 border-slate-100 dark:border-slate-800 hover:border-emerald-500 dark:hover:border-emerald-500 bg-slate-50/50 dark:bg-slate-800/50 hover:bg-emerald-50/50 dark:hover:bg-emerald-950/30 transition-all duration-200 flex items-center gap-6 group cursor-pointer">
+            <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-3xl bg-emerald-500 text-white flex items-center justify-center text-[32px] sm:text-[40px] leading-[45px] shadow-md group-hover:scale-110 transition-transform shrink-0">
               <i class="fa-solid fa-user-shield"></i>
             </div>
-            <div class="flex-1">
+            <div class="flex-1 min-w-0">
               <div class="flex items-center justify-between">
-                <span class="font-extrabold text-slate-800 dark:text-white text-[20px] leading-[30px] group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">Quản trị</span>
-                <i class="fa-solid fa-chevron-right text-[15px] leading-[20px] text-slate-400 group-hover:translate-x-1 transition-transform"></i>
+                <span class="font-extrabold text-slate-800 dark:text-white text-[26px] sm:text-[32px] leading-[36px] sm:leading-[42px] group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">Quản trị</span>
+                <i class="fa-solid fa-chevron-right text-[20px] sm:text-[24px] leading-[28px] text-slate-400 group-hover:translate-x-1 transition-transform"></i>
               </div>
-              <p class="text-[15px] leading-[20px] text-slate-500 dark:text-slate-400 mt-0.5">
+              <p class="text-[18px] sm:text-[22px] leading-[26px] sm:leading-[30px] text-slate-500 dark:text-slate-400 mt-1">
                 Dành cho Quản trị viên hệ thống &amp; Bếp
               </p>
             </div>
           </button>
 
           <!-- Option: Customer (Khách hàng) -->
-          <button type="button" onclick="selectRoleChoice('customer')" class="w-full text-left p-4 rounded-2xl border-2 border-slate-100 dark:border-slate-800 hover:border-teal-500 dark:hover:border-teal-500 bg-slate-50/50 dark:bg-slate-800/50 hover:bg-teal-50/50 dark:hover:bg-teal-950/30 transition-all duration-200 flex items-center gap-4 group cursor-pointer">
-            <div class="w-12 h-12 rounded-2xl bg-teal-600 text-white flex items-center justify-center text-[25px] leading-[35px] shadow-md group-hover:scale-110 transition-transform">
+          <button type="button" onclick="selectRoleChoice('customer')" class="w-full text-left p-6 sm:p-7 rounded-3xl border-2 border-slate-100 dark:border-slate-800 hover:border-teal-500 dark:hover:border-teal-500 bg-slate-50/50 dark:bg-slate-800/50 hover:bg-teal-50/50 dark:hover:bg-teal-950/30 transition-all duration-200 flex items-center gap-6 group cursor-pointer">
+            <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-3xl bg-teal-600 text-white flex items-center justify-center text-[32px] sm:text-[40px] leading-[45px] shadow-md group-hover:scale-110 transition-transform shrink-0">
               <i class="fa-solid fa-user"></i>
             </div>
-            <div class="flex-1">
+            <div class="flex-1 min-w-0">
               <div class="flex items-center justify-between">
-                <span class="font-extrabold text-slate-800 dark:text-white text-[20px] leading-[30px] group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors">Khách hàng</span>
-                <i class="fa-solid fa-chevron-right text-[15px] leading-[20px] text-slate-400 group-hover:translate-x-1 transition-transform"></i>
+                <span class="font-extrabold text-slate-800 dark:text-white text-[26px] sm:text-[32px] leading-[36px] sm:leading-[42px] group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors">Khách hàng</span>
+                <i class="fa-solid fa-chevron-right text-[20px] sm:text-[24px] leading-[28px] text-slate-400 group-hover:translate-x-1 transition-transform"></i>
               </div>
-              <p class="text-[15px] leading-[20px] text-slate-500 dark:text-slate-400 mt-0.5">
+              <p class="text-[18px] sm:text-[22px] leading-[26px] sm:leading-[30px] text-slate-500 dark:text-slate-400 mt-1">
                 Trang cá nhân &amp; đăng ký thực đơn bữa ăn
               </p>
             </div>
@@ -364,57 +364,57 @@
     </div>
 
     <!-- Modal: Admin Login (Đăng nhập Quản trị) -->
-    <div id="admin-login-modal" class="fixed inset-0 z-[9999] hidden items-center justify-center bg-slate-950/60 backdrop-blur-md p-4 transition-all duration-300 animate-fade-in">
-      <div class="bg-white dark:bg-slate-900 w-full max-w-sm rounded-[2rem] shadow-2xl border border-slate-100 dark:border-slate-800/80 overflow-hidden flex flex-col transform scale-100 transition-all duration-300 relative">
+    <div id="admin-login-modal" class="fixed inset-0 z-[9999] hidden items-center justify-center bg-slate-950/60 backdrop-blur-md p-4 md:p-8 transition-all duration-300 animate-fade-in">
+      <div class="bg-white dark:bg-slate-900 w-full max-w-3xl rounded-[2.5rem] shadow-2xl border border-slate-100 dark:border-slate-800/80 overflow-hidden flex flex-col transform scale-100 transition-all duration-300 relative">
         <!-- Modal Header -->
-        <div class="p-6 bg-gradient-to-br from-slate-800 via-slate-900 to-emerald-950 text-white relative overflow-hidden">
-          <div class="absolute -right-10 -top-10 w-32 h-32 bg-emerald-500/10 rounded-full blur-2xl pointer-events-none"></div>
+        <div class="p-8 md:p-10 bg-gradient-to-br from-slate-800 via-slate-900 to-emerald-950 text-white relative overflow-hidden">
+          <div class="absolute -right-10 -top-10 w-48 h-48 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
 
-          <button onclick="closeAdminLoginModal()" class="absolute top-5 right-5 text-slate-300 hover:text-white bg-white/10 hover:bg-white/20 w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200">
-            <i class="fa-solid fa-times text-[17.5px] leading-[25px]"></i>
+          <button onclick="closeAdminLoginModal()" class="absolute top-6 right-6 text-slate-300 hover:text-white bg-white/10 hover:bg-white/20 w-12 h-12 rounded-full flex items-center justify-center transition-all duration-200 cursor-pointer">
+            <i class="fa-solid fa-times text-2xl"></i>
           </button>
 
-          <div class="flex items-center gap-2 mb-2">
-            <div class="w-8 h-8 bg-emerald-500/20 backdrop-blur-md rounded-xl flex items-center justify-center text-emerald-400 shadow-inner">
-              <i class="fa-solid fa-shield-halved text-[17.5px] leading-[25px]"></i>
+          <div class="flex items-center gap-3 mb-3">
+            <div class="w-12 h-12 bg-emerald-500/20 backdrop-blur-md rounded-2xl flex items-center justify-center text-emerald-400 shadow-inner">
+              <i class="fa-solid fa-shield-halved text-2xl"></i>
             </div>
-            <span class="text-[15px] uppercase tracking-widest font-black text-emerald-400">Nuri Admin Portal</span>
+            <span class="text-lg uppercase tracking-widest font-black text-emerald-400">Nuri Admin Portal</span>
           </div>
 
-          <h3 class="text-[25px] leading-[35px] font-extrabold tracking-tight mb-1">
+          <h3 class="text-3xl md:text-4xl font-extrabold tracking-tight mb-2">
             Đăng nhập Quản trị
           </h3>
-          <p class="text-[15px] leading-[20px] text-slate-300 font-medium">
+          <p class="text-lg md:text-xl text-slate-300 font-medium">
             Truy cập bảng điều khiển hệ thống Nuri Kitchen
           </p>
         </div>
 
         <!-- Modal Body -->
-        <div class="p-6">
-          <form id="admin-login-form" onsubmit="handleAdminLoginSubmit(event)" class="space-y-4">
+        <div class="p-8 md:p-10">
+          <form id="admin-login-form" onsubmit="handleAdminLoginSubmit(event)" class="space-y-6">
             <div>
-              <label class="block text-[15px] leading-[20px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">Số điện thoại</label>
+              <label class="block text-base md:text-lg font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">Số điện thoại</label>
               <div class="relative">
-                <span class="absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400">
-                  <i class="fa-solid fa-phone text-[15px] leading-[20px]"></i>
+                <span class="absolute inset-y-0 left-0 flex items-center pl-5 text-slate-400">
+                  <i class="fa-solid fa-phone text-xl"></i>
                 </span>
-                <input type="tel" id="admin-login-phone-input" required="" autocomplete="off" placeholder="Nhập số điện thoại..." class="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-[17.5px] leading-[25px] font-semibold text-slate-800 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all">
+                <input type="tel" id="admin-login-phone-input" required="" autocomplete="off" placeholder="Nhập số điện thoại..." class="w-full pl-14 pr-6 py-4.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl text-xl md:text-2xl font-semibold text-slate-800 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all">
               </div>
             </div>
 
             <div>
-              <label class="block text-[15px] leading-[20px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">Mật khẩu Quản trị</label>
+              <label class="block text-base md:text-lg font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">Mật khẩu Quản trị</label>
               <div class="relative">
-                <span class="absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400">
-                  <i class="fa-solid fa-lock text-[15px] leading-[20px]"></i>
+                <span class="absolute inset-y-0 left-0 flex items-center pl-5 text-slate-400">
+                  <i class="fa-solid fa-lock text-xl"></i>
                 </span>
-                <input type="password" id="admin-login-password-input" required="" autocomplete="off" placeholder="Nhập mật khẩu..." class="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-[17.5px] leading-[25px] font-semibold text-slate-800 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all">
+                <input type="password" id="admin-login-password-input" required="" autocomplete="off" placeholder="Nhập mật khẩu..." class="w-full pl-14 pr-6 py-4.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl text-xl md:text-2xl font-semibold text-slate-800 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all">
               </div>
             </div>
 
-            <div class="pt-2">
-              <button type="submit" class="w-full py-3.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold text-[17.5px] leading-[25px] rounded-xl shadow-lg shadow-emerald-600/20 hover:shadow-emerald-600/30 transition-all transform hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2 cursor-pointer">
-                <i class="fa-solid fa-right-to-bracket"></i>
+            <div class="pt-3">
+              <button type="submit" class="w-full py-4.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-extrabold text-xl md:text-2xl rounded-2xl shadow-xl shadow-emerald-600/25 hover:shadow-emerald-600/40 transition-all transform hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-3 cursor-pointer">
+                <i class="fa-solid fa-right-to-bracket text-2xl"></i>
                 Đăng Nhập Quản Trị
               </button>
             </div>
@@ -424,61 +424,61 @@
     </div>
 
     <!-- Modal: Login -->
-    <div id="login-modal" class="fixed inset-0 z-[9999] hidden items-center justify-center bg-slate-950/60 backdrop-blur-md p-4 transition-all duration-300 animate-fade-in">
-      <div class="bg-white dark:bg-slate-900 w-full max-w-sm rounded-[2rem] shadow-2xl border border-slate-100 dark:border-slate-800/80 overflow-hidden flex flex-col transform scale-100 transition-all duration-300 relative">
+    <div id="login-modal" class="fixed inset-0 z-[9999] hidden items-center justify-center bg-slate-950/60 backdrop-blur-md p-4 md:p-8 transition-all duration-300 animate-fade-in">
+      <div class="bg-white dark:bg-slate-900 w-full max-w-3xl rounded-[2.5rem] shadow-2xl border border-slate-100 dark:border-slate-800/80 overflow-hidden flex flex-col transform scale-100 transition-all duration-300 relative">
         <!-- Modal Header with elegant gradient background and brand patterns -->
-        <div class="p-6 bg-gradient-to-br from-emerald-600 via-emerald-600 to-teal-700 text-white relative overflow-hidden">
-          <div class="absolute -right-10 -top-10 w-32 h-32 bg-white/10 rounded-full blur-2xl pointer-events-none"></div>
-          <div class="absolute -left-10 -bottom-10 w-24 h-24 bg-teal-500/20 rounded-full blur-xl pointer-events-none"></div>
+        <div class="p-8 md:p-10 bg-gradient-to-br from-emerald-600 via-emerald-600 to-teal-700 text-white relative overflow-hidden">
+          <div class="absolute -right-10 -top-10 w-48 h-48 bg-white/10 rounded-full blur-3xl pointer-events-none"></div>
+          <div class="absolute -left-10 -bottom-10 w-36 h-36 bg-teal-500/20 rounded-full blur-2xl pointer-events-none"></div>
 
-          <button onclick="closeAuthModal('login')" class="absolute top-5 right-5 text-emerald-100 hover:text-white bg-white/10 hover:bg-white/20 w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200">
-            <i class="fa-solid fa-times text-[17.5px] leading-[25px]"></i>
+          <button onclick="closeAuthModal('login')" class="absolute top-6 right-6 text-emerald-100 hover:text-white bg-white/10 hover:bg-white/20 w-12 h-12 rounded-full flex items-center justify-center transition-all duration-200 cursor-pointer">
+            <i class="fa-solid fa-times text-2xl"></i>
           </button>
 
           <!-- Brand Logo icon inside the header -->
-          <div class="flex items-center gap-2 mb-2">
-            <div class="w-8 h-8 bg-white/20 backdrop-blur-md rounded-xl flex items-center justify-center text-white shadow-inner">
-              <i class="fa-solid fa-cookie-bite text-[17.5px] leading-[25px] animate-wiggle"></i>
+          <div class="flex items-center gap-3 mb-3">
+            <div class="w-12 h-12 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center text-white shadow-inner">
+              <i class="fa-solid fa-cookie-bite text-2xl animate-wiggle"></i>
             </div>
-            <span class="text-[15px] uppercase tracking-widest font-black text-emerald-200">Nuri Kitchen</span>
+            <span class="text-lg uppercase tracking-widest font-black text-emerald-200">Nuri Kitchen</span>
           </div>
 
-          <h3 class="text-[25px] leading-[35px] font-extrabold tracking-tight mb-1">
+          <h3 class="text-3xl md:text-4xl font-extrabold tracking-tight mb-2">
             Chào mừng quay lại!
           </h3>
-          <p class="text-[15px] leading-[20px] text-emerald-100/90 font-medium">
+          <p class="text-lg md:text-xl text-emerald-100/90 font-medium">
             Quản lý bữa ăn dinh dưỡng &amp; nhận điểm thưởng hấp dẫn
           </p>
         </div>
 
-        <div class="p-6">
-          <form id="login-form" onsubmit="handleLogin(event)" class="space-y-4">
+        <div class="p-8 md:p-10">
+          <form id="login-form" onsubmit="handleLogin(event)" class="space-y-8">
             <div>
-              <label class="block text-[15px] leading-[20px] font-bold uppercase tracking-wider text-slate-500 dark:text-emerald-400 mb-1.5">Số điện thoại</label>
+              <label class="block text-lg md:text-xl font-bold uppercase tracking-wider text-slate-500 dark:text-emerald-400 mb-3">Số điện thoại</label>
               <div class="relative">
-                <span class="absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400 dark:text-emerald-600">
-                  <i class="fa-solid fa-phone text-[15px] leading-[20px]"></i>
+                <span class="absolute inset-y-0 left-0 flex items-center pl-6 text-slate-400 dark:text-emerald-600">
+                  <i class="fa-solid fa-phone text-3xl"></i>
                 </span>
-                <input type="tel" id="login-phone" required="" class="w-full border border-slate-200 dark:border-slate-800 rounded-2xl pl-10 pr-4 py-3 focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 bg-slate-50/50 dark:bg-slate-950/50 text-slate-800 dark:text-white transition-all duration-200 text-[17.5px] leading-[25px] font-medium" placeholder="VD: 0912345678">
+                <input type="tel" id="login-phone" required="" class="w-full border border-slate-200 dark:border-slate-800 rounded-2xl pl-16 pr-6 py-9 focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 bg-slate-50/50 dark:bg-slate-950/50 text-slate-800 dark:text-white transition-all duration-200 text-2xl md:text-3xl font-medium" placeholder="VD: 0912345678">
               </div>
             </div>
 
             <div>
-              <label class="block text-[15px] leading-[20px] font-bold uppercase tracking-wider text-slate-500 dark:text-emerald-400 mb-1.5">Mật khẩu</label>
+              <label class="block text-lg md:text-xl font-bold uppercase tracking-wider text-slate-500 dark:text-emerald-400 mb-3">Mật khẩu</label>
               <div class="relative">
-                <span class="absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400 dark:text-emerald-600">
-                  <i class="fa-solid fa-lock text-[15px] leading-[20px]"></i>
+                <span class="absolute inset-y-0 left-0 flex items-center pl-6 text-slate-400 dark:text-emerald-600">
+                  <i class="fa-solid fa-lock text-3xl"></i>
                 </span>
-                <input type="password" id="login-password" required="" class="w-full border border-slate-200 dark:border-slate-800 rounded-2xl pl-10 pr-12 py-3 focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 bg-slate-50/50 dark:bg-slate-950/50 text-slate-800 dark:text-white transition-all duration-200 text-[17.5px] leading-[25px] font-medium" placeholder="••••••••">
-                <button type="button" onclick="togglePasswordVisibility('login-password')" class="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-emerald-600 transition-colors">
-                  <i class="fa-solid fa-eye text-[15px] leading-[20px]" id="login-password-eye"></i>
+                <input type="password" id="login-password" required="" class="w-full border border-slate-200 dark:border-slate-800 rounded-2xl pl-16 pr-18 py-9 focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 bg-slate-50/50 dark:bg-slate-950/50 text-slate-800 dark:text-white transition-all duration-200 text-2xl md:text-3xl font-medium" placeholder="••••••••">
+                <button type="button" onclick="togglePasswordVisibility('login-password')" class="absolute inset-y-0 right-0 pr-6 flex items-center text-slate-400 hover:text-emerald-600 transition-colors cursor-pointer">
+                  <i class="fa-solid fa-eye text-3xl" id="login-password-eye"></i>
                 </button>
               </div>
             </div>
 
-            <button type="submit" class="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-extrabold py-3 px-4 rounded-2xl shadow-lg shadow-emerald-600/20 active:scale-[0.98] transition-all duration-200 text-[17.5px] leading-[25px] flex items-center justify-center gap-2">
+            <button type="submit" class="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-black py-9 px-8 rounded-2xl shadow-xl shadow-emerald-600/25 active:scale-[0.98] transition-all duration-200 text-2xl md:text-3xl flex items-center justify-center gap-4 cursor-pointer">
               <span>Đăng nhập</span>
-              <i class="fa-solid fa-arrow-right text-[15px] leading-[20px]"></i>
+              <i class="fa-solid fa-arrow-right text-3xl"></i>
             </button>
           </form>
 
@@ -486,13 +486,13 @@
           <div class="mb-4 hidden" id="google-signin-container-login">
             <div class="flex items-center my-4">
               <div class="flex-grow border-t border-slate-100 dark:border-slate-800"></div>
-              <span class="mx-3 text-[15px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-widest">HOẶC</span>
+              <span class="mx-3 text-base text-slate-400 dark:text-slate-500 font-bold uppercase tracking-widest">HOẶC</span>
               <div class="flex-grow border-t border-slate-100 dark:border-slate-800"></div>
             </div>
             <div id="g_id_signin_login" class="flex justify-center"></div>
           </div>
 
-          <div class="text-center text-[15px] leading-[20px] text-slate-500 dark:text-slate-400 border-t border-slate-100 dark:border-slate-800/80 pt-4 mt-4">
+          <div class="text-center text-base md:text-lg leading-relaxed text-slate-500 dark:text-slate-400 border-t border-slate-100 dark:border-slate-800/80 pt-4 mt-6">
             Chưa có tài khoản?
             <button onclick="switchAuthModal('register')" class="text-emerald-600 dark:text-emerald-400 font-extrabold hover:underline ml-1">
               Tạo tài khoản ngay
@@ -772,13 +772,14 @@
         </div>
       </div>
       <!-- Loading indicator -->
-      <div id="chatbot-loading" class="hidden px-5 py-2 bg-slate-50 text-[15px] leading-[20px] text-slate-500 italic flex items-center gap-2 shrink-0">
+      <div id="chatbot-loading" role="status" aria-busy="true" class="hidden px-5 py-2 bg-slate-50 text-[15px] leading-[20px] text-slate-500 italic flex items-center gap-2 shrink-0">
         <div class="flex gap-1">
           <span class="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-[bounce_1s_infinite_0ms]"></span>
           <span class="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-[bounce_1s_infinite_200ms]"></span>
           <span class="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-[bounce_1s_infinite_400ms]"></span>
         </div>
-        NutriNuri đang phân tích...
+        <span>NutriNuri đang phân tích...</span>
+        <span class="sr-only">NutriNuri đang phân tích câu hỏi</span>
       </div>
       <!-- Input Area -->
       <div class="bg-white border-t border-slate-100 flex flex-col shrink-0">
@@ -1561,6 +1562,7 @@
             <select id="batch-export-meal" class="w-full border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all font-medium text-slate-700 bg-white">
               <option value="meal1">Trưa</option>
               <option value="meal2">Tối</option>
+              <option value="both">Gộp cả ngày (Trưa + Tối)</option>
             </select>
           </div>
         </div>
@@ -1729,7 +1731,7 @@
     <div id="weekly-menu-modal" class="fixed inset-0 z-50 hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
       <div class="fixed inset-0 bg-slate-900 bg-opacity-75 transition-opacity backdrop-blur-sm" onclick="closeCustomerMenuModal()"></div>
       <div class="fixed inset-0 z-10 overflow-y-auto flex min-h-full items-center justify-center p-4 text-center sm:p-0 pointer-events-none">
-        <div class="relative transform overflow-hidden rounded-2xl bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-3xl pointer-events-auto">
+        <div class="relative transform overflow-hidden rounded-2xl bg-white text-left shadow-xl transition-all sm:my-8 w-[95vw] max-w-6xl sm:w-full sm:max-w-6xl pointer-events-auto">
           <div class="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4 border-b border-slate-100 flex justify-between items-center sticky top-0 z-10">
             <div>
               <h3 class="text-[25px] leading-[35px] font-semibold text-slate-900" id="weekly-menu-title">
@@ -2193,7 +2195,7 @@
             </div>
 
             <!-- Loading State -->
-            <div id="route-ai-loading" class="hidden text-center py-12">
+            <div id="route-ai-loading" role="status" aria-busy="true" class="hidden text-center py-12">
               <div class="inline-block animate-spin rounded-full h-14 w-14 border-4 border-slate-200 border-t-indigo-500 mb-4"></div>
               <h4 class="text-[22.5px] leading-[35px] font-bold text-slate-700">
                 Đang tính toán ma trận khoảng cách...
@@ -2201,6 +2203,7 @@
               <p class="text-[17.5px] leading-[25px] text-slate-500 mt-2">
                 Đang gom nhóm các đơn hàng tại các Quận lân cận cho Shipper.
               </p>
+              <span class="sr-only">Đang tính toán lộ trình tối ưu</span>
             </div>
 
             <!-- Result State -->
@@ -2475,7 +2478,7 @@
     
 
     <!-- Pricing Modal -->
-    <div id="pricing-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] hidden opacity-0 transition-opacity duration-300 flex items-center justify-center p-4">
+    <div id="pricing-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[150] hidden opacity-0 transition-opacity duration-300 flex items-center justify-center p-4">
       <div id="pricing-modal-content" class="bg-[#FFFDF5] rounded-3xl w-full max-w-5xl shadow-2xl transform scale-95 transition-all duration-300 flex flex-col max-h-[90vh]" onclick="event.stopPropagation()">
         <!-- Header -->
         <div class="p-6 md:p-8 text-center relative border-b border-slate-200 bg-white rounded-t-3xl">
@@ -2897,7 +2900,7 @@
     
   
     <!-- Modal: Order Platform Modal -->
-    <div id="order-platform-modal" class="fixed inset-0 z-[110] hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div id="order-platform-modal" class="fixed inset-0 z-[160] hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
       <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" onclick="closeOrderPlatformModal()"></div>
       <div class="fixed inset-0 z-10 overflow-y-auto">
         <div class="flex min-h-full items-center justify-center p-4 text-center sm:p-0">
@@ -3259,9 +3262,10 @@
               <i class="fa-solid fa-wand-magic-sparkles text-amber-300 animate-pulse"></i>
               <span>✨ AI Phân Tích Kcal & Dinh Dưỡng</span>
             </button>
-            <div id="ai-food-loading" class="hidden mt-2 p-3 bg-purple-50 rounded-xl border border-purple-200 flex items-center justify-center gap-3 text-purple-700 text-xs font-bold animate-pulse">
+            <div id="ai-food-loading" role="status" aria-busy="true" class="hidden mt-2 p-3 bg-purple-50 rounded-xl border border-purple-200 flex items-center justify-center gap-3 text-purple-700 text-xs font-bold animate-pulse">
               <i class="fa-solid fa-spinner fa-spin text-purple-600 text-base"></i>
               <span>AI đang phân tích hình ảnh & tính toán lượng Kcal...</span>
+              <span class="sr-only">AI đang phân tích dinh dưỡng món ăn</span>
             </div>
           </div>
 
@@ -3330,5 +3334,443 @@
         </div>
       </div>
     </div>
+
+<!-- Modal Gia hạn gói ăn -->
+<div id="modal-renew-subscription" class="fixed inset-0 z-[120] hidden items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
+  <div class="bg-white rounded-3xl w-full max-w-5xl shadow-2xl overflow-hidden border border-slate-100 flex flex-col min-h-[560px] max-h-[95vh]">
+    <!-- Header -->
+    <div class="px-8 py-6 bg-slate-50 border-b border-slate-100 flex items-center justify-between shrink-0">
+      <div class="flex items-center gap-4">
+        <div class="w-16 h-16 rounded-2xl bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold">
+          <i class="fa-solid fa-repeat text-[32px]"></i>
+        </div>
+        <div>
+          <h3 id="renew-modal-title" class="font-bold text-slate-800 text-[32px] leading-tight">Gia hạn gói ăn</h3>
+          <p id="renew-modal-subtitle" class="text-[24px] text-slate-500 font-medium mt-1">Bước 1: Chọn gói gia hạn</p>
+        </div>
+      </div>
+      <button type="button" onclick="closeRenewSubscriptionModal()" class="w-12 h-12 rounded-full bg-slate-200/60 hover:bg-slate-200 text-slate-500 flex items-center justify-center transition-colors">
+        <i class="fa-solid fa-xmark text-[28px]"></i>
+      </button>
+    </div>
+
+    <!-- Body: Step 1 (Bảng lựa chọn) -->
+    <div id="renew-step-1" class="p-8 overflow-y-auto space-y-6 flex-1">
+      <!-- Nút xem thông tin các gói ăn -->
+      <div class="flex justify-end">
+        <button type="button" onclick="openPackageInfoModal()" class="text-[24px] font-bold text-emerald-600 hover:text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200/80 px-6 py-3 rounded-xl inline-flex items-center gap-2 transition-all shadow-sm cursor-pointer">
+          <i class="fa-solid fa-circle-info text-[24px]"></i> Xem thông tin gói
+        </button>
+      </div>
+
+      <div class="space-y-5">
+        <!-- Option A: Gia hạn gói hiện tại -->
+        <label class="relative flex items-start p-6 rounded-2xl border-2 cursor-pointer transition-all border-indigo-600 bg-indigo-50/40" id="renew-opt-current-label">
+          <input type="radio" name="renew-type-radio" id="renew-opt-current" value="current" checked onchange="switchRenewOption('current')" class="mt-2 w-7 h-7 text-indigo-600 focus:ring-indigo-500 cursor-pointer shrink-0" />
+          <div class="ml-4 flex-1">
+            <span class="block text-[28px] font-bold text-slate-800 leading-snug">Gia hạn gói hiện tại</span>
+            <p id="renew-current-pkg-desc" class="text-[24px] text-slate-600 mt-2 font-medium leading-relaxed">
+              Đang tải thông tin gói hiện tại...
+            </p>
+          </div>
+        </label>
+
+        <!-- Option B: Chọn gói khác -->
+        <label class="relative flex items-start p-6 rounded-2xl border-2 cursor-pointer transition-all border-slate-200 hover:border-slate-300" id="renew-opt-custom-label">
+          <input type="radio" name="renew-type-radio" id="renew-opt-custom" value="custom" onchange="switchRenewOption('custom')" class="mt-2 w-7 h-7 text-indigo-600 focus:ring-indigo-500 cursor-pointer shrink-0" />
+          <div class="ml-4 flex-1">
+            <span class="block text-[28px] font-bold text-slate-800 leading-snug">Chọn gói khác</span>
+            <span class="block text-[24px] text-slate-500 mt-1 leading-relaxed">Thay đổi tên gói, số bữa hoặc size suất ăn</span>
+          </div>
+        </label>
+      </div>
+
+      <!-- Custom Form (Ẩn khi chọn gói hiện tại) -->
+      <div id="renew-custom-fields" class="hidden space-y-5 p-6 bg-slate-50 border border-slate-200/80 rounded-2xl animate-fade-in">
+        <div>
+          <label class="block text-[24px] font-bold text-slate-700 mb-2">Tên gói ăn mới</label>
+          <select id="renew-pkg-name" class="w-full border border-slate-300 rounded-xl px-5 py-4 text-[24px] font-semibold text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            <option value="Gói Trải Nghiệm (1 Tuần)">Gói Trải Nghiệm (1 Tuần)</option>
+            <option value="Gói Chuyển Đổi (2 Tuần)">Gói Chuyển Đổi (2 Tuần)</option>
+            <option value="Gói Bứt Phá (1 Tháng)">Gói Bứt Phá (1 Tháng)</option>
+          </select>
+        </div>
+
+        <div class="grid grid-cols-2 gap-5">
+          <div>
+            <label class="block text-[24px] font-bold text-slate-700 mb-2">Số bữa/ngày</label>
+            <select id="renew-pkg-meals" class="w-full border border-slate-300 rounded-xl px-5 py-4 text-[24px] font-semibold text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+              <option value="2">2 bữa/ngày (Trưa & Tối)</option>
+              <option value="1">1 bữa/ngày</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-[24px] font-bold text-slate-700 mb-2">Size khẩu phần</label>
+            <select id="renew-pkg-size" class="w-full border border-slate-300 rounded-xl px-5 py-4 text-[24px] font-semibold text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+              <option value="balance">Balance (M) - Tiêu chuẩn</option>
+              <option value="power">Power (L) - Lớn</option>
+              <option value="lean">Lean (S) - Nhỏ</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Body: Step 2 (Bảng thanh toán QR) -->
+    <div id="renew-step-2" class="p-8 overflow-y-auto space-y-6 flex-1 hidden">
+      <div id="renew-summary-box" class="p-5 bg-indigo-50/70 border border-indigo-100 rounded-2xl text-[24px] text-indigo-900">
+        <span class="font-bold text-indigo-900 text-[26px] block mb-1.5">Gói gia hạn đã chọn:</span>
+        <div id="renew-summary-text" class="font-semibold text-slate-700 text-[24px]">--</div>
+      </div>
+
+      <!-- Tabs chọn phương thức QR -->
+      <div>
+        <div class="flex gap-3 border-b border-slate-200 pb-3">
+          <button type="button" id="tab-renew-bank" onclick="switchRenewPaymentTab('bank')" class="flex-1 py-4 rounded-xl font-bold text-[24px] bg-blue-600 text-white transition-colors flex items-center justify-center gap-2 shadow-sm">
+            <i class="fa-solid fa-building-columns"></i> Ngân hàng
+          </button>
+          <button type="button" id="tab-renew-momo" onclick="switchRenewPaymentTab('momo')" class="flex-1 py-4 rounded-xl font-bold text-[24px] bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors flex items-center justify-center gap-2">
+            <i class="fa-solid fa-wallet text-pink-600"></i> Ví MoMo
+          </button>
+        </div>
+
+        <!-- Bank QR Panel -->
+        <div id="panel-renew-bank" class="pt-5 text-center">
+          <div class="inline-block p-3 bg-white rounded-2xl border border-slate-200 shadow-md">
+            <img id="renew-bank-qr-img" class="w-64 h-64 object-contain mx-auto rounded-xl" alt="QR Ngân hàng" />
+          </div>
+          <p id="renew-bank-info" class="text-[24px] text-slate-700 mt-4 font-semibold"></p>
+        </div>
+
+        <!-- MoMo QR Panel -->
+        <div id="panel-renew-momo" class="pt-5 text-center hidden">
+          <div class="inline-block p-3 bg-white rounded-2xl border border-slate-200 shadow-md">
+            <img id="renew-momo-qr-img" class="w-64 h-64 object-contain mx-auto rounded-xl" alt="QR MoMo" />
+          </div>
+          <p id="renew-momo-info" class="text-[24px] text-slate-700 mt-4 font-semibold"></p>
+        </div>
+      </div>
+
+      <!-- Nội dung chuyển khoản -->
+      <div class="bg-amber-50 border border-amber-200/80 rounded-2xl p-5 text-center">
+        <p class="text-[22px] font-bold uppercase tracking-wider text-amber-800 mb-2">
+          <i class="fa-solid fa-receipt mr-1"></i> Nội dung chuyển khoản bắt buộc
+        </p>
+        <div class="inline-flex items-center gap-3 bg-white px-5 py-3 rounded-xl border border-amber-300 shadow-sm mt-1">
+          <span id="renew-transfer-content" class="font-mono font-bold text-slate-900 text-[28px] tracking-wide select-all"></span>
+        </div>
+        <p class="text-[20px] text-amber-700 mt-2.5 italic font-medium">Vui lòng ghi chính xác nội dung trên để hệ thống xác nhận tự động nhanh nhất.</p>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="p-6 bg-slate-50 border-t border-slate-100 flex gap-4 shrink-0">
+      <button type="button" id="btn-renew-back" onclick="showRenewSelectionStep()" class="hidden flex-1 bg-white hover:bg-slate-100 border border-slate-300 text-slate-700 font-bold py-4 px-6 rounded-xl transition-colors text-[24px]">
+        <i class="fa-solid fa-arrow-left mr-2"></i> Quay lại
+      </button>
+      <button type="button" id="btn-renew-cancel" onclick="closeRenewSubscriptionModal()" class="flex-1 bg-white hover:bg-slate-100 border border-slate-300 text-slate-700 font-bold py-4 px-6 rounded-xl transition-colors text-[24px]">
+        Hủy
+      </button>
+      <button type="button" id="btn-renew-next" onclick="showRenewPaymentStep()" class="flex-[2] bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 px-6 rounded-xl shadow-md transition-all text-[24px] flex items-center justify-center gap-2 active:scale-95">
+        Tiếp tục <i class="fa-solid fa-arrow-right"></i>
+      </button>
+      <button type="button" id="btn-renew-confirm" onclick="confirmRenewSubscription()" class="hidden flex-[2] bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-4 px-6 rounded-xl shadow-md transition-all text-[24px] flex items-center justify-center gap-2 active:scale-95">
+        <i class="fa-solid fa-check-circle"></i> Xác nhận đã thanh toán
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Duyệt Gia Hạn Gói (Admin) -->
+<div id="modal-approve-renewal" class="fixed inset-0 z-[130] hidden items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
+  <div class="bg-white rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden border border-slate-100 flex flex-col max-h-[90vh]">
+    <!-- Header -->
+    <div class="px-6 py-4 bg-slate-50 border-b border-slate-100 flex items-center justify-between shrink-0">
+      <div class="flex items-center gap-2.5">
+        <div class="w-9 h-9 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center font-bold">
+          <i class="fa-solid fa-bell text-base animate-bounce"></i>
+        </div>
+        <div>
+          <h3 class="font-bold text-slate-800 text-base">Duyệt Yêu Cầu Gia Hạn Gói</h3>
+          <p class="text-xs text-slate-500">Xác nhận thanh toán và cộng dồn ngày cho khách hàng</p>
+        </div>
+      </div>
+      <button type="button" onclick="closeApproveRenewalModal()" class="w-8 h-8 rounded-full bg-slate-200/60 hover:bg-slate-200 text-slate-500 flex items-center justify-center transition-colors">
+        <i class="fa-solid fa-xmark text-sm"></i>
+      </button>
+    </div>
+
+    <!-- Body -->
+    <div class="p-6 overflow-y-auto space-y-4">
+      <input type="hidden" id="approve-renewal-customer-id" />
+
+      <!-- Customer Info Card -->
+      <div class="p-3.5 bg-slate-50 border border-slate-200 rounded-2xl flex items-center justify-between">
+        <div>
+          <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Khách hàng</span>
+          <h4 id="approve-cust-name" class="font-bold text-slate-800 text-sm">--</h4>
+          <p id="approve-cust-phone" class="text-xs text-slate-500 font-semibold">--</p>
+        </div>
+        <div class="text-right">
+          <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Gói ăn hiện tại</span>
+          <p id="approve-curr-pkg" class="text-xs font-bold text-emerald-600">--</p>
+          <p id="approve-curr-dates" class="text-[11px] text-slate-500">--</p>
+        </div>
+      </div>
+
+      <!-- Requested Package Card -->
+      <div class="p-4 bg-amber-50/80 border border-amber-200 rounded-2xl space-y-2">
+        <div class="flex items-center justify-between border-b border-amber-200/60 pb-2">
+          <span class="text-xs font-bold text-amber-900 flex items-center gap-1.5">
+            <i class="fa-solid fa-receipt text-amber-600"></i> Thông tin gói yêu cầu gia hạn
+          </span>
+          <span id="approve-req-time" class="text-[10px] text-amber-700 italic">--</span>
+        </div>
+        <div class="space-y-1 text-xs text-slate-800">
+          <p>Loại yêu cầu: <strong id="approve-req-type" class="text-indigo-700">Gia hạn gói hiện tại</strong></p>
+          <p>Tên gói: <strong id="approve-req-pkg-name">--</strong></p>
+          <p>Số bữa / Size: <strong id="approve-req-details">--</strong></p>
+        </div>
+      </div>
+
+      <!-- Extended Result Card (Dự kiến ngày kết thúc mới) -->
+      <div class="p-4 bg-emerald-50/80 border border-emerald-200 rounded-2xl space-y-1.5">
+        <span class="text-xs font-bold text-emerald-900 flex items-center gap-1.5">
+          <i class="fa-solid fa-calendar-check text-emerald-600"></i> Dự kiến sau khi duyệt (Cộng dồn)
+        </span>
+        <div class="text-xs text-slate-700 space-y-1 pt-1">
+          <p>Ngày bắt đầu tính: <strong id="approve-calc-start">--</strong></p>
+          <p>Ngày kết thúc mới: <strong id="approve-calc-new-end" class="text-emerald-700 text-sm font-bold">--</strong></p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="p-4 bg-slate-50 border-t border-slate-100 flex gap-3 shrink-0">
+      <button type="button" onclick="closeApproveRenewalModal()" class="flex-1 bg-white hover:bg-slate-100 border border-slate-300 text-slate-700 font-bold py-2.5 rounded-xl transition-colors text-xs">
+        Hủy / Đóng
+      </button>
+      <button type="button" onclick="executeApproveRenewal()" class="flex-[2] bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 rounded-xl shadow-md transition-all text-xs flex items-center justify-center gap-2 active:scale-95">
+        <i class="fa-solid fa-circle-check"></i> Duyệt gia hạn & Cộng dồn ngày
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Xem Thông Tin Các Gói Ăn -->
+<div id="modal-package-info" class="fixed inset-0 z-[140] hidden items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
+  <div class="bg-slate-50 dark:bg-slate-900 rounded-3xl w-full max-w-6xl shadow-2xl overflow-hidden border border-slate-100 dark:border-slate-800 flex flex-col max-h-[92vh]">
+    <!-- Header -->
+    <div class="px-6 py-4 bg-white dark:bg-slate-800 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between shrink-0">
+      <div class="flex items-center gap-2.5">
+        <div class="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center font-bold">
+          <i class="fa-solid fa-utensils text-base"></i>
+        </div>
+        <div>
+          <h3 class="font-bold text-slate-800 dark:text-white text-base">Thông tin các gói ăn Nuri Kitchen</h3>
+          <p class="text-xs text-slate-500 dark:text-slate-400">Chi tiết 3 gói ăn khoa học từ Nuri Kitchen</p>
+        </div>
+      </div>
+      <button type="button" onclick="closePackageInfoModal()" class="w-8 h-8 rounded-full bg-slate-200/60 hover:bg-slate-200 text-slate-500 flex items-center justify-center transition-colors">
+        <i class="fa-solid fa-xmark text-sm"></i>
+      </button>
+    </div>
+
+    <!-- Body: 3 Package Cards -->
+    <div class="p-6 overflow-y-auto">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch">
+        <!-- Gói Trải Nghiệm -->
+        <div class="relative bg-white dark:bg-slate-800 rounded-[32px] p-6 flex flex-col items-center text-center shadow-xl shadow-slate-200/50 dark:shadow-none group border border-slate-100 dark:border-slate-700 hover:-translate-y-2 hover:border-emerald-200 dark:hover:border-emerald-800 transition-all duration-300 w-full h-full hover-shine-effect">
+          <div class="absolute top-0 left-0 w-full h-[180px] overflow-hidden" style="border-top-left-radius: 32px; border-top-right-radius: 32px; border-bottom-left-radius: 50% 15%; border-bottom-right-radius: 50% 15%;">
+            <img src="https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&amp;fit=crop&amp;w=600&amp;q=80" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" alt="bg">
+            <div class="absolute inset-0 bg-emerald-900/40 mix-blend-multiply pointer-events-none"></div>
+            <div class="absolute top-6 left-0 w-full text-center px-4 pointer-events-none">
+              <p class="text-white font-medium text-[17.5px] leading-[25px] drop-shadow-md">
+                bắt đầu hành trình<br>
+                <span class="font-bold text-[20px] leading-[30px]">thay đổi vóc dáng</span>
+              </p>
+            </div>
+          </div>
+          <div class="relative z-10 mt-[80px] mb-4 w-36 h-36 rounded-full border-[6px] border-white dark:border-slate-800 shadow-xl bg-white dark:bg-slate-800 overflow-hidden shrink-0 group-hover:-translate-y-2 transition-transform duration-500">
+            <img src="https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&amp;fit=crop&amp;w=300&amp;q=80" class="w-full h-full object-cover" alt="food">
+          </div>
+          <div class="relative z-10 flex flex-col items-center w-full flex-1">
+            <h3 class="text-emerald-600 dark:text-emerald-400 font-bold uppercase tracking-wider text-[15px] mb-1">TRẢI NGHIỆM</h3>
+            <p class="text-[32px] leading-[38px] font-black text-slate-800 dark:text-white tracking-tight mb-4">1 Tuần</p>
+            
+            <div class="bg-emerald-50 dark:bg-emerald-900/20 rounded-2xl p-4 mb-5 w-full border border-emerald-100/50 dark:border-emerald-800/30">
+              <ul class="space-y-2.5 w-full text-sm">
+                <li class="flex items-center justify-between">
+                  <div class="flex items-center gap-2 text-slate-700 dark:text-slate-300 font-bold"><i class="fa-solid fa-leaf text-emerald-500"></i> Size Lean (S)</div>
+                  <span class="text-emerald-600 dark:text-emerald-400 font-medium whitespace-nowrap">400 Kcal</span>
+                </li>
+                <li class="flex items-center justify-between">
+                  <div class="flex items-center gap-2 text-slate-700 dark:text-slate-300 font-bold"><i class="fa-solid fa-scale-balanced text-emerald-500"></i> Size Balance (M)</div>
+                  <span class="text-emerald-600 dark:text-emerald-400 font-medium whitespace-nowrap">500 Kcal</span>
+                </li>
+                <li class="flex items-center justify-between">
+                  <div class="flex items-center gap-2 text-slate-700 dark:text-slate-300 font-bold"><i class="fa-solid fa-dumbbell text-emerald-500"></i> Size Power (L)</div>
+                  <span class="text-emerald-600 dark:text-emerald-400 font-medium whitespace-nowrap">700 Kcal</span>
+                </li>
+              </ul>
+            </div>
+
+            <ul class="text-left space-y-2.5 w-full mb-6 flex-1 text-sm">
+              <li class="flex items-start gap-2.5 text-slate-600 dark:text-slate-300 font-medium">
+                <i class="fa-solid fa-check text-emerald-500 mt-0.5"></i>
+                <span class="flex-1">Menu Nuri thiết kế riêng</span>
+              </li>
+              <li class="flex items-start gap-2.5 text-slate-600 dark:text-slate-300 font-medium">
+                <i class="fa-solid fa-check text-emerald-500 mt-0.5"></i>
+                <span class="flex-1">Giao hàng tận nơi</span>
+              </li>
+            </ul>
+            <button type="button" onclick="openPricingModal('5', true)" class="text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 font-bold text-sm mb-4 transition-colors flex items-center justify-center gap-1.5 w-full cursor-pointer">
+              <i class="fa-solid fa-tags"></i> Xem bảng giá chi tiết
+            </button>
+            <div onclick="window.openOrderPlatformModal('landing', '7')" class="ripple-btn pkg-btn block w-full text-center py-3 rounded-xl bg-emerald-500 text-white font-bold text-base transition-all duration-300 mt-auto relative z-10 animate-glow-pulse-emerald hover:bg-emerald-600 shadow-lg shadow-emerald-500/30 hover:-translate-y-0.5 cursor-pointer">Chọn Gói Này</div>
+          </div>
+        </div>
+
+        <!-- Gói Chuyển Đổi -->
+        <div class="relative bg-white dark:bg-slate-800 rounded-[32px] p-6 flex flex-col items-center text-center shadow-xl shadow-slate-200/50 dark:shadow-none group border border-slate-100 dark:border-slate-700 hover:-translate-y-2 hover:border-emerald-200 dark:hover:border-emerald-800 transition-all duration-300 w-full h-full hover-shine-effect">
+          <div class="absolute top-0 left-0 w-full h-[180px] overflow-hidden" style="border-top-left-radius: 32px; border-top-right-radius: 32px; border-bottom-left-radius: 50% 15%; border-bottom-right-radius: 50% 15%;">
+            <img src="https://images.unsplash.com/photo-1540420773420-3366772f4999?auto=format&amp;fit=crop&amp;w=600&amp;q=80" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" alt="bg">
+            <div class="absolute inset-0 bg-emerald-900/40 mix-blend-multiply pointer-events-none"></div>
+            <div class="absolute top-6 left-0 w-full text-center px-4 pointer-events-none">
+              <p class="text-white font-medium text-[17.5px] leading-[25px] drop-shadow-md">
+                duy trì cân nặng<br>
+                <span class="font-bold text-[20px] leading-[30px]">tăng cơ giảm mỡ</span>
+              </p>
+            </div>
+          </div>
+          <div class="relative z-10 mt-[80px] mb-4 w-36 h-36 rounded-full border-[6px] border-white dark:border-slate-800 shadow-xl bg-white dark:bg-slate-800 overflow-hidden shrink-0 group-hover:-translate-y-2 transition-transform duration-500">
+            <img src="https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&amp;fit=crop&amp;w=300&amp;q=80" class="w-full h-full object-cover" alt="food">
+          </div>
+          <div class="relative z-10 flex flex-col items-center w-full flex-1">
+            <h3 class="text-emerald-600 dark:text-emerald-400 font-bold uppercase tracking-wider text-[15px] mb-1">CHUYỂN ĐỔI</h3>
+            <p class="text-[32px] leading-[38px] font-black text-slate-800 dark:text-white tracking-tight mb-4">2 Tuần</p>
+            
+            <div class="bg-emerald-50 dark:bg-emerald-900/20 rounded-2xl p-4 mb-5 w-full border border-emerald-100/50 dark:border-emerald-800/30">
+              <ul class="space-y-2.5 w-full text-sm">
+                <li class="flex items-center justify-between">
+                  <div class="flex items-center gap-2 text-slate-700 dark:text-slate-300 font-bold"><i class="fa-solid fa-leaf text-emerald-500"></i> Size Lean (S)</div>
+                  <span class="text-emerald-600 dark:text-emerald-400 font-medium whitespace-nowrap">400 Kcal</span>
+                </li>
+                <li class="flex items-center justify-between">
+                  <div class="flex items-center gap-2 text-slate-700 dark:text-slate-300 font-bold"><i class="fa-solid fa-scale-balanced text-emerald-500"></i> Size Balance (M)</div>
+                  <span class="text-emerald-600 dark:text-emerald-400 font-medium whitespace-nowrap">500 Kcal</span>
+                </li>
+                <li class="flex items-center justify-between">
+                  <div class="flex items-center gap-2 text-slate-700 dark:text-slate-300 font-bold"><i class="fa-solid fa-dumbbell text-emerald-500"></i> Size Power (L)</div>
+                  <span class="text-emerald-600 dark:text-emerald-400 font-medium whitespace-nowrap">700 Kcal</span>
+                </li>
+              </ul>
+            </div>
+
+            <ul class="text-left space-y-2.5 w-full mb-6 flex-1 text-sm">
+              <li class="flex items-start gap-2.5 text-slate-600 dark:text-slate-300 font-medium">
+                <i class="fa-solid fa-check text-emerald-500 mt-0.5"></i>
+                <span class="flex-1">Miễn phí giao từ 2 đơn</span>
+              </li>
+              <li class="flex items-start gap-2.5 text-slate-600 dark:text-slate-300 font-medium">
+                <i class="fa-solid fa-check text-emerald-500 mt-0.5"></i>
+                <span class="flex-1">Đổi món linh hoạt</span>
+              </li>
+            </ul>
+            <button type="button" onclick="openPricingModal('10', true)" class="text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 font-bold text-sm mb-4 transition-colors flex items-center justify-center gap-1.5 w-full cursor-pointer">
+              <i class="fa-solid fa-tags"></i> Xem bảng giá chi tiết
+            </button>
+            <div onclick="window.openOrderPlatformModal('landing', '14')" class="ripple-btn pkg-btn block w-full text-center py-3 rounded-xl bg-emerald-500 text-white font-bold text-base transition-all duration-300 mt-auto relative z-10 animate-glow-pulse-emerald hover:bg-emerald-600 shadow-lg shadow-emerald-500/30 hover:-translate-y-0.5 cursor-pointer">Chọn Gói Này</div>
+          </div>
+        </div>
+
+        <!-- Gói Bứt Phá -->
+        <div class="relative bg-white dark:bg-slate-800 rounded-[32px] p-6 flex flex-col items-center text-center shadow-2xl shadow-emerald-900/10 dark:shadow-none group border-2 border-emerald-500 hover:-translate-y-2 transition-all duration-300 w-full h-full">
+          <div class="absolute -top-5 right-6 z-20">
+            <span class="bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-xs font-black px-3.5 py-1.5 rounded-full shadow-lg shadow-emerald-500/30 uppercase tracking-wider">Phổ Biến Nhất</span>
+          </div>
+          <div class="absolute top-0 left-0 w-full h-[180px] overflow-hidden" style="border-top-left-radius: 32px; border-top-right-radius: 32px; border-bottom-left-radius: 50% 15%; border-bottom-right-radius: 50% 15%;">
+            <img src="https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&amp;fit=crop&amp;w=600&amp;q=80" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" alt="bg">
+            <div class="absolute inset-0 bg-emerald-900/40 mix-blend-multiply pointer-events-none"></div>
+            <div class="absolute top-6 left-0 w-full text-center px-4 pointer-events-none">
+              <p class="text-white font-medium text-[17.5px] leading-[25px] drop-shadow-md">
+                gấp đôi lượng Protein<br>
+                <span class="font-bold text-[20px] leading-[30px]">xây dựng cơ bắp</span>
+              </p>
+            </div>
+          </div>
+          <div class="relative z-10 mt-[80px] mb-4 w-36 h-36 rounded-full border-[6px] border-white dark:border-slate-800 shadow-xl bg-white dark:bg-slate-800 overflow-hidden shrink-0 group-hover:-translate-y-2 transition-transform duration-500">
+            <img src="https://images.unsplash.com/photo-1543339308-43e59d6b73a6?auto=format&amp;fit=crop&amp;w=300&amp;q=80" class="w-full h-full object-cover" alt="food">
+          </div>
+          <div class="relative z-10 flex flex-col items-center w-full flex-1">
+            <h3 class="text-emerald-600 dark:text-emerald-400 font-bold uppercase tracking-wider text-[15px] mb-1">BỨT PHÁ</h3>
+            <p class="text-[32px] leading-[38px] font-black text-slate-800 dark:text-white tracking-tight mb-4">1 Tháng</p>
+            
+            <div class="bg-emerald-50 dark:bg-emerald-900/20 rounded-2xl p-4 mb-5 w-full border border-emerald-100/50 dark:border-emerald-800/30">
+              <ul class="space-y-2.5 w-full text-sm">
+                <li class="flex items-center justify-between">
+                  <div class="flex items-center gap-2 text-slate-700 dark:text-slate-300 font-bold"><i class="fa-solid fa-leaf text-emerald-500"></i> Size Lean (S)</div>
+                  <span class="text-emerald-600 dark:text-emerald-400 font-medium whitespace-nowrap">400 Kcal</span>
+                </li>
+                <li class="flex items-center justify-between">
+                  <div class="flex items-center gap-2 text-slate-700 dark:text-slate-300 font-bold"><i class="fa-solid fa-scale-balanced text-emerald-500"></i> Size Balance (M)</div>
+                  <span class="text-emerald-600 dark:text-emerald-400 font-medium whitespace-nowrap">500 Kcal</span>
+                </li>
+                <li class="flex items-center justify-between">
+                  <div class="flex items-center gap-2 text-slate-700 dark:text-slate-300 font-bold"><i class="fa-solid fa-dumbbell text-emerald-500"></i> Size Power (L)</div>
+                  <span class="text-emerald-600 dark:text-emerald-400 font-medium whitespace-nowrap">700 Kcal</span>
+                </li>
+              </ul>
+            </div>
+
+            <ul class="text-left space-y-2.5 w-full mb-6 flex-1 text-sm">
+              <li class="flex items-start gap-2.5 text-slate-600 dark:text-slate-300 font-medium">
+                <i class="fa-solid fa-check text-emerald-500 mt-0.5"></i>
+                <span class="flex-1">Miễn phí giao hàng</span>
+              </li>
+              <li class="flex items-start gap-2.5 text-slate-600 dark:text-slate-300 font-medium">
+                <i class="fa-solid fa-check text-emerald-500 mt-0.5"></i>
+                <span class="flex-1">Chuyên gia theo dõi 1:1</span>
+              </li>
+              <li class="flex items-start gap-2.5 text-slate-600 dark:text-slate-300 font-medium">
+                <i class="fa-solid fa-check text-emerald-500 mt-0.5"></i>
+                <span class="flex-1">Đổi món linh hoạt</span>
+              </li>
+            </ul>
+            <button type="button" onclick="openPricingModal('20', true)" class="text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 font-bold text-sm mb-4 transition-colors flex items-center justify-center gap-1.5 w-full cursor-pointer">
+              <i class="fa-solid fa-tags"></i> Xem bảng giá chi tiết
+            </button>
+            <div onclick="window.openOrderPlatformModal('landing', '30')" class="ripple-btn pkg-btn block w-full text-center py-3 rounded-xl bg-emerald-500 text-white font-bold text-base transition-all duration-300 mt-auto relative z-10 animate-glow-pulse-emerald hover:bg-emerald-600 shadow-lg shadow-emerald-500/30 hover:-translate-y-0.5 cursor-pointer">Chọn Gói Này</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Popup Cảm ơn Gia hạn gói -->
+<div id="modal-renew-thanks-popup" class="fixed inset-0 z-[200] hidden items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-fade-in">
+  <div class="bg-white dark:bg-slate-800 rounded-3xl p-8 max-w-md w-full shadow-2xl flex flex-col items-center text-center border border-slate-100 dark:border-slate-700 animate-scale-up">
+    <!-- Mascot Container -->
+    <div class="relative w-44 h-44 mb-3 flex items-center justify-center">
+      <img id="renew-thanks-mascot-img" class="w-full h-full object-contain drop-shadow-xl hidden" alt="Mascot Cảm ơn" />
+      <div id="renew-thanks-mascot-svg" class="w-full h-full flex items-center justify-center"></div>
+    </div>
+    
+    <!-- Tag Cảm ơn -->
+    <span class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400 text-xs font-extrabold uppercase tracking-wider mb-3">
+      <i class="fa-solid fa-heart text-emerald-500 animate-pulse"></i> Đã Gửi Yêu Cầu Gia Hạn
+    </span>
+
+    <!-- Dòng chữ thông báo -->
+    <h3 class="text-base md:text-lg font-bold text-slate-800 dark:text-white leading-snug">
+      Chờ Nuri xác nhận thanh toán và gia hạn gói bạn nhé!
+    </h3>
+  </div>
+</div>
+
+
+
 
 

@@ -7,6 +7,10 @@ import './index.css';
 
 export default function App() {
   useEffect(() => {
+    if (import.meta.env.VITE_GEMINI_API_KEY) {
+      window.NURI_GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
+      window.VITE_GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
+    }
     if (document.getElementById('legacy-script-loader')) return;
 
     const script = document.createElement('script');
@@ -23,16 +27,21 @@ export default function App() {
 
           const showBanner = JSON.parse(localStorage.getItem("nutriadmin_settings") || "{}").bannerGrandOpeningEnabled !== false;
           if (showBanner && !window.hasShownGrandOpeningPopup) {
-            const selfMixBanner = document.getElementById("home-self-mix-banner");
-            if (selfMixBanner) {
+            const targetElement = document.getElementById("home-self-mix-banner") || document.getElementById("section-dang-ki-goi");
+            if (targetElement) {
               const observer = new IntersectionObserver((entries) => {
                 if (entries[0].isIntersecting) {
-                  window.hasShownGrandOpeningPopup = true;
-                  if (window.openGrandOpeningPopup) setTimeout(window.openGrandOpeningPopup, 1800);
+                  if (!window.hasShownGrandOpeningPopup) {
+                    window.hasShownGrandOpeningPopup = true;
+                    window.hasShownGrandOpeningPopupHomepage = true;
+                    if (typeof window.openGrandOpeningPopup === "function") {
+                      window.openGrandOpeningPopup();
+                    }
+                  }
                   observer.disconnect();
                 }
               }, { threshold: 0.2 });
-              observer.observe(selfMixBanner);
+              observer.observe(targetElement);
             }
           }
         };
@@ -43,14 +52,9 @@ export default function App() {
 
   useEffect(() => {
     const updateViewport = () => {
-      const urlParams = new URLSearchParams(window.location.search);
       const metaViewport = document.querySelector('meta[name=viewport]');
       if (metaViewport) {
-        if (urlParams.get("mode") === "admin") {
-          metaViewport.setAttribute('content', 'width=device-width, initial-scale=1.0');
-        } else {
-          metaViewport.setAttribute('content', 'width=1280');
-        }
+        metaViewport.setAttribute('content', 'width=1280, initial-scale=0.35, maximum-scale=5.0, user-scalable=yes');
       }
     };
     
